@@ -1,0 +1,5 @@
+Hello world, HELLO universe
+The quick brown fox
+Test test TEST testing
+NUM-NUM-NUM
+BAR bar baz BAR

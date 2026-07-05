@@ -1,0 +1,115 @@
+{
+  "id": "1783290095.9223626",
+  "title": "ReplaceLine Comprehensive Examples - Multi-Language Testing",
+  "instructions": "Create exhaustive examples demonstrating ReplaceLine tool across multiple programming languages (Python, PHP, JavaScript, Java, Rust, Go, C++, Ruby, TypeScript, C#). Cover all scenarios: single line replacement, multi-line block replacement, replacements at beginning, middle, and end of files. Include proper indentation handling, special characters, and edge cases. Each example should be a complete, runnable code snippet that gets modified.",
+  "startTimestamp": 1783290095.9223669,
+  "endTimestamp": null,
+  "tasks": {
+    "1783290095.9226174": {
+      "id": "1783290095.9226174",
+      "status": "in_progress",
+      "instruction": "Create Python files demonstrating ReplaceLine with significant whitespace:\n(a) Replace first line (shebang/docstring)\n(b) Replace middle line in nested function (preserving indentation)\n(c) Replace last line of file\n(d) Replace multi-line block (entire function/class)\n(e) Replace line with special Python characters (decorators, f-strings, unicode)\n(f) Replace __main__ block at end\nTest files: test_python_begin.py, test_python_middle.py, test_python_end.py, test_python_block.py",
+      "startTimestamp": 1783290095.9254496,
+      "endTimestamp": null,
+      "log": [
+        {
+          "timestamp": 1783290095.9255254,
+          "text": "Build started"
+        }
+      ]
+    },
+    "1783290095.92402": {
+      "id": "1783290095.92402",
+      "status": "in_progress",
+      "instruction": "Create PHP files with mixed content:\n(a) Replace PHP opening tag at beginning\n(b) Replace line in middle of HTML/PHP mix\n(c) Replace closing PHP tag and HTML at end\n(d) Replace multi-line function block\n(e) Replace line with $variables and special chars\n(f) Replace heredoc/nowdoc blocks\nTest files: test_php_begin.php, test_php_middle.php, test_php_end.php",
+      "startTimestamp": 1783290106.7352538,
+      "endTimestamp": null,
+      "log": [
+        {
+          "timestamp": 1783290106.7353945,
+          "text": "Build started"
+        }
+      ]
+    },
+    "1783290095.9241555": {
+      "id": "1783290095.9241555",
+      "status": "pending",
+      "instruction": "Create JavaScript files demonstrating modern syntax:\n(a) Replace import/require statements at top\n(b) Replace middle async function with arrow function\n(c) Replace export/module.exports at end\n(d) Replace multi-line callback block\n(e) Replace template literal line with embedded expressions\n(f) Replace JSDoc comment block\nTest files: test_js_begin.js, test_js_middle.js, test_js_end.js",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783290095.9242706": {
+      "id": "1783290095.9242706",
+      "status": "pending",
+      "instruction": "Create Java files with strict structure:\n(a) Replace package/import statements at beginning\n(b) Replace middle method in class\n(c) Replace closing brace and class end\n(d) Replace multi-line method block with generics\n(e) Replace annotation line (@Override, @Test)\n(f) Replace try-catch-finally block\nTest files: test_java_begin.java, test_java_middle.java, test_java_end.java",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783290095.9243834": {
+      "id": "1783290095.9243834",
+      "status": "pending",
+      "instruction": "Create Rust files with ownership syntax:\n(a) Replace extern crate/use statements\n(b) Replace middle impl method with lifetime params\n(c) Replace main() function end\n(d) Replace multi-line match block\n(e) Replace line with &str, Box<T>, Rc<T>\n(f) Replace unsafe block\nTest files: test_rust_begin.rs, test_rust_middle.rs, test_rust_end.rs",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783290095.9244955": {
+      "id": "1783290095.9244955",
+      "status": "pending",
+      "instruction": "Create Go files with idiomatic style:\n(a) Replace package/import block at top\n(b) Replace middle function with goroutine\n(c) Replace main() end with defer\n(d) Replace multi-line struct/interface definition\n(e) Replace line with channels (<-chan)\n(f) Replace error handling block\nTest files: test_go_begin.go, test_go_middle.go, test_go_end.go",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783290095.9246125": {
+      "id": "1783290095.9246125",
+      "status": "pending",
+      "instruction": "Create C++ files with header/template syntax:\n(a) Replace #include/#define at beginning\n(b) Replace middle template method\n(c) Replace main return and EOF\n(d) Replace multi-line namespace/class\n(e) Replace line with template<typename T>\n(f) Replace preprocessor directives\nTest files: test_cpp_begin.cpp, test_cpp_middle.cpp, test_cpp_end.cpp",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783290095.9247434": {
+      "id": "1783290095.9247434",
+      "status": "pending",
+      "instruction": "Create Ruby files with flexible syntax:\n(a) Replace require/gem statements\n(b) Replace middle block with do/end\n(c) Replace __END__ and DATA\n(d) Replace multi-line class/module\n(e) Replace line with symbols (:name) and blocks\n(f) Replace heredoc with interpolation\nTest files: test_ruby_begin.rb, test_ruby_middle.rb, test_ruby_end.rb",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783290095.924879": {
+      "id": "1783290095.924879",
+      "status": "pending",
+      "instruction": "Create TypeScript files with type annotations:\n(a) Replace import type statements\n(b) Replace middle interface method\n(c) Replace export default at end\n(d) Replace multi-line generic interface\n(e) Replace line with union types (A | B)\n(f) Replace decorator (@Component)\nTest files: test_ts_begin.ts, test_ts_middle.ts, test_ts_end.ts",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783290095.9250185": {
+      "id": "1783290095.9250185",
+      "status": "pending",
+      "instruction": "Create C# files with .NET features:\n(a) Replace using directives\n(b) Replace middle async LINQ method\n(c) Replace class closing brace\n(d) Replace multi-line property with attributes\n(e) Replace line with => expression body\n(f) Replace #region/#endregion\nTest files: test_cs_begin.cs, test_cs_middle.cs, test_cs_end.cs",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783290095.925153": {
+      "id": "1783290095.925153",
+      "status": "pending",
+      "instruction": "Create edge case examples:\n(a) Replace line 1 in empty file\n(b) Replace beyond EOF (error handling)\n(c) Replace line 0 (error handling)\n(d) Replace with Unicode content (emoji, CJK)\n(e) Replace with XML/HTML special chars\n(f) Replace with very long line (>1000 chars)\n(g) Replace preserving exact indentation (spaces vs tabs)\n(h) Replace in file with mixed line endings (\\n vs \\r\\n)",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783290095.9252903": {
+      "id": "1783290095.9252903",
+      "status": "pending",
+      "instruction": "Create chained workflows:\n(a) ReadFile \u2192 ReplaceLine \u2192 ReadFile (verify)\n(b) ReplaceLine \u2192 Diff (compare before/after)\n(c) Multiple ReplaceLine calls in sequence\n(d) ReplaceLine \u2192 ExecuteScript (run modified code)\n(e) ReplaceLine \u2192 AppendFile \u2192 ReadFile\n(f) Find \u2192 Grep \u2192 ReplaceLine (locate and modify)",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    }
+  }
+}

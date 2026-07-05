@@ -1,0 +1,4 @@
+&lt;?xml version="1.0"?&gt;
+&lt;root&gt;
+  &lt;element attr="value"&gt;Text &amp; more&lt;/element&gt;
+&lt;/root&gt;

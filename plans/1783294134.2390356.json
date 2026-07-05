@@ -1,0 +1,99 @@
+{
+  "id": "1783294134.2390356",
+  "title": "WebCMS - Python-based Content Management System",
+  "instructions": "Build a complete WebCMS with plugin architecture, template engine, HTTPS support, and Python backend. Features: page management, user roles, media uploads, plugin API, theme system, SEO tools, caching, and admin dashboard.",
+  "startTimestamp": 1783294134.2390385,
+  "endTimestamp": null,
+  "tasks": {
+    "1783294134.2394133": {
+      "id": "1783294134.2394133",
+      "status": "in_progress",
+      "instruction": "Create WebCMS directory structure: core/, plugins/, templates/, static/, media/, config/. Implement base classes: Application, Request, Response, Router. Setup configuration system (YAML/JSON) for database, server, security settings. Create WSGI/ASGI entry point. Implement dependency injection container for plugin management.",
+      "startTimestamp": 1783294134.2424903,
+      "endTimestamp": null,
+      "log": [
+        {
+          "timestamp": 1783294134.2425575,
+          "text": "Build started"
+        }
+      ]
+    },
+    "1783294134.2410412": {
+      "id": "1783294134.2410412",
+      "status": "in_progress",
+      "instruction": "Design database schema: User, Role, Permission, Page, Post, Category, Tag, Media, Plugin, Theme. Implement SQLAlchemy ORM models with relationships. Create migration system (Alembic). Add database connection pooling. Implement soft delete, timestamps, audit logging.",
+      "startTimestamp": 1783294156.9289758,
+      "endTimestamp": null,
+      "log": [
+        {
+          "timestamp": 1783294156.9291139,
+          "text": "Build started"
+        }
+      ]
+    },
+    "1783294134.2413588": {
+      "id": "1783294134.2413588",
+      "status": "pending",
+      "instruction": "Implement user registration/login with JWT tokens. Password hashing (bcrypt/argon2). Role-based access control (RBAC) with permissions. Session management with Redis. OAuth2 integration (Google, GitHub). Two-factor authentication (TOTP). Password reset via email.",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783294134.2415314": {
+      "id": "1783294134.2415314",
+      "status": "pending",
+      "instruction": "Create Jinja2-based template engine with custom filters. Theme discovery and loading system. Template inheritance (base.html, blocks). Asset pipeline (CSS/JS minification). Theme settings/configurations. Mobile-responsive default theme. Template caching for performance.",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783294134.2416627": {
+      "id": "1783294134.2416627",
+      "status": "pending",
+      "instruction": "Design plugin system with hooks/events (WordPress-style). Plugin discovery and loading mechanism. Plugin configuration UI. Sandbox/secure execution environment. Plugin dependencies management. REST API for plugins. Sample plugins: contact form, SEO, analytics, social share.",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783294134.2417839": {
+      "id": "1783294134.2417839",
+      "status": "pending",
+      "instruction": "CRUD operations for pages and posts. Rich text editor integration (TinyMCE/Markdown). URL routing and slug generation. Draft/published/scheduled states. Revision history. Category and tag management. Featured images. Meta tags for SEO.",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783294134.241917": {
+      "id": "1783294134.241917",
+      "status": "pending",
+      "instruction": "File upload handling with validation (type, size). Image processing (Pillow) - resize, crop, thumbnails. CDN integration support. Media library browser. Drag-and-drop upload. File organization (folders). Storage backends (local, S3, Azure).",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783294134.2420585": {
+      "id": "1783294134.2420585",
+      "status": "pending",
+      "instruction": "SSL/TLS certificate handling (Let's Encrypt integration). HTTPS redirect middleware. Security headers (HSTS, CSP, X-Frame-Options). CSRF protection. XSS filtering. SQL injection prevention. Rate limiting. Security audit logging.",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783294134.2421997": {
+      "id": "1783294134.2421997",
+      "status": "pending",
+      "instruction": "React/Vue.js admin interface. Dashboard widgets (stats, recent activity). User management UI. Content editor with preview. Plugin manager. Theme customizer. File manager. REST API with OpenAPI/Swagger docs. GraphQL endpoint option.",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783294134.2423398": {
+      "id": "1783294134.2423398",
+      "status": "pending",
+      "instruction": "Multi-level caching: Redis, filesystem, memory. Query optimization. Static file serving with nginx. Gzip compression. Database indexing. Load balancing support. Docker containerization. Kubernetes manifests. Production deployment guide.",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    }
+  }
+}

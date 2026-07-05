@@ -1,0 +1,1 @@
+"""WebCMS Static Assets Directory."""

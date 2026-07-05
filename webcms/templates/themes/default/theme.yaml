@@ -1,0 +1,25 @@
+name: default
+version: "1.0.0"
+description: "Default WebCMS theme with responsive design"
+author: "WebCMS Team"
+
+settings:
+  primary_color: "#007bff"
+  secondary_color: "#6c757d"
+  font_family: "system-ui, -apple-system, sans-serif"
+  
+  # Layout options
+  sidebar_enabled: true
+  footer_enabled: true
+  
+  # Features
+  show_breadcrumbs: true
+  show_author: true
+  show_date: true
+
+assets:
+  css:
+    - css/main.css
+    - css/responsive.css
+  js:
+    - js/main.js

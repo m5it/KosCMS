@@ -1,0 +1,24 @@
+TASK 7/12: WEB TOOLS - RESULTS SUMMARY
+
+WWW Tool Capabilities:
+✓ HTTPS fetching (example.com, httpbin.org)
+✓ HTTP support (confirmed)
+✓ Text extraction from HTML (strips tags, preserves content)
+✓ Redirect following (3 redirects followed to final /get)
+✓ Full Unicode support: CJK, Greek, Cyrillic, Thai, Amharic, Georgian, math symbols, emoji, braille, runes, combining chars, RTL
+
+Error Handling:
+✓ 404: Returns "(no text extracted)" - graceful
+✓ Invalid URL: Java exception → STDERR with clear message
+✓ Timeout: Not explicitly tested (delay endpoint would test)
+
+Parameters:
+- url: Required, must include scheme (http:// or https://)
+- text: Required boolean (true for text extraction)
+
+User Agent: Mozilla/5.0 (Linux x86_64) AppleWebKit... (JavaFX browser)
+
+Limitations:
+- No direct user agent customization observed
+- No timeout parameter exposed
+- text=true required for readable output (HTML otherwise?)

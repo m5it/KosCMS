@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}WebCMS{% endblock %}</title>
+    
+    {% block head %}
+    <link rel="stylesheet" href="{{ theme.get_static_url('css/main.css') }}">
+    <link rel="stylesheet" href="{{ theme.get_static_url('css/responsive.css') }}">
+    {% endblock %}
+</head>
+<body>
+    {% block navigation %}
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">{{ site.name }}</a>
+            <ul class="nav-menu">
+                {% for item in menu.items %}
+                <li><a href="{{ item.url }}">{{ item.label }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </nav>
+    {% endblock %}
+    
+    <div class="container main-container">
+        {% block breadcrumbs %}
+        {% if theme.config.settings.show_breadcrumbs %}
+        <nav class="breadcrumbs">
+            {% for crumb in breadcrumbs %}
+            <a href="{{ crumb.url }}">{{ crumb.label }}</a>
+            {% if not loop.last %} / {% endif %}
+            {% endfor %}
+        </nav>
+        {% endif %}
+        {% endblock %}
+        
+        <div class="content-wrapper">
+            <main class="main-content">
+                {% block content %}{% endblock %}
+            </main>
+            
+            {% block sidebar %}
+            {% if theme.config.settings.sidebar_enabled %}
+            <aside class="sidebar">
+                {% for widget in sidebar.widgets %}
+                <div class="widget">
+                    <h3>{{ widget.title }}</h3>
+                    {{ widget.content }}
+                </div>
+                {% endfor %}
+            </aside>
+            {% endif %}
+            {% endblock %}
+        </div>
+    </div>
+    
+    {% block footer %}
+    {% if theme.config.settings.footer_enabled %}
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; {{ now.year }} {{ site.name }}. All rights reserved.</p>
+        </div>
+    </footer>
+    {% endif %}
+    {% endblock %}
+    
+    {% block scripts %}
+    <script src="{{ theme.get_static_url('js/main.js') }}"></script>
+    {% endblock %}
+</body>
+</html>

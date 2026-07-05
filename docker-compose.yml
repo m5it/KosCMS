@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  webcms:
+    build: .
+    container_name: webcms
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://webcms:webcms@db:5432/webcms
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - FLASK_ENV=production
+    volumes:
+      - ./data:/app/data
+      - ./media:/app/media
+    depends_on:
+      - db
+      - redis
+    networks:
+      - webcms-network
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: webcms-db
+    environment:
+      - POSTGRES_USER=webcms
+      - POSTGRES_PASSWORD=webcms
+      - POSTGRES_DB=webcms
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - webcms-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: webcms-redis
+    volumes:
+      - redis-data:/data
+    networks:
+      - webcms-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: webcms-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./static:/var/www/static:ro
+    depends_on:
+      - webcms
+    networks:
+      - webcms-network
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  webcms-network:
+    driver: bridge

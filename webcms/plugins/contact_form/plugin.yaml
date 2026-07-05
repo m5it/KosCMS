@@ -1,0 +1,8 @@
+name: contact_form
+version: "1.0.0"
+description: "Simple contact form with admin dashboard"
+author: "WebCMS Team"
+requires: []
+permissions:
+  - view_contact_submissions
+  - manage_contact_settings

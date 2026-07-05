@@ -1,0 +1,46 @@
+TASK 6/12: INFO TOOLS - COMPLETE TOOL INVENTORY (24 tools)
+
+FILE I/O TOOLS (5):
+- ReadFile: Get file content. Params: fileName (required)
+- WriteFile: Create/overwrite file. Params: fileName, contentOfFile (required)
+- CreateFile: Create empty file. Params: fileName (required), contentOfFile (optional)
+- AppendFile: Append to file. Params: fileName, content (required)
+- ReplaceLine: Replace line range. Params: fileName, fromLine, toLine, replacement (required)
+
+DIRECTORY TOOLS (3):
+- List: List files/dirs. Params: path (optional, default current)
+- TreeView: ASCII tree. Params: depth (optional), showFiles (optional)
+- Find: Find by pattern. Params: pattern (required), path (optional)
+
+SEARCH TOOLS (2):
+- Grep: Regex search. Params: pattern, fileName, recursive (required)
+- Sed: Stream editor. Params: pattern, replacement, fileName, inplace (required)
+
+EDITING TOOLS (4):
+- Diff: Compare files. Params: file1, file2, unified (required)
+- Head: First N lines. Params: fileName, lines (required)
+- Tail: Last N lines. Params: fileName, lines (required)
+- Sort: Sort lines. Params: fileName, reverse, unique (required)
+
+EXECUTION TOOLS (2):
+- Terminal: Shell commands. Params: arg1-arg5 (required, space-separated)
+- ExecuteScript: Run scripts. Params: fileName, args (required)
+
+WEB TOOLS (2):
+- WWW: Fetch web page. Params: url, text (required)
+- WWWExec: Execute JS on page. Params: script (required)
+
+TIPS TOOLS (5):
+- SaveTip: Save tip. Params: title, content (required)
+- GetTip: Retrieve tip. Params: title (required)
+- ListTips: List all tips. Params: source (optional)
+- DeleteTip: Delete tip. Params: title (required)
+- ReinsertTip: Load tip to context. Params: title (required)
+
+INFO TOOLS (1):
+- listTools: List all tools. No params.
+
+SECURITY NOTES:
+- Terminal: Allowed programs whitelist enforced
+- ExecuteScript: Runs from project root, stderr captured
+- All file operations: Restricted to project directory

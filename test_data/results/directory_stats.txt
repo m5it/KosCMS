@@ -1,0 +1,22 @@
+DIRECTORY STATISTICS - test_data/
+Generated from TreeView analysis
+
+Subdirectories: 6
+- chains/
+- edit/
+- exec/
+- mixed/
+- results/
+- search/
+- web/
+
+Estimated Files: 20+
+Max Depth: 3 levels
+Structure: Balanced (no excessively deep nesting)
+
+File Type Distribution (estimated):
+- .txt: ~60% (results, documentation)
+- .py: ~15% (scripts, tests)
+- .json: ~5% (data files)
+
+Analysis: Well-organized hierarchy with logical category-based grouping.

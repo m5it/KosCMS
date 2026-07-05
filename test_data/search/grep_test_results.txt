@@ -1,0 +1,25 @@
+GREP TEST RESULTS - Task 3/12
+
+SUPPORTED PATTERNS:
+- Literal string matching (case sensitive): "test" matches "test" not "TEST"
+- Basic regex: ^anchor, $anchor, \b word boundaries (per tip)
+- Character classes: [0-9], [A-Z] (limited support observed)
+- Quantifiers: .* (greedy match), +, ? (limited support)
+- Dot wildcard: a.a matches "aba", "aca"
+
+BEHAVIOR OBSERVED:
+- Recursive=true on directory: searches all files, outputs "path:line:content"
+- Recursive=false on directory: no matches (must specify file)
+- Recursive=false on file: searches single file, outputs "line:content" (no path)
+- Unicode: Full support for CJK (你好) and emoji (🎉)
+
+LIMITATIONS FOUND:
+- Complex regex (alternation with |, groups with ()) may not be supported
+- Character classes and quantifiers have inconsistent support
+- Empty file handling: file must exist with content
+
+TEST FILES CREATED:
+- sample.txt: Mixed case, unicode, special chars
+- code.py: Python code with function definitions
+- data.json: JSON structure
+- overlaps.txt: Pattern overlap testing

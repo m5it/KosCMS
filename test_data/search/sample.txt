@@ -1,0 +1,12 @@
+Hello World
+This is a TEST line
+Testing word boundaries
+test at start
+end test
+UPPERCASE lowercase MiXeD
+Special chars: 你好世界 🎉
+Line with numbers 123 and 456
+Another test here
+Empty line follows:
+
+Final line here

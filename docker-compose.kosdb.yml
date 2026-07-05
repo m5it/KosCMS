@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  kosdb-master:
+    build: ./kosdb
+    container_name: kosdb-master
+    ports:
+      - "9999:9999"
+      - "10999:10999"
+    environment:
+      - SERVER_ID=1
+      - ROLE=master
+      - REPLICATION_PORT=10999
+    volumes:
+      - kosdb-master-data:/data
+    networks:
+      - kosdb-network
+    restart: unless-stopped
+
+  kosdb-slave:
+    build: ./kosdb
+    container_name: kosdb-slave
+    ports:
+      - "9998:9999"
+    environment:
+      - SERVER_ID=2
+      - ROLE=slave
+      - MASTER_HOST=kosdb-master:9999
+    volumes:
+      - kosdb-slave-data:/data
+    networks:
+      - kosdb-network
+    depends_on:
+      - kosdb-master
+    restart: unless-stopped
+
+  webcms:
+    build: .
+    container_name: webcms
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=kosdb://admin:admin@kosdb-master:9999/webcms
+      - KOSDB_HOST=kosdb-master
+      - KOSDB_PORT=9999
+    depends_on:
+      - kosdb-master
+    networks:
+      - kosdb-network
+    restart: unless-stopped
+
+volumes:
+  kosdb-master-data:
+  kosdb-slave-data:
+
+networks:
+  kosdb-network:
+    driver: bridge

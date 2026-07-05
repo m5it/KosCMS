@@ -1,0 +1,6 @@
+MODIFIED: First line (was replaced)
+VERIFIED: Second line was replaced in chain workflow
+MODIFIED: Middle line replaced
+Line 4: Fourth line
+MODIFIED: Last line replaced
+NEW LINE: Appended after replacement
