@@ -372,3 +372,160 @@ print('Headers received:')
 for name, value in headers_list:
     print(f'  {name}: {value[:60]}...')
  | SUCCESS: True | OUTPUT_LEN: 1693
+[2026-07-11 22:51:43] CMD: python3 -c 
+import sys
+import time
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+from webcms.core.request import Request
+
+app = create_app('config.json')
+
+# Test all admin routes
+routes = [
+    '/admin',
+    '/admin/posts',
+    '/admin/pages',
+    '/admin/media',
+    '/admin/users',
+    '/admin/plugins',
+    '/admin/themes',
+    '/admin/settings',
+]
+
+print('Testing Admin Navigation - All Buttons')
+print('=' * 50)
+
+all_passed = True
+for path in routes:
+    start = time.time()
+    handler, params = app.router.match(path, 'GET')
+    
+    if handler:
+        try:
+            req = Request({
+                'REQUEST_METHOD': 'GET',
+                'PATH_INFO': path,
+                'QUERY_STRING': '',
+                'SERVER_NAME': 'localhost',
+                'SERVER_PORT': '8000',
+                'HTTP_HOST': 'localhost:8000',
+                'wsgi.url_scheme': 'http',
+                'wsgi.input': None,
+                'wsgi.errors': sys.stderr,
+            })
+            response = handler(req)
+            elapsed = (time.time() - start) * 1000
+            
+            status = getattr(response, 'status', 'N/A')
+            content_type = getattr(response, 'headers', {}).get('Content-Type', 'N/A')
+            
+            if status == 200 and 'text/html' in content_type:
+                print(f'✓ {path:<20} | Status: {status} | Time: {elapsed:.1f}ms')
+            else:
+                print(f'✗ {path:<20} | Status: {status} | Type: {content_type}')
+                all_passed = False
+        except Exception as e:
+            print(f'✗ {path:<20} | ERROR: {e}')
+            all_passed = False
+    else:
+        print(f'✗ {path:<20} | NO HANDLER')
+        all_passed = False
+
+print('=' * 50)
+if all_passed:
+    print('SUCCESS: All admin navigation buttons work!')
+else:
+    print('FAILED: Some routes have issues')
+ | SUCCESS: True | OUTPUT_LEN: 1609
+[2026-07-11 22:51:58] CMD: python3 -c 
+import sys
+import time
+import json
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+from webcms.core.request import Request
+
+app = create_app('config.json')
+
+# Test API endpoints
+endpoints = [
+    '/api/v1/dashboard',
+    '/api/v1/status',
+    '/api/v1/posts',
+]
+
+print('Testing API Endpoints')
+print('=' * 50)
+
+all_passed = True
+for path in endpoints:
+    start = time.time()
+    handler, params = app.router.match(path, 'GET')
+    
+    if handler:
+        try:
+            req = Request({
+                'REQUEST_METHOD': 'GET',
+                'PATH_INFO': path,
+                'QUERY_STRING': '',
+                'SERVER_NAME': 'localhost',
+                'SERVER_PORT': '8000',
+                'HTTP_HOST': 'localhost:8000',
+                'wsgi.url_scheme': 'http',
+                'wsgi.input': None,
+                'wsgi.errors': sys.stderr,
+            })
+            response = handler(req)
+            elapsed = (time.time() - start) * 1000
+            
+            status = getattr(response, 'status', 'N/A')
+            content_type = getattr(response, 'headers', {}).get('Content-Type', 'N/A')
+            
+            # Try to parse JSON
+            try:
+                body = json.loads(response.body.decode('utf-8'))
+                json_valid = True
+            except:
+                json_valid = False
+            
+            if status == 200 and 'application/json' in content_type and json_valid:
+                print(f'✓ {path:<25} | Status: {status} | JSON: OK | Time: {elapsed:.1f}ms')
+                if path == '/api/v1/status':
+                    print(f'  Version: {body.get("webcms", "N/A")}')
+            else:
+                print(f'✗ {path:<25} | Status: {status} | JSON: {json_valid} | Type: {content_type}')
+                all_passed = False
+        except Exception as e:
+            print(f'✗ {path:<25} | ERROR: {e}')
+            all_passed = False
+    else:
+        print(f'✗ {path:<25} | NO HANDLER')
+        all_passed = False
+
+print('=' * 50)
+if all_passed:
+    print('SUCCESS: All API endpoints working!')
+else:
+    print('FAILED: Some API endpoints have issues')
+ | SUCCESS: True | OUTPUT_LEN: 1480
+[2026-07-11 22:52:04] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+app = create_app('config.json')
+
+# Check what database is being used
+services = list(app.container._services.keys())
+print(f'Services: {services}')
+
+# Check if API routes are registered
+routes = app.router.get_routes()
+api_routes = [r for r in routes if r['path'].startswith('/api')]
+print(f'\nAPI routes registered: {len(api_routes)}')
+for r in api_routes[:10]:
+    print(f'  {r["method"]} {r["path"]}')
+ | SUCCESS: True | OUTPUT_LEN: 1457
+[2026-07-11 22:52:27] CMD: python3 -m py_compile webcms/security/middleware.py webcms/app_factory.py webcms/admin/routes.py && echo All files syntax OK | SUCCESS: True | OUTPUT_LEN: 49
+[2026-07-11 22:52:31] CMD: python3 -m py_compile webcms/security/middleware.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 22:52:34] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 0
