@@ -31,6 +31,3 @@ __all__ = [
     "AuditLog",
     "SearchIndex"
 ]
-    "Theme",
-    "AuditLog"
-]
