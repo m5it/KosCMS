@@ -123,44 +123,48 @@ def create_app(config_path: str = None) -> Application:
     def home(request):
         """Homepage."""
         kosdb_connected = "kosdb" in app.container._services
-        html = '''<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello World - WebCMS</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-               display: flex; justify-content: center; align-items: center; min-height: 100vh;
-               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #333; }
-        .card { background: white; border-radius: 16px; padding: 48px; text-align: center;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 500px; width: 90%; }
-        h1 { font-size: 2.5em; margin-bottom: 12px; color: #667eea; }
-        p { font-size: 1.1em; color: #666; margin-bottom: 24px; }
-        .status { display: inline-block; padding: 8px 20px; border-radius: 24px; font-size: 0.9em; font-weight: 600; }
-        .connected { background: #d4edda; color: #155724; }
-        .disconnected { background: #f8d7da; color: #721c24; }
-        .links { margin-top: 24px; }
-        .links a { color: #667eea; text-decoration: none; margin: 0 12px; font-weight: 500; }
-        .links a:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>Hello World!</h1>
-        <p>Welcome to <strong>WebCMS</strong> - A Modern Python Content Management System</p>
-        <span class="status {cls}">KosDB: {status}</span>
-        <div class="links">
-            <a href="/health">Health Check</a>
-            <a href="/api/v1/status">API Status</a>
-        </div>
-    </div>
-</body>
-</html>'''
         cls = "connected" if kosdb_connected else "disconnected"
         status = "Connected" if kosdb_connected else "Disconnected"
-        return html.format(cls=cls, status=status)
+        
+        # Build HTML with string concatenation to avoid format issues
+        html = (
+            '<!DOCTYPE html>\n'
+            '<html lang="en">\n'
+            '<head>\n'
+            '    <meta charset="UTF-8">\n'
+            '    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+            '    <title>Hello World - WebCMS</title>\n'
+            '    <style>\n'
+            '        * { margin: 0; padding: 0; box-sizing: border-box; }\n'
+            '        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; \n'
+            '               display: flex; justify-content: center; align-items: center; min-height: 100vh;\n'
+            '               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #333; }\n'
+            '        .card { background: white; border-radius: 16px; padding: 48px; text-align: center;\n'
+            '                box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 500px; width: 90%; }\n'
+            '        h1 { font-size: 2.5em; margin-bottom: 12px; color: #667eea; }\n'
+            '        p { font-size: 1.1em; color: #666; margin-bottom: 24px; }\n'
+            '        .status { display: inline-block; padding: 8px 20px; border-radius: 24px; font-size: 0.9em; font-weight: 600; }\n'
+            '        .connected { background: #d4edda; color: #155724; }\n'
+            '        .disconnected { background: #f8d7da; color: #721c24; }\n'
+            '        .links { margin-top: 24px; }\n'
+            '        .links a { color: #667eea; text-decoration: none; margin: 0 12px; font-weight: 500; }\n'
+            '        .links a:hover { text-decoration: underline; }\n'
+            '    </style>\n'
+            '</head>\n'
+            '<body>\n'
+            '    <div class="card">\n'
+            '        <h1>Hello World!</h1>\n'
+            '        <p>Welcome to <strong>WebCMS</strong> - A Modern Python Content Management System</p>\n'
+            f'        <span class="status {cls}">KosDB: {status}</span>\n'
+            '        <div class="links">\n'
+            '            <a href="/health">Health Check</a>\n'
+            '            <a href="/api/v1/status">API Status</a>\n'
+            '        </div>\n'
+            '    </div>\n'
+            '</body>\n'
+            '</html>'
+        )
+        return html
     
     @app.route("/health", methods=["GET"])
     def health(request):

@@ -72,3 +72,16 @@ except Exception as e:
  | SUCCESS: True | OUTPUT_LEN: 1296
 [2026-07-11 22:11:25] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 89
 [2026-07-11 22:11:46] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 22:13:08] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 251
+[2026-07-11 22:13:35] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 22:13:38] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+try:
+    app = create_app('config.json')
+    print('SUCCESS: App created')
+    print('Services registered:', list(app.container._services.keys()))
+except Exception as e:
+    print('ERROR:', type(e).__name__, str(e))
+ | SUCCESS: True | OUTPUT_LEN: 1187
