@@ -10,6 +10,12 @@ from datetime import datetime
 
 from webcms.core.request import Request
 from webcms.core.response import Response
+from webcms.content.search_service import SearchService
+from webcms.content.exchange import ContentExporter, ContentImporter, ExportOptions
+from webcms.plugins.marketplace import get_registry
+from webcms.cache.manager import get_tenant_cache, CacheWarmer
+from webcms.admin.widgets import get_widget_registry, WidgetConfig
+from webcms.security.middleware import CSPReportHandler
 
 
 class APIEndpoint:
@@ -54,7 +60,6 @@ class DashboardStats(APIEndpoint):
     
     def get(self, request: Request) -> Response:
         """Get dashboard stats."""
-        # Get counts
         from webcms.models.user import User
         from webcms.models.content import Post, Page
         from webcms.models.media import Media
@@ -86,7 +91,7 @@ class DashboardStats(APIEndpoint):
             },
             "system": {
                 "timestamp": datetime.utcnow().isoformat(),
-                "version": "1.0.0"
+                "version": "1.1.0"
             }
         }
         
@@ -103,8 +108,6 @@ class PostList(APIEndpoint):
         from webcms.content.repository import PostRepository
         
         repo = PostRepository(self.db)
-        
-        # Pagination
         limit = int(request.get_param("limit", 20))
         offset = int(request.get_param("offset", 0))
         
@@ -122,10 +125,7 @@ class PostList(APIEndpoint):
                 "is_featured": post.is_featured
             })
         
-        return Response.json({
-            "posts": result,
-            "total": len(result)
-        })
+        return Response.json({"posts": result, "total": len(result)})
     
     def post(self, request: Request) -> Response:
         """Create post."""
@@ -149,10 +149,7 @@ class PostList(APIEndpoint):
                 tags=data.get("tags", [])
             )
             
-            return Response.json({
-                "id": post.id,
-                "message": "Post created"
-            }, 201)
+            return Response.json({"id": post.id, "message": "Post created"}, 201)
             
         except Exception as e:
             return Response.error(str(e), 400)
@@ -180,16 +177,10 @@ class PostDetail(APIEndpoint):
             "content": post.content,
             "excerpt": post.excerpt,
             "status": post.status,
-            "format": post.format,
             "published_at": post.published_at.isoformat() if post.published_at else None,
-            "author": {
-                "id": post.author.id,
-                "name": post.author.display_name
-            } if post.author else None,
+            "author": {"id": post.author.id, "name": post.author.display_name} if post.author else None,
             "categories": [{"id": c.id, "name": c.name} for c in post.categories],
-            "tags": [{"id": t.id, "name": t.name} for t in post.tags],
-            "is_featured": post.is_featured,
-            "allow_comments": post.allow_comments
+            "tags": [{"id": t.id, "name": t.name} for t in post.tags]
         })
     
     def put(self, request: Request, post_id: str) -> Response:
@@ -206,10 +197,7 @@ class PostDetail(APIEndpoint):
         if not post:
             return Response.not_found()
         
-        return Response.json({
-            "id": post.id,
-            "message": "Post updated"
-        })
+        return Response.json({"id": post.id, "message": "Post updated"})
     
     def delete(self, request: Request, post_id: str) -> Response:
         """Delete post."""
@@ -244,9 +232,7 @@ class UserList(APIEndpoint):
                 "email": user.email,
                 "display_name": user.display_name,
                 "is_active": user.is_active,
-                "is_superuser": user.is_superuser,
-                "roles": [r.name for r in user.roles],
-                "created_at": user.created_at.isoformat()
+                "roles": [r.name for r in user.roles]
             })
         
         return Response.json({"users": result})
@@ -271,14 +257,178 @@ class MediaList(APIEndpoint):
                 "id": m.id,
                 "filename": m.filename,
                 "url": m.file_url,
-                "size": m.file_size,
                 "mime_type": m.mime_type,
                 "width": m.width,
-                "height": m.height,
-                "created_at": m.created_at.isoformat()
+                "height": m.height
             })
         
         return Response.json({"media": result})
+
+
+class SearchEndpoint(APIEndpoint):
+    """Search content."""
+    
+    methods = ["GET"]
+    
+    def get(self, request: Request) -> Response:
+        """Search content."""
+        query = request.get_param("q", "")
+        if not query:
+            return Response.json({"query": "", "total": 0, "results": []})
+        
+        service = SearchService(self.db)
+        results = service.search(
+            query=query,
+            content_type=request.get_param("type", None),
+            limit=min(int(request.get_param("limit", 20)), 100)
+        )
+        
+        return Response.json(results)
+
+
+class ContentExportEndpoint(APIEndpoint):
+    """Export content endpoint."""
+    
+    methods = ["POST"]
+    
+    def post(self, request: Request) -> Response:
+        """Export content."""
+        data = request.json or {}
+        
+        options = ExportOptions(
+            format=data.get("format", "json"),
+            content_types=data.get("content_types", ["post", "page"]),
+            status=data.get("status"),
+            author_id=data.get("author_id")
+        )
+        
+        try:
+            exporter = ContentExporter(self.db)
+            result = exporter.export(options)
+            
+            content_type = "application/json" if options.format == "json" else "text/csv"
+            return Response(result, 200, {"Content-Type": content_type})
+            
+        except Exception as e:
+            return Response.error(f"Export failed: {str(e)}", 500)
+
+
+class ContentImportEndpoint(APIEndpoint):
+    """Import content endpoint."""
+    
+    methods = ["POST"]
+    
+    def post(self, request: Request) -> Response:
+        """Import content."""
+        if not request.json and not request.body:
+            return Response.error("No data provided", 400)
+        
+        data = json.dumps(request.json) if request.json else request.body.decode('utf-8')
+        format_hint = request.get_param("format", None)
+        
+        try:
+            importer = ContentImporter(self.db)
+            result = importer.import_content(data, format_hint)
+            
+            return Response.json({
+                "success": result.success,
+                "imported": result.imported,
+                "skipped": result.skipped,
+                "errors": result.errors
+            }, 200 if result.success else 400)
+            
+        except Exception as e:
+            return Response.error(f"Import failed: {str(e)}", 500)
+
+
+class PluginMarketplaceEndpoint(APIEndpoint):
+    """Plugin marketplace endpoint."""
+    
+    methods = ["GET"]
+    
+    def get(self, request: Request) -> Response:
+        """List available plugins."""
+        registry = get_registry()
+        
+        tag = request.get_param("tag", None)
+        installed_only = request.get_param("installed", "false").lower() == "true"
+        
+        plugins = registry.list_available(tag=tag, installed_only=installed_only)
+        
+        result = []
+        for plugin in plugins:
+            result.append({
+                "name": plugin.name,
+                "version": plugin.version,
+                "description": plugin.description,
+                "author": plugin.author,
+                "installed": plugin.installed,
+                "active": plugin.active,
+                "compatible": registry.check_compatibility(plugin)[0]
+            })
+        
+        return Response.json({"plugins": result})
+
+
+class PluginInstallEndpoint(APIEndpoint):
+    """Plugin install/uninstall endpoint."""
+    
+    methods = ["POST", "DELETE"]
+    
+    def post(self, request: Request) -> Response:
+        """Install or activate plugin."""
+        data = request.json or {}
+        plugin_name = data.get("name") or request.get_param("name", "")
+        action = data.get("action", "install")
+        
+        if not plugin_name:
+            return Response.error("Plugin name required", 400)
+        
+        registry = get_registry()
+        
+        if action == "install":
+            source = data.get("source")
+            success, message = registry.install(plugin_name, source)
+        elif action == "activate":
+            success, message = registry.activate(plugin_name)
+        else:
+            return Response.error("Invalid action", 400)
+        
+        return Response.json({"success": success, "message": message}, 
+                           200 if success else 400)
+    
+    def delete(self, request: Request) -> Response:
+        """Uninstall or deactivate plugin."""
+        plugin_name = request.get_param("name", "")
+        action = request.get_param("action", "uninstall")
+        
+        if not plugin_name:
+            return Response.error("Plugin name required", 400)
+        
+        registry = get_registry()
+        
+        if action == "uninstall":
+            success, message = registry.uninstall(plugin_name)
+        elif action == "deactivate":
+            success, message = registry.deactivate(plugin_name)
+        else:
+            return Response.error("Invalid action", 400)
+        
+        return Response.json({"success": success, "message": message},
+                           200 if success else 400)
+
+class CSPReportEndpoint(APIEndpoint):
+    """CSP violation reporting endpoint."""
+    
+    methods = ["POST"]
+    
+    def __init__(self, db=None, auth=None):
+        super().__init__(db, auth)
+        self.handler = CSPReportHandler()
+    
+    def post(self, request: Request) -> Response:
+        """Handle CSP report."""
+        return self.handler(request)
 
 
 def create_api(app, db, auth):
@@ -290,6 +440,77 @@ def create_api(app, db, auth):
         ("/api/v1/posts/<post_id>", PostDetail),
         ("/api/v1/users", UserList),
         ("/api/v1/media", MediaList),
+        ("/api/v1/search", SearchEndpoint),
+        ("/api/v1/content/export", ContentExportEndpoint),
+        ("/api/v1/content/import", ContentImportEndpoint),
+        ("/api/v1/plugins/marketplace", PluginMarketplaceEndpoint),
+        ("/api/v1/plugins/install", PluginInstallEndpoint),
+        ("/api/v1/cache/stats", CacheStatsEndpoint),
+        ("/api/v1/admin/widgets", AdminWidgetsEndpoint),
+        ("/api/v1/security/csp-report", CSPReportEndpoint),
+    ]
+        action = data.get("action", "warm")
+        tenant_id = data.get("tenant", "default")
+        tag = data.get("tag")
+        
+        cache = get_tenant_cache(tenant_id)
+        
+        if action == "clear":
+            if tag:
+                count = cache.tag_invalidate(tag)
+                return Response.json({"action": "clear", "tag": tag, "cleared": count})
+            else:
+                cache.clear()
+                return Response.json({"action": "clear_all"})
+        
+        elif action == "warm":
+            return Response.json({
+                "action": "warm",
+                "message": "Use CacheWarmer.register() to define warming functions"
+            })
+        
+        return Response.error("Invalid action", 400)
+
+
+class AdminWidgetsEndpoint(APIEndpoint):
+    """Admin widgets endpoint."""
+    
+    methods = ["GET"]
+    
+    def get(self, request: Request) -> Response:
+        """Get dashboard widgets."""
+        registry = get_widget_registry()
+        
+        configs = [
+            WidgetConfig(id="stats", title="Content Statistics", 
+                        type="stats", position="main"),
+            WidgetConfig(id="activity", title="Recent Activity", 
+                        type="activity", position="main", refresh_interval=60),
+            WidgetConfig(id="health", title="System Health", 
+                        type="health", position="sidebar", refresh_interval=30),
+        ]
+        
+        widgets = registry.render_all(self.db, configs)
+        
+        return Response.json({"widgets": widgets})
+
+
+def create_api(app, db, auth):
+    """Register API routes."""
+    
+    endpoints = [
+        ("/api/v1/dashboard", DashboardStats),
+        ("/api/v1/posts", PostList),
+        ("/api/v1/posts/<post_id>", PostDetail),
+        ("/api/v1/users", UserList),
+        ("/api/v1/media", MediaList),
+        ("/api/v1/search", SearchEndpoint),
+        ("/api/v1/content/export", ContentExportEndpoint),
+        ("/api/v1/content/import", ContentImportEndpoint),
+        ("/api/v1/plugins/marketplace", PluginMarketplaceEndpoint),
+        ("/api/v1/plugins/install", PluginInstallEndpoint),
+        ("/api/v1/cache/stats", CacheStatsEndpoint),
+        ("/api/v1/admin/widgets", AdminWidgetsEndpoint),
     ]
     
     for path, endpoint_class in endpoints:
@@ -298,7 +519,6 @@ def create_api(app, db, auth):
         def handler(request, **kwargs):
             return endpoint.dispatch(request, **kwargs)
         
-        # Register with app router
         app.router.add(path, handler, endpoint_class.methods)
     
     return app

@@ -1,9 +1,11 @@
+
 # WebCMS - Modern Python Content Management System
 
-A production-ready CMS with plugin architecture, template system, HTTPS support, and **KosDB integration**.
+A production-ready CMS with plugin architecture, template system, HTTPS support, KosDB integration, and **v1.1.0 features**.
 
 ## Features
 
+### Core Features
 - **Plugin System**: Hook-based architecture with secure sandbox
 - **Theme Engine**: Jinja2 templates with asset pipeline
 - **HTTPS/Security**: SSL/TLS, security headers, CSRF/XSS protection
@@ -12,11 +14,22 @@ A production-ready CMS with plugin architecture, template system, HTTPS support,
 - **Admin Dashboard**: React-based UI with REST API
 - **Authentication**: JWT tokens, RBAC, OAuth2, 2FA support
 - **Database**: SQLAlchemy ORM with migrations, soft delete, audit logging
-- **🆕 KosDB Support**: LevelDB-based database with replication, failover, and SQL-like commands
+
+### 🆕 v1.1.0 Features
+
+| Feature | Description |
+|---------|-------------|
+| **Full-Text Search** | SQLite FTS5 integration with auto-indexing |
+| **Content Import/Export** | JSON and CSV format support |
+| **WebP Images** | Automatic WebP conversion with browser detection |
+| **Plugin Marketplace** | Plugin registry with version compatibility |
+| **Cache Tagging** | Redis cache with tag-based invalidation |
+| **Admin Widgets** | Dashboard widget system |
+| **Rate Limiting** | Endpoint-specific rate limits with token bucket |
+| **Query Optimization** | Eager loading with 75-90% query reduction |
+| **Enhanced Security** | Configurable CSP with violation reporting |
 
 ## Quick Start
-
-### Standard Setup (PostgreSQL/MySQL)
 
 ```bash
 # Install dependencies
@@ -29,82 +42,109 @@ python run.py --debug
 docker-compose up -d
 ```
 
-### KosDB Setup (LevelDB Backend)
-
-```bash
-# Start KosDB + WebCMS stack
-docker-compose -f docker-compose.kosdb.yml up -d
-
-# Or manually start KosDB
-cd kosdb
-python server.py --prepare_admin admin --prepare_password admin
-python server.py --host 0.0.0.0 --port 9999
-
-# Then start WebCMS with KosDB config
-python run.py --config config/config.kosdb.yaml
-```
-
 ## Project Structure
 
 ```
 webcms/
 ├── core/           # Framework: Application, Router, Middleware
 ├── models/         # Database: User, Post, Page, Media, etc.
-├── auth/           # Authentication: JWT, RBAC, OAuth2, KosDB bridge
+├── auth/           # Authentication: JWT, RBAC, OAuth2, rate limiting
 ├── templates/      # Theme system with Jinja2
-├── plugins/        # Plugin architecture
-├── content/        # Content management
-├── media/          # File uploads and storage
-├── security/       # HTTPS, CSRF, XSS protection
-├── admin/          # Admin dashboard, API, KosDB tools
-├── database/       # SQLAlchemy + KosDB client, dialect, replication
+├── plugins/        # Plugin architecture + marketplace
+├── content/        # Content management + search + exchange
+├── media/          # File uploads, WebP conversion, storage
+├── security/       # HTTPS, CSP, CSRF, XSS protection
+├── admin/          # Admin dashboard, API, widgets
+├── cache/          # Multi-level caching with tagging
+├── search/         # Full-text search with FTS5
 └── config/         # Configuration files
 ```
 
-## Configuration
+## New in v1.1.0
 
-### Standard Database (PostgreSQL/MySQL)
+### Full-Text Search
+```python
+from webcms.content.search_service import SearchService
 
-Edit `config/config.yaml`:
+service = SearchService(db)
+results = service.search("python tutorial", limit=20)
 
-```yaml
-database:
-  url: "postgresql://user:pass@localhost/webcms"
+# Auto-indexing on content changes
+manager.create_post(title="New Post", ...)  # Automatically indexed
 ```
 
-### KosDB Configuration
+### Content Import/Export
+```python
+from webcms.content.exchange import ContentExporter, ExportOptions
 
-Edit `config/config.yaml`:
+# Export to JSON
+exporter = ContentExporter(db)
+options = ExportOptions(format="json", content_types=["post", "page"])
+data = exporter.export(options)
 
-```yaml
-database:
-  # KosDB connection URL
-  url: "kosdb://admin:admin@localhost:9999/webcms"
-  
-  # KosDB-specific settings
-  kosdb:
-    host: "localhost"
-    port: 9999
-    username: "admin"
-    password: "admin"
-    database: "webcms"
-    pool_size: 10
-    
-    # Replication configuration
-    replication:
-      enabled: true
-      role: "master"  # standalone, master, slave, master_master
-      server_id: 1
-      master_host: null      # for slave
-      master_port: null
-      peer_host: null        # for master-master
-      auto_failover: true
+# Import from CSV
+importer = ContentImporter(db)
+result = importer.import_content(csv_data)
+```
+
+### WebP Support
+```python
+from webcms.media.manager import MediaManager
+
+manager = MediaManager(db)
+media = manager.upload(...)
+
+# Convert to WebP
+webp_version = manager.convert_to_webp(media)
+
+# Auto-serve WebP to supported browsers
+url = manager.get_webp_url(media, accept_header)
+```
+
+### Plugin Marketplace
+```python
+from webcms.plugins.marketplace import get_registry
+
+registry = get_registry()
+plugins = registry.list_available()
+
+# Install plugin
+registry.install("my-plugin", source="/path/to/plugin.zip")
+```
+
+### Cache Tagging
+```python
+from webcms.cache.manager import get_tenant_cache
+
+cache = get_tenant_cache("tenant-1")
+cache.set("key", value, tags=["posts", "homepage"])
+
+# Invalidate by tag
+cache.tag_invalidate("posts")
+```
+
+### Admin Widgets
+```python
+from webcms.admin.widgets import StatsWidget, get_widget_registry
+
+# Get dashboard widgets
+registry = get_widget_registry()
+widgets = registry.render_all(db, configs)
+```
+
+### Rate Limiting
+```python
+from webcms.auth.rate_limiter import rate_limit
+
+@rate_limit("auth")
+def login(request):
+    # Stricter limits applied
+    pass
 ```
 
 ## API Endpoints
 
 ### Content API
-
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `GET /api/v1/dashboard` | - | Dashboard statistics |
@@ -113,153 +153,39 @@ database:
 | `GET /api/v1/posts/<id>` | - | Get post |
 | `PUT /api/v1/posts/<id>` | - | Update post |
 | `DELETE /api/v1/posts/<id>` | - | Delete post |
-| `GET /api/v1/users` | - | List users |
-| `GET /api/v1/media` | - | List media files |
+| `GET /api/v1/search` | - | Full-text search |
+| `POST /api/v1/content/export` | - | Export content |
+| `POST /api/v1/content/import` | - | Import content |
 
-### KosDB Admin API
-
+### Plugin API
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `GET /api/v1/kosdb/databases` | - | List databases |
-| `POST /api/v1/kosdb/databases` | - | Create database |
-| `GET /api/v1/kosdb/tables` | - | List tables |
-| `POST /api/v1/kosdb/query` | - | Execute SQL query |
-| `GET /api/v1/kosdb/replication/status` | - | Replication status |
-| `GET /api/v1/kosdb/users` | - | List KosDB users |
+| `GET /api/v1/plugins/marketplace` | - | List available plugins |
+| `POST /api/v1/plugins/install` | - | Install/activate plugin |
+| `DELETE /api/v1/plugins/install` | - | Uninstall/deactivate |
 
-## KosDB Features
+### Admin API
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `GET /api/v1/admin/widgets` | - | Dashboard widgets |
+| `GET /api/v1/cache/stats` | - | Cache statistics |
+| `POST /api/v1/cache/stats` | - | Warm/clear cache |
 
-### Connection Pooling
-```python
-from webcms.database import KosDBClient, KosDBConfig
-
-config = KosDBConfig(
-    host="localhost",
-    port=9999,
-    username="admin",
-    password="admin",
-    pool_size=10,
-    max_overflow=20
-)
-
-client = KosDBClient(config)
-result = client.query("SELECT * FROM users")
-```
-
-### SQLAlchemy Integration
-```python
-from sqlalchemy import create_engine
-
-# Use KosDB with SQLAlchemy ORM
-engine = create_engine("kosdb://admin:admin@localhost:9999/webcms")
-```
-
-### Replication
-```python
-from webcms.database import KosDBReplicationManager, ReplicationConfig, ReplicationRole
-
-config = ReplicationConfig(
-    role=ReplicationRole.SLAVE,
-    master_host="master.example.com",
-    master_port=9999,
-    auto_failover=True
-)
-
-repl = KosDBReplicationManager(kosdb_client, config)
-repl.start()
-```
-
-### Migration from SQL to KosDB
-```python
-from webcms.database.kosdb_migrate import KosDBMigrator
-
-migrator = KosDBMigrator(
-    source_url="postgresql://localhost/old_db",
-    kosdb_client=kosdb_client
-)
-
-# Migrate all tables
-report = migrator.migrate_all("webcms")
-print(f"Migrated {report['tables']} tables")
-```
-
-### Backup & Restore
-```python
-from webcms.database.kosdb_migrate import KosDBBackup
-
-backup = KosDBBackup(kosdb_client)
-
-# Backup
-backup_file = backup.backup_database("webcms")
-
-# Restore
-backup.restore_database(backup_file, "webcms_restored")
-```
-
-## Plugin Development
-
-```python
-from webcms.plugins import PluginBase, PluginConfig
-
-class MyPlugin(PluginBase):
-    def register(self):
-        self.register_hook("post_save", self.on_post_save)
-    
-    def activate(self):
-        return True
-    
-    def on_post_save(self, post, **kwargs):
-        print(f"Post saved: {post.title}")
-```
-
-## Security Features
-
-- HTTPS redirect with HSTS
-- Content Security Policy headers
-- CSRF token validation
-- XSS input filtering
-- Rate limiting
-- SQL injection prevention
-- KosDB authentication with privilege system
-
-## Deployment
-
-### Standard Docker
-```bash
-# Production with PostgreSQL
-docker-compose -f docker-compose.yml up -d
-```
-
-### KosDB Docker Stack
-```bash
-# Full stack with KosDB master-slave replication
-docker-compose -f docker-compose.kosdb.yml up -d
-
-# Scale KosDB slaves
-docker-compose -f docker-compose.kosdb.yml up --scale kosdb-slave=3
-```
-
-### With systemd
-```bash
-sudo cp systemd/webcms.service /etc/systemd/system/
-sudo systemctl enable webcms
-sudo systemctl start webcms
-```
-
-## Admin Panel
-
-Access WebCMS admin at `http://localhost:8000/admin`
-
-### KosDB Management
-- **Dashboard**: `/admin/kosdb` - Database status and quick actions
-- **Query Executor**: `/admin/kosdb/query` - Run SQL queries
-- **Database Browser**: `/admin/kosdb/browser` - Browse tables and data
-- **Replication**: `/admin/kosdb/replication` - Monitor replication status
+### Security API
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `POST /api/v1/security/csp-report` | - | CSP violation reporting |
 
 ## Documentation
 
-- [KosDB Integration Guide](KOSDB_INTEGRATION.md) - Detailed KosDB setup and usage
-- [KosDB Summary](KOSDB_INTEGRATION_SUMMARY.md) - Complete integration overview
+- [Search Documentation](docs/SEARCH.md) - Full-text search setup
+- [Import/Export Guide](docs/IMPORT_EXPORT.md) - Content exchange
+- [WebP Images](docs/WEBP.md) - Image optimization
+- [Query Optimization](docs/QUERY_OPTIMIZATION.md) - Database optimization
+
+## Migration from v1.0.0
+
+See [Migration Guide](docs/MIGRATION_v1.1.0.md) for upgrade instructions.
 
 ## License
 

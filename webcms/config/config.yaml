@@ -1,6 +1,7 @@
+
 app:
   name: WebCMS
-  version: "1.0.0"
+  version: "1.1.0"
   debug: false
   secret_key: "your-secret-key-change-in-production"
   timezone: "UTC"
@@ -12,18 +13,9 @@ server:
   ssl_cert: null
   ssl_key: null
 
-# Database configuration
-# Supports: sqlite, postgresql, mysql, kosdb
 database:
-  # Connection URL format:
-  # sqlite:///path/to/db.sqlite
-  # postgresql://user:pass@host:port/db
-  # mysql://user:pass@host:port/db
-  # kosdb://user:pass@host:port/db
-  
   url: "kosdb://admin:admin@localhost:9999/webcms"
   
-  # For KosDB-specific settings
   kosdb:
     host: "localhost"
     port: 9999
@@ -33,20 +25,11 @@ database:
     pool_size: 10
     replication:
       enabled: false
-      role: "standalone"  # standalone, master, slave, master_master
+      role: "standalone"
       server_id: 1
-      master_host: null
-      master_port: null
-      peer_host: null
-      peer_port: null
-  
-  # Legacy SQLAlchemy settings (for non-KosDB)
-  pool_size: 10
-  max_overflow: 20
-  echo: false
 
 cache:
-  backend: "memory"  # memory, redis
+  backend: "memory"
   redis_url: "redis://localhost:6379/0"
   default_timeout: 300
 
@@ -55,12 +38,42 @@ security:
   session_timeout: 3600
   password_min_length: 8
   bcrypt_rounds: 12
+  
+  # Content Security Policy
+  csp:
+    enabled: true
+    report_only: false
+    report_uri: "/api/v1/security/csp-report"
+    default_src: ["'self'"]
+    script_src: ["'self'", "'unsafe-inline'"]
+    style_src: ["'self'", "'unsafe-inline'"]
+    img_src: ["'self'", "data:", "https:"]
+    font_src: ["'self'"]
+    connect_src: ["'self'"]
+    media_src: ["'self'"]
+    object_src: ["'none'"]
+    frame_ancestors: ["'none'"]
+  
+  # Security Headers
+  hsts:
+    enabled: true
+    max_age: 31536000
+    include_subdomains: true
+    preload: true
+  
+  frame_options: "DENY"
+  content_type_options: true
+  xss_protection: true
+  referrer_policy: "strict-origin-when-cross-origin"
+  
+  # Rate Limiting
   rate_limit:
-    requests: 100
-    window: 60
+    enabled: true
+    requests_per_minute: 60
+    burst_size: 10
 
 uploads:
-  max_size: 10485760  # 10MB
+  max_size: 10485760
   allowed_extensions:
     - ".jpg"
     - ".jpeg"

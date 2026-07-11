@@ -2,17 +2,50 @@
 Storage Backends
 
 Local filesystem, S3, and Azure storage implementations.
+Includes WebP support and Accept header detection.
 """
 
 import os
 import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import BinaryIO, Optional
+from typing import BinaryIO, Optional, Dict
 from urllib.parse import urljoin
 
 
-class StorageBackend(ABC):
+class WebPSupport:
+    """WebP support detection."""
+    
+    @staticmethod
+    def supports_webp(accept_header: str) -> bool:
+        """Check if browser supports WebP."""
+        if not accept_header:
+            return False
+        return "image/webp" in accept_header
+    
+    @staticmethod
+    def get_preferred_format(accept_header: str, 
+                            available_formats: Dict[str, str]) -> str:
+        """
+        Get preferred image format based on Accept header.
+        
+        Args:
+            accept_header: HTTP Accept header
+            available_formats: Dict of mime_type -> url
+        
+        Returns:
+            URL of preferred format
+        """
+        if "image/webp" in accept_header and "image/webp" in available_formats:
+            return available_formats["image/webp"]
+        
+        # Fallback to JPEG or original
+        for mime in ["image/jpeg", "image/png", "image/gif"]:
+            if mime in available_formats:
+                return available_formats[mime]
+        
+        # Return first available
+        return next(iter(available_formats.values()))
     """Abstract storage backend."""
     
     @abstractmethod

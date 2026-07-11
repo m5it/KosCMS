@@ -9,6 +9,7 @@ from .user import User, Role, Permission, UserRole
 from .content import Page, Post, Category, Tag, PostTag
 from .media import Media
 from .system import Plugin, Theme, AuditLog
+from .search import SearchIndex
 
 __all__ = [
     "Base",
@@ -26,6 +27,10 @@ __all__ = [
     "PostTag",
     "Media",
     "Plugin",
+    "Theme",
+    "AuditLog",
+    "SearchIndex"
+]
     "Theme",
     "AuditLog"
 ]

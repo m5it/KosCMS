@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from webcms.models.content import Page, Post, Category, Tag
 from webcms.models.user import User
+from webcms.content.search_service import SearchService
 
 
 class ContentManager:
@@ -17,6 +18,7 @@ class ContentManager:
     
     def __init__(self, db: Session):
         self.db = db
+        self.search_service = SearchService(db)
     
     # Page Operations
     
@@ -38,6 +40,9 @@ class ContentManager:
         self.db.add(page)
         self.db.commit()
         self.db.refresh(page)
+        
+        # Auto-index for search
+        self.search_service.index_content(page)
         
         return page
     
@@ -72,6 +77,9 @@ class ContentManager:
         self.db.commit()
         self.db.refresh(page)
         
+        # Re-index for search
+        self.search_service.index_content(page)
+        
         return page
     
     def delete_page(self, page_id: str, soft: bool = True) -> bool:
@@ -79,6 +87,9 @@ class ContentManager:
         page = self.get_page(page_id=page_id)
         if not page:
             return False
+        
+        # Remove from search index
+        self.search_service.remove_from_index(page.id, "page")
         
         if soft:
             page.soft_delete()
@@ -139,6 +150,9 @@ class ContentManager:
         self.db.commit()
         self.db.refresh(post)
         
+        # Auto-index for search
+        self.search_service.index_content(post)
+        
         return post
     
     def get_post(self, post_id: Optional[str] = None,
@@ -191,6 +205,9 @@ class ContentManager:
         self.db.commit()
         self.db.refresh(post)
         
+        # Re-index for search
+        self.search_service.index_content(post)
+        
         return post
     
     def delete_post(self, post_id: str, soft: bool = True) -> bool:
@@ -198,6 +215,9 @@ class ContentManager:
         post = self.get_post(post_id=post_id)
         if not post:
             return False
+        
+        # Remove from search index
+        self.search_service.remove_from_index(post.id, "post")
         
         if soft:
             post.soft_delete()
@@ -227,7 +247,6 @@ class ContentManager:
     
     def _get_or_create_tag(self, name: str) -> Tag:
         """Get existing tag or create new one."""
-        from webcms.plugins.hooks import HookManager
         slug = name.lower().replace(" ", "-")
         
         tag = self.db.query(Tag).filter(Tag.slug == slug).first()

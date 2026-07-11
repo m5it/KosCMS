@@ -1,3 +1,4 @@
+
 """
 WebCMS Setup
 """
@@ -12,7 +13,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="webcms",
-    version="1.0.0",
+    version="1.1.0",
     author="WebCMS Team",
     description="Modern Python Content Management System",
     long_description=long_description,
@@ -27,6 +28,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
     python_requires=">=3.9",
     install_requires=requirements,
@@ -42,6 +44,9 @@ setup(
             "templates/**/*.css",
             "templates/**/*.js",
             "templates/**/*.yaml",
+            "static/**/*.js",
+            "static/**/*.css",
+            "config/*.yaml",
         ],
     },
 )

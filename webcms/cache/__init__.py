@@ -1,10 +1,20 @@
 """
-Caching System
+Cache Module
 
-Multi-level caching with Redis and memory backends.
+Multi-level caching with tagging and warming support.
 """
 
-from .manager import CacheManager
-from .backends import MemoryCache, RedisCache
+from .manager import CacheManager, CacheTag, CacheWarmer, get_tenant_cache
+from .backends import CacheBackend, MemoryCache, RedisCache
+
+__all__ = [
+    "CacheManager",
+    "CacheTag",
+    "CacheWarmer",
+    "get_tenant_cache",
+    "CacheBackend",
+    "MemoryCache",
+    "RedisCache"
+]
 
 __all__ = ["CacheManager", "MemoryCache", "RedisCache"]
