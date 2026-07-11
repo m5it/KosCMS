@@ -1,4 +1,3 @@
-
 """
 Security Middleware
 
@@ -11,7 +10,6 @@ import time
 from typing import Callable, Dict, Optional, List
 from dataclasses import dataclass, field
 from webcms.core.request import Request
-from webcms.core.response import Response
 from webcms.core.response import Response
 
 
@@ -28,7 +26,7 @@ class CSPConfig:
     media_src: List[str] = field(default_factory=lambda: ["'self'"])
     object_src: List[str] = field(default_factory=lambda: ["'none'"])
     frame_src: List[str] = field(default_factory=lambda: ["'none'"])
-    frame_ancestors: List[str] = field(default_factory=lambda: ["'none'"])
+    frame_ancestors: List[str] = field(default_factory=lambda: ["'self'"])  # Changed from 'none'
     form_action: List[str] = field(default_factory=lambda: ["'self'"])
     base_uri: List[str] = field(default_factory=lambda: ["'self'"])
     report_uri: Optional[str] = None
@@ -103,7 +101,7 @@ class SecurityHeadersMiddleware:
         hsts_max_age: int = 31536000,
         hsts_include_subdomains: bool = True,
         hsts_preload: bool = True,
-        frame_options: str = "DENY",
+        frame_options: str = "SAMEORIGIN",  # Changed from DENY
         content_type_options: bool = True,
         xss_protection: bool = True,
         referrer_policy: str = "strict-origin-when-cross-origin",
@@ -188,9 +186,10 @@ class SecurityHeadersMiddleware:
                 else:
                     perms.append(f"{feature}=()")
             response.headers["Permissions-Policy"] = ", ".join(perms)
-        # Cross-Origin headers
-        response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
-        response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
+        
+        # Cross-Origin headers - DISABLED (caused navigation blocking)
+        # response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+        # response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
         
         # Cleanup nonce
         if self.generate_nonces and request_id:

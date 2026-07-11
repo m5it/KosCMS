@@ -85,3 +85,290 @@ try:
 except Exception as e:
     print('ERROR:', type(e).__name__, str(e))
  | SUCCESS: True | OUTPUT_LEN: 1187
+[2026-07-11 22:17:56] CMD: python3 -m py_compile webcms/admin/routes.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 22:22:30] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 109
+[2026-07-11 22:22:53] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 22:22:57] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+try:
+    app = create_app('config.json')
+    print('SUCCESS: App created')
+    # Check registered routes
+    routes = app.router.get_routes()
+    admin_routes = [r for r in routes if r['path'].startswith('/admin')]
+    api_routes = [r for r in routes if r['path'].startswith('/api')]
+    print(f'Admin routes: {len(admin_routes)}')
+    print(f'API routes: {len(api_routes)}')
+    for r in api_routes[:5]:
+        print(f'  - {r["path"]}')
+except Exception as e:
+    print('ERROR:', type(e).__name__, str(e))
+    import traceback
+    traceback.print_exc()
+ | SUCCESS: True | OUTPUT_LEN: 1262
+[2026-07-11 22:23:01] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+app = create_app('config.json')
+routes = app.router.get_routes()
+print('All API routes:')
+for r in sorted(routes, key=lambda x: x['path']):
+    if r['path'].startswith('/api'):
+        print(f'  {r["method"]} {r["path"]}')
+ | SUCCESS: True | OUTPUT_LEN: 2187
+[2026-07-11 22:25:02] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+app = create_app('config.json')
+print('App created OK')
+
+# Test the home route
+from webcms.core.request import Request
+req = Request({'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'QUERY_STRING': ''})
+print('Testing home route...')
+
+# Get the handler
+handler, params = app.router.match('/', 'GET')
+print(f'Handler found: {handler}')
+if handler:
+    try:
+        response = handler(req)
+        print(f'Response type: {type(response)}')
+        print(f'Response status: {getattr(response, "status", "no status")}')
+    except Exception as e:
+        print(f'Error: {e}')
+        import traceback
+        traceback.print_exc()
+ | SUCCESS: True | OUTPUT_LEN: 1265
+[2026-07-11 22:26:34] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+app = create_app('config.json')
+
+# Test admin routes
+from webcms.core.request import Request
+routes_to_test = ['/admin/posts', '/admin/settings', '/admin/pages']
+
+for path in routes_to_test:
+    print(f'Testing {path}...')
+    handler, params = app.router.match(path, 'GET')
+    if handler:
+        print(f'  Handler found: {handler.__name__}')
+        try:
+            req = Request({'REQUEST_METHOD': 'GET', 'PATH_INFO': path, 'QUERY_STRING': ''})
+            response = handler(req)
+            print(f'  Response type: {type(response).__name__}')
+            print(f'  Status: {getattr(response, "status", "N/A")}')
+            body_preview = str(getattr(response, 'body', b''))[:100]
+            print(f'  Body preview: {body_preview}...')
+        except Exception as e:
+            print(f'  ERROR: {e}')
+            import traceback
+            traceback.print_exc()
+    else:
+        print('  No handler found!')
+    print()
+ | SUCCESS: True | OUTPUT_LEN: 1851
+[2026-07-11 22:26:41] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+app = create_app('config.json')
+
+from webcms.core.request import Request
+req = Request({'REQUEST_METHOD': 'GET', 'PATH_INFO': '/admin/posts', 'QUERY_STRING': ''})
+handler, params = app.router.match('/admin/posts', 'GET')
+response = handler(req)
+
+html = response.body.decode('utf-8')
+print('=== HTML HEAD ===')
+print(html[:1500])
+print('=== END HEAD ===')
+print()
+print('=== CHECKING FOR JAVASCRIPT ===')
+if '<script' in html.lower():
+    print('WARNING: Found <script> tag in HTML!')
+    # Extract script
+    import re
+    scripts = re.findall(r'<script.*?</script>', html, re.DOTALL | re.IGNORECASE)
+    for s in scripts[:3]:
+        print(f'Script: {s[:200]}...')
+else:
+    print('No JavaScript found in HTML')
+ | SUCCESS: True | OUTPUT_LEN: 2502
+[2026-07-11 22:26:47] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+app = create_app('config.json')
+
+# Simulate full WSGI request
+environ = {
+    'REQUEST_METHOD': 'GET',
+    'PATH_INFO': '/admin/posts',
+    'QUERY_STRING': '',
+    'SERVER_NAME': 'localhost',
+    'SERVER_PORT': '8000',
+    'HTTP_HOST': 'localhost:8000',
+    'wsgi.url_scheme': 'http',
+    'wsgi.input': None,
+    'wsgi.errors': sys.stderr,
+}
+
+def start_response(status, headers):
+    print(f'Status: {status}')
+    print('Headers:')
+    for name, value in headers:
+        print(f'  {name}: {value}')
+    return lambda x: None
+
+print('Testing full WSGI cycle for /admin/posts...')
+response_body = app.wsgi_app(environ, start_response)
+html = b''.join(response_body).decode('utf-8')
+print(f'Response length: {len(html)} bytes')
+print(f'First 500 chars: {html[:500]}')
+ | SUCCESS: True | OUTPUT_LEN: 2470
+[2026-07-11 22:26:56] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+app = create_app('config.json')
+
+# Get full HTML
+environ = {
+    'REQUEST_METHOD': 'GET',
+    'PATH_INFO': '/admin/posts',
+    'QUERY_STRING': '',
+    'SERVER_NAME': 'localhost',
+    'SERVER_PORT': '8000',
+    'HTTP_HOST': 'localhost:8000',
+    'wsgi.url_scheme': 'http',
+    'wsgi.input': None,
+    'wsgi.errors': sys.stderr,
+}
+
+html_parts = []
+def start_response(status, headers):
+    html_parts.append(('headers', headers))
+    return lambda x: None
+
+body = app.wsgi_app(environ, start_response)
+html = b''.join(body).decode('utf-8')
+
+# Check for potential CSP issues
+print('=== CSP ANALYSIS ===')
+if 'Content-Security-Policy' in str(html_parts):
+    print('CSP header is present')
+    
+# Check if styles are inline (they are in the HTML)
+print()
+print('=== STYLE CHECK ===')
+if '<style>' in html:
+    print('Inline <style> tags found - these need unsafe-inline or nonce')
+    
+print()
+print('=== POTENTIAL FIX ===')
+print('The CSP header has style-src with unsafe-inline which SHOULD work.')
+print('But if browser still blocks, we need to check console errors.')
+print()
+print('Let me generate a version WITHOUT CSP to test...')
+ | SUCCESS: True | OUTPUT_LEN: 1293
+[2026-07-11 22:31:40] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+app = create_app('config_test.json')
+
+# Test with no CSP
+environ = {
+    'REQUEST_METHOD': 'GET',
+    'PATH_INFO': '/admin/posts',
+    'QUERY_STRING': '',
+    'SERVER_NAME': 'localhost',
+    'SERVER_PORT': '8000',
+    'HTTP_HOST': 'localhost:8000',
+    'wsgi.url_scheme': 'http',
+    'wsgi.input': None,
+    'wsgi.errors': sys.stderr,
+}
+
+def start_response(status, headers):
+    print(f'Status: {status}')
+    csp = [h for h in headers if h[0] == 'Content-Security-Policy']
+    print(f'CSP present: {len(csp) > 0}')
+    return lambda x: None
+
+body = app.wsgi_app(environ, start_response)
+html = b''.join(body).decode('utf-8')
+print(f'Response length: {len(html)} bytes')
+ | SUCCESS: True | OUTPUT_LEN: 135
+[2026-07-11 22:33:52] CMD: python3 test_admin.py & | SUCCESS: False | OUTPUT_LEN: 7
+[2026-07-11 22:33:57] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+app = create_app('config.json')
+
+from webcms.core.request import Request
+req = Request({'REQUEST_METHOD': 'GET', 'PATH_INFO': '/admin/posts', 'QUERY_STRING': ''})
+handler, params = app.router.match('/admin/posts', 'GET')
+response = handler(req)
+
+html = response.body.decode('utf-8')
+print('=== FULL HTML ===')
+print(html)
+ | SUCCESS: True | OUTPUT_LEN: 3802
+[2026-07-11 22:34:08] CMD: python3 diagnose.py | SUCCESS: True | OUTPUT_LEN: 700
+[2026-07-11 22:36:49] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+app = create_app('config.json')
+
+# Add test route
+@app.route('/test_nav', methods=['GET'])
+def test_nav(request):
+    with open('test_nav.html') as f:
+        return f.read()
+
+print('Test server on http://localhost:8000/test_nav')
+print('Open this URL and check browser console when clicking links')
+ | SUCCESS: True | OUTPUT_LEN: 1285
+[2026-07-11 22:38:30] CMD: python3 test_nosec.py & | SUCCESS: False | OUTPUT_LEN: 7
+[2026-07-11 22:41:59] CMD: python3 -m py_compile webcms/security/middleware.py && echo Syntax OK | SUCCESS: True | OUTPUT_LEN: 116
+[2026-07-11 22:42:29] CMD: python3 -m py_compile webcms/security/middleware.py && echo Syntax OK | SUCCESS: True | OUTPUT_LEN: 49
+[2026-07-11 22:42:32] CMD: python3 -m py_compile webcms/security/middleware.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 22:42:37] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+app = create_app('config.json')
+
+# Test the headers
+environ = {
+    'REQUEST_METHOD': 'GET',
+    'PATH_INFO': '/admin/posts',
+    'QUERY_STRING': '',
+    'SERVER_NAME': 'localhost',
+    'SERVER_PORT': '8000',
+    'HTTP_HOST': 'localhost:8000',
+    'wsgi.url_scheme': 'http',
+    'wsgi.input': None,
+    'wsgi.errors': sys.stderr,
+}
+
+headers_list = []
+def start_response(status, headers):
+    headers_list.extend(headers)
+    return lambda x: None
+
+body = app.wsgi_app(environ, start_response)
+print('Headers received:')
+for name, value in headers_list:
+    print(f'  {name}: {value[:60]}...')
+ | SUCCESS: True | OUTPUT_LEN: 1693

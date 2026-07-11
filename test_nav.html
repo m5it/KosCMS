@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Navigation Test</title>
+</head>
+<body>
+    <h1>Admin Navigation Test</h1>
+    <p>Open browser DevTools (F12) → Console before clicking</p>
+    
+    <h2>Test Links:</h2>
+    <ul>
+        <li><a href="/admin/posts" onclick="console.log('Clicked Posts'); return true;">Posts (with logging)</a></li>
+        <li><a href="/admin/posts">Posts (plain)</a></li>
+        <li><a href="/admin/settings">Settings</a></li>
+    </ul>
+    
+    <h2>Direct Fetch Test:</h2>
+    <button onclick="testFetch()">Test /admin/posts with fetch()</button>
+    <div id="result"></div>
+    
+    <script>
+        function testFetch() {
+            console.log('Fetching /admin/posts...');
+            fetch('/admin/posts')
+                .then(r => {
+                    console.log('Response:', r.status, r.statusText);
+                    document.getElementById('result').innerHTML = 
+                        '<p style="color:green">Success: ' + r.status + '</p>';
+                    return r.text();
+                })
+                .then(text => {
+                    console.log('Body length:', text.length);
+                })
+                .catch(e => {
+                    console.error('Error:', e);
+                    document.getElementById('result').innerHTML = 
+                        '<p style="color:red">Error: ' + e + '</p>';
+                });
+        }
+        
+        // Log all clicks
+        document.addEventListener('click', function(e) {
+            console.log('Click detected on:', e.target.tagName, e.target.href || 'no href');
+        });
+    </script>
+</body>
+</html>

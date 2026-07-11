@@ -141,14 +141,23 @@ def admin_routes(app):
                 fetch('/api/v1/dashboard')
                     .then(r => r.json())
                     .then(data => {
-                        document.getElementById('post-count').textContent = 
-                            data.content.posts.total;
-                        document.getElementById('published-count').textContent = 
-                            data.content.posts.published;
-                        document.getElementById('user-count').textContent = 
-                            data.users.total;
-                        document.getElementById('media-count').textContent = 
-                            data.media.total_files;
+                        if (data.content && data.content.posts) {
+                            document.getElementById('post-count').textContent = 
+                                data.content.posts.total || 0;
+                            document.getElementById('published-count').textContent = 
+                                data.content.posts.published || 0;
+                        }
+                        if (data.users) {
+                            document.getElementById('user-count').textContent = 
+                                data.users.total || 0;
+                        }
+                        if (data.media) {
+                            document.getElementById('media-count').textContent = 
+                                data.media.total_files || 0;
+                        }
+                    })
+                    .catch(e => {
+                        console.error('Failed to load stats:', e);
                     });
             </script>
         </body>
@@ -159,7 +168,37 @@ def admin_routes(app):
     @app.route("/admin/posts", methods=["GET"])
     def admin_posts(request):
         """Posts management."""
-        return Response.html("<h1>Posts</h1><p>Post management interface</p>")
+        return _admin_layout("Posts", "<p>Post management interface</p>")
+    
+    @app.route("/admin/pages", methods=["GET"])
+    def admin_pages(request):
+        """Pages management."""
+        return _admin_layout("Pages", "<p>Pages management interface</p>")
+    
+    @app.route("/admin/media", methods=["GET"])
+    def admin_media(request):
+        """Media management."""
+        return _admin_layout("Media", "<p>Media library interface</p>")
+    
+    @app.route("/admin/users", methods=["GET"])
+    def admin_users(request):
+        """Users management."""
+        return _admin_layout("Users", "<p>User management interface</p>")
+    
+    @app.route("/admin/plugins", methods=["GET"])
+    def admin_plugins(request):
+        """Plugins management."""
+        return _admin_layout("Plugins", "<p>Plugin management interface</p>")
+    
+    @app.route("/admin/themes", methods=["GET"])
+    def admin_themes(request):
+        """Themes management."""
+        return _admin_layout("Themes", "<p>Theme management interface</p>")
+    
+    @app.route("/admin/settings", methods=["GET"])
+    def admin_settings(request):
+        """Settings page."""
+        return _admin_layout("Settings", "<p>System settings interface</p>")
     
     @app.route("/admin/login", methods=["GET", "POST"])
     def admin_login(request):
@@ -223,3 +262,94 @@ def admin_routes(app):
         return Response.html(html)
     
     return app
+
+
+def _admin_layout(title, content):
+    """Generate admin page layout."""
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{title} - WebCMS Admin</title>
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{
+                font-family: -apple-system, system-ui, sans-serif;
+                background: #f5f5f5;
+            }}
+            .admin-layout {{
+                display: flex;
+                min-height: 100vh;
+            }}
+            .sidebar {{
+                width: 250px;
+                background: #1a1a2e;
+                color: white;
+                padding: 1rem;
+            }}
+            .sidebar h1 {{
+                font-size: 1.5rem;
+                margin-bottom: 2rem;
+                color: #e94560;
+            }}
+            .nav-menu {{
+                list-style: none;
+            }}
+            .nav-menu li {{
+                margin-bottom: 0.5rem;
+            }}
+            .nav-menu a {{
+                color: #a0a0a0;
+                text-decoration: none;
+                display: block;
+                padding: 0.75rem 1rem;
+                border-radius: 4px;
+                transition: all 0.2s;
+            }}
+            .nav-menu a:hover, .nav-menu a.active {{
+                background: #0f3460;
+                color: white;
+            }}
+            .main-content {{
+                flex: 1;
+                padding: 2rem;
+            }}
+            .header {{
+                background: white;
+                padding: 1.5rem;
+                border-radius: 8px;
+                margin-bottom: 2rem;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="admin-layout">
+            <aside class="sidebar">
+                <h1>🔧 WebCMS</h1>
+                <nav>
+                    <ul class="nav-menu">
+                        <li><a href="/admin">Dashboard</a></li>
+                        <li><a href="/admin/posts">Posts</a></li>
+                        <li><a href="/admin/pages">Pages</a></li>
+                        <li><a href="/admin/media">Media</a></li>
+                        <li><a href="/admin/users">Users</a></li>
+                        <li><a href="/admin/plugins">Plugins</a></li>
+                        <li><a href="/admin/themes">Themes</a></li>
+                        <li><a href="/admin/settings">Settings</a></li>
+                    </ul>
+                </nav>
+            </aside>
+            <main class="main-content">
+                <div class="header">
+                    <h2>{title}</h2>
+                </div>
+                {content}
+            </main>
+        </div>
+    </body>
+    </html>
+    """
+    return Response.html(html)
