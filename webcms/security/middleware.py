@@ -183,11 +183,11 @@ class SecurityHeadersMiddleware:
             perms = []
             for feature, allowlist in self.permissions_policy.items():
                 if allowlist:
-                    perms.append(f"{feature=({' '.join(allowlist)})}")
+                    allow_str = ' '.join(allowlist)
+                    perms.append(f"{feature}=({allow_str})")
                 else:
-                    perms.append(f"{feature=()}")
+                    perms.append(f"{feature}=()")
             response.headers["Permissions-Policy"] = ", ".join(perms)
-        
         # Cross-Origin headers
         response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
         response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"

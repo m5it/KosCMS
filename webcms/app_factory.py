@@ -8,6 +8,7 @@ from webcms import Application
 from webcms.database import init_db, KosDBClient, KosDBConfig
 from webcms.database.kosdb_replication import KosDBReplicationManager, ReplicationConfig, ReplicationRole
 from webcms.security import SecurityMiddleware, HTTPSRedirectMiddleware
+from webcms.security.middleware import CSPConfig
 from webcms.admin.api import create_api
 from webcms.admin.routes import admin_routes
 from webcms.admin.kosdb_admin import register_kosdb_admin
@@ -35,7 +36,7 @@ def create_app(config_path: str = None) -> Application:
         kosdb_config = db_config.get("kosdb", {})
         config = KosDBConfig(
             host=kosdb_config.get("host", "localhost"),
-            port=kosdb_config.get("port", 9999),
+            port=kosdb_config.get("port", 5555),
             username=kosdb_config.get("username", "admin"),
             password=kosdb_config.get("password", "admin"),
             database=kosdb_config.get("database", "webcms"),
@@ -91,9 +92,23 @@ def create_app(config_path: str = None) -> Application:
         app.use(HTTPSRedirectMiddleware(enabled=True))
     
     # Security headers
+    csp_dict = security_config.get("csp")
+    if csp_dict is None or csp_dict == {}:
+        csp_config = CSPConfig()
+    elif isinstance(csp_dict, dict):
+        # Filter only valid CSPConfig fields
+        valid_fields = {'default_src', 'script_src', 'style_src', 'img_src', 
+                       'font_src', 'connect_src', 'media_src', 'object_src',
+                       'frame_src', 'frame_ancestors', 'form_action', 'base_uri',
+                       'report_uri', 'report_only', 'upgrade_insecure'}
+        filtered = {k: v for k, v in csp_dict.items() if k in valid_fields}
+        csp_config = CSPConfig(**filtered)
+    else:
+        csp_config = csp_dict
+    
     app.use(SecurityMiddleware(
-        content_security_policy=security_config.get("csp"),
-        strict_transport_security=security_config.get("hsts", True)
+        csp_config=csp_config,
+        hsts_enabled=security_config.get("hsts", True)
     ))
     
     # Register admin routes
@@ -108,7 +123,7 @@ def create_app(config_path: str = None) -> Application:
     def home(request):
         """Homepage."""
         kosdb_connected = "kosdb" in app.container._services
-        return """<!DOCTYPE html>
+        html = '''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -118,9 +133,9 @@ def create_app(config_path: str = None) -> Application:
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
                display: flex; justify-content: center; align-items: center; min-height: 100vh;
-               background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); color: #333; }
+               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #333; }
         .card { background: white; border-radius: 16px; padding: 48px; text-align: center;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 500px; width: 90%%; }
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 500px; width: 90%; }
         h1 { font-size: 2.5em; margin-bottom: 12px; color: #667eea; }
         p { font-size: 1.1em; color: #666; margin-bottom: 24px; }
         .status { display: inline-block; padding: 8px 20px; border-radius: 24px; font-size: 0.9em; font-weight: 600; }
@@ -135,22 +150,24 @@ def create_app(config_path: str = None) -> Application:
     <div class="card">
         <h1>Hello World!</h1>
         <p>Welcome to <strong>WebCMS</strong> - A Modern Python Content Management System</p>
-        <span class="status %s">KosDB: %s</span>
+        <span class="status {cls}">KosDB: {status}</span>
         <div class="links">
             <a href="/health">Health Check</a>
             <a href="/api/v1/status">API Status</a>
         </div>
     </div>
 </body>
-</html>""" % ("connected" if kosdb_connected else "disconnected",
-              "Connected" if kosdb_connected else "Disconnected")
+</html>'''
+        cls = "connected" if kosdb_connected else "disconnected"
+        status = "Connected" if kosdb_connected else "Disconnected"
+        return html.format(cls=cls, status=status)
     
     @app.route("/health", methods=["GET"])
     def health(request):
         """Health check endpoint."""
         status = {
             "status": "healthy",
-            "version": "1.0.0",
+            "version": "1.1.0",
             "database": "kosdb" if "kosdb" in app.container._services else "sql"
         }
         
@@ -168,7 +185,7 @@ def create_app(config_path: str = None) -> Application:
     def status(request):
         """Detailed status endpoint."""
         return {
-            "webcms": "1.0.0",
+            "webcms": "1.1.0",
             "database_type": "kosdb" if "kosdb" in app.container._services else "sql",
             "features": {
                 "kosdb": "kosdb" in app.container._services,

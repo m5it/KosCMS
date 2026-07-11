@@ -194,3 +194,7 @@ class XSSFilter:
                 result.append(c)
         
         return ''.join(result)
+
+
+# Alias for consistent naming with other security modules
+XSSProtection = XSSFilter

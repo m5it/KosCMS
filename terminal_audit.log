@@ -20,3 +20,55 @@
 [2026-07-11 18:26:28] CMD: git tag -a v1.1.0 -m WebCMS v1.1.0 - Full-text search, WebP support, plugin marketplace, cache tagging, admin widgets, rate limiting, query optimization | SUCCESS: True | OUTPUT_LEN: 0
 [2026-07-11 18:26:40] CMD: git tag -l | SUCCESS: True | OUTPUT_LEN: 7
 [2026-07-11 18:26:43] CMD: git log -1 --oneline | SUCCESS: True | OUTPUT_LEN: 126
+[2026-07-11 21:54:27] CMD: python3 -m pytest tests/ -v --tb=short 2>&1 | head -50 | SUCCESS: True | OUTPUT_LEN: 49
+[2026-07-11 21:54:36] CMD: python3 -c from webcms.models import *; print('Models import OK') | SUCCESS: True | OUTPUT_LEN: 604
+[2026-07-11 21:54:42] CMD: python3 -m py_compile webcms/models/__init__.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 21:54:47] CMD: git add webcms/models/__init__.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 21:55:21] CMD: git commit | SUCCESS: False | OUTPUT_LEN: 7
+[2026-07-11 21:55:25] CMD: git commit -m Fix: Correct indentation error in models/__init__.py | SUCCESS: True | OUTPUT_LEN: 102
+[2026-07-11 21:55:29] CMD: git tag -d v1.1.0 | SUCCESS: True | OUTPUT_LEN: 35
+[2026-07-11 21:55:34] CMD: git tag -a v1.1.0 -m WebCMS v1.1.0 - Full-text search, WebP support, plugin marketplace, cache tagging, admin widgets, rate limiting, query optimization | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 21:55:37] CMD: git log -1 --oneline | SUCCESS: True | OUTPUT_LEN: 61
+[2026-07-11 21:58:42] CMD: python3 -m py_compile webcms/security/middleware.py && echo Syntax OK | SUCCESS: True | OUTPUT_LEN: 118
+[2026-07-11 21:58:54] CMD: python3 -m py_compile webcms/security/middleware.py && echo Syntax OK | SUCCESS: True | OUTPUT_LEN: 49
+[2026-07-11 21:58:59] CMD: python3 -m py_compile webcms/security/middleware.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 21:59:02] CMD: git add webcms/security/middleware.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 22:00:38] CMD: python3 -c from webcms.security.xss import XSSProtection; print('XSSProtection import OK') | SUCCESS: True | OUTPUT_LEN: 572
+[2026-07-11 22:00:55] CMD: python3 -c from webcms.security.xss import XSSProtection; print('XSSProtection import OK') | SUCCESS: True | OUTPUT_LEN: 24
+[2026-07-11 22:01:40] CMD: python3 -c from webcms.security import SecurityMiddleware, HTTPSRedirectMiddleware; print('Imports OK:', SecurityMiddleware, HTTPSRedirectMiddleware) | SUCCESS: True | OUTPUT_LEN: 136
+[2026-07-11 22:02:44] CMD: python3 -m py_compile webcms/admin/api.py && echo Syntax OK | SUCCESS: True | OUTPUT_LEN: 49
+[2026-07-11 22:02:46] CMD: python3 -m py_compile webcms/admin/api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 22:05:11] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 76
+[2026-07-11 22:06:20] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 22:07:32] CMD: python3 run.py --config config.json | SUCCESS: False | OUTPUT_LEN: 7
+[2026-07-11 22:07:35] CMD: python3 -c from webcms.app_factory import create_app; print('Import OK') | SUCCESS: True | OUTPUT_LEN: 10
+[2026-07-11 22:07:39] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+try:
+    app = create_app('config.json')
+    print('SUCCESS: App created with KosDB config')
+    print('Services:', list(app.container._services.keys()))
+except Exception as e:
+    print('ERROR:', type(e).__name__, str(e))
+ | SUCCESS: True | OUTPUT_LEN: 1152
+[2026-07-11 22:07:49] CMD: python3 -m py_compile webcms/app_factory.py && echo Syntax OK | SUCCESS: True | OUTPUT_LEN: 49
+[2026-07-11 22:10:04] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 77
+[2026-07-11 22:10:23] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-11 22:10:26] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+from webcms.app_factory import create_app
+try:
+    app = create_app('config.json')
+    print('SUCCESS: App created')
+    # Test the home route
+    from webcms.core.request import Request
+    req = Request({'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'QUERY_STRING': ''})
+    print('Home route exists:', hasattr(app, 'router'))
+except Exception as e:
+    print('ERROR:', type(e).__name__, str(e))
+ | SUCCESS: True | OUTPUT_LEN: 1296
+[2026-07-11 22:11:25] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 89
+[2026-07-11 22:11:46] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 0

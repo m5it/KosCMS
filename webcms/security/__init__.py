@@ -12,20 +12,19 @@ from .middleware import (
     HTTPSRedirectMiddleware
 )
 from .csrf import CSRFProtection
-from .xss import XSSProtection
+from .xss import XSSProtection, XSSFilter
+
+# Alias for backward compatibility
+SecurityMiddleware = SecurityHeadersMiddleware
 
 __all__ = [
     "SecurityHeadersMiddleware",
+    "SecurityMiddleware",  # Alias
     "CSPConfig",
     "CSPReportHandler",
     "NonceGenerator",
     "HTTPSRedirectMiddleware",
     "CSRFProtection",
-    "XSSProtection"
-]
-__all__ = [
-    "SecurityMiddleware",
-    "HTTPSRedirectMiddleware", 
-    "CSRFProtection",
+    "XSSProtection",
     "XSSFilter"
 ]

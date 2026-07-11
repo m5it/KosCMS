@@ -417,38 +417,25 @@ class PluginInstallEndpoint(APIEndpoint):
         return Response.json({"success": success, "message": message},
                            200 if success else 400)
 
-class CSPReportEndpoint(APIEndpoint):
-    """CSP violation reporting endpoint."""
+
+class CacheStatsEndpoint(APIEndpoint):
+    """Cache management endpoint."""
     
-    methods = ["POST"]
+    methods = ["GET", "POST"]
     
-    def __init__(self, db=None, auth=None):
-        super().__init__(db, auth)
-        self.handler = CSPReportHandler()
+    def get(self, request: Request) -> Response:
+        """Get cache stats."""
+        tenant_id = request.get_param("tenant", "default")
+        cache = get_tenant_cache(tenant_id)
+        
+        return Response.json({
+            "tenant": tenant_id,
+            "stats": cache.get_stats() if hasattr(cache, 'get_stats') else {}
+        })
     
     def post(self, request: Request) -> Response:
-        """Handle CSP report."""
-        return self.handler(request)
-
-
-def create_api(app, db, auth):
-    """Register API routes."""
-    
-    endpoints = [
-        ("/api/v1/dashboard", DashboardStats),
-        ("/api/v1/posts", PostList),
-        ("/api/v1/posts/<post_id>", PostDetail),
-        ("/api/v1/users", UserList),
-        ("/api/v1/media", MediaList),
-        ("/api/v1/search", SearchEndpoint),
-        ("/api/v1/content/export", ContentExportEndpoint),
-        ("/api/v1/content/import", ContentImportEndpoint),
-        ("/api/v1/plugins/marketplace", PluginMarketplaceEndpoint),
-        ("/api/v1/plugins/install", PluginInstallEndpoint),
-        ("/api/v1/cache/stats", CacheStatsEndpoint),
-        ("/api/v1/admin/widgets", AdminWidgetsEndpoint),
-        ("/api/v1/security/csp-report", CSPReportEndpoint),
-    ]
+        """Clear or warm cache."""
+        data = request.json or {}
         action = data.get("action", "warm")
         tenant_id = data.get("tenant", "default")
         tag = data.get("tag")
@@ -495,6 +482,20 @@ class AdminWidgetsEndpoint(APIEndpoint):
         return Response.json({"widgets": widgets})
 
 
+class CSPReportEndpoint(APIEndpoint):
+    """CSP violation reporting endpoint."""
+    
+    methods = ["POST"]
+    
+    def __init__(self, db=None, auth=None):
+        super().__init__(db, auth)
+        self.handler = CSPReportHandler()
+    
+    def post(self, request: Request) -> Response:
+        """Handle CSP report."""
+        return self.handler(request)
+
+
 def create_api(app, db, auth):
     """Register API routes."""
     
@@ -511,6 +512,7 @@ def create_api(app, db, auth):
         ("/api/v1/plugins/install", PluginInstallEndpoint),
         ("/api/v1/cache/stats", CacheStatsEndpoint),
         ("/api/v1/admin/widgets", AdminWidgetsEndpoint),
+        ("/api/v1/security/csp-report", CSPReportEndpoint),
     ]
     
     for path, endpoint_class in endpoints:
