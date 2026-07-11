@@ -1153,3 +1153,5 @@ Allowed: ls, dir, cat, echo, pwd, whoami, date, id, grep, find, sort, head, tail
 [22:42:45] You: 
 [22:47:08] You: 
 [22:47:13] INFO: AI request (iteration 1, msgs=361)
+[22:47:21] INFO: AI response: 113523 prompt + 638 response tokens (total: 25218547 / 120734)
+[22:47:21] You: 
