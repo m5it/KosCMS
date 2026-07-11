@@ -70,7 +70,7 @@ class AuditLog(Base, UUIDMixin, TimestampMixin):
     user_agent = Column(Text, nullable=True)
     
     # Relationships
-    user_id = Column(String(36), String(36), nullable=True)
+    user_id = Column(String(36), nullable=True)
     user = relationship('User', foreign_keys=[user_id])
     
     def __repr__(self):

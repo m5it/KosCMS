@@ -107,13 +107,43 @@ def create_app(config_path: str = None) -> Application:
     @app.route("/", methods=["GET"])
     def home(request):
         """Homepage."""
-        if "kosdb" in app.container._services:
-            kosdb = app.container.get("kosdb")
-            result = kosdb.query("SELECT * FROM pages WHERE is_homepage = 1 LIMIT 1")
-            if result.get("rows"):
-                return "<h1>Welcome to WebCMS with KosDB!</h1>"
-        
-        return "<h1>Welcome to WebCMS</h1><p>Your homepage is not set up yet.</p>"
+        kosdb_connected = "kosdb" in app.container._services
+        return """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World - WebCMS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+               display: flex; justify-content: center; align-items: center; min-height: 100vh;
+               background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); color: #333; }
+        .card { background: white; border-radius: 16px; padding: 48px; text-align: center;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 500px; width: 90%%; }
+        h1 { font-size: 2.5em; margin-bottom: 12px; color: #667eea; }
+        p { font-size: 1.1em; color: #666; margin-bottom: 24px; }
+        .status { display: inline-block; padding: 8px 20px; border-radius: 24px; font-size: 0.9em; font-weight: 600; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+        .links { margin-top: 24px; }
+        .links a { color: #667eea; text-decoration: none; margin: 0 12px; font-weight: 500; }
+        .links a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Hello World!</h1>
+        <p>Welcome to <strong>WebCMS</strong> - A Modern Python Content Management System</p>
+        <span class="status %s">KosDB: %s</span>
+        <div class="links">
+            <a href="/health">Health Check</a>
+            <a href="/api/v1/status">API Status</a>
+        </div>
+    </div>
+</body>
+</html>""" % ("connected" if kosdb_connected else "disconnected",
+              "Connected" if kosdb_connected else "Disconnected")
     
     @app.route("/health", methods=["GET"])
     def health(request):

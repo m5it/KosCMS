@@ -97,6 +97,10 @@ class Application:
             return func
         return decorator
     
+    def use(self, middleware) -> None:
+        """Register middleware."""
+        self.middleware.add(middleware)
+    
     def wsgi_app(self, environ: Dict, start_response: Callable) -> List[bytes]:
         """WSGI application entry point."""
         request = Request.from_wsgi(environ)
@@ -122,12 +126,16 @@ class Application:
             self.logger.exception("Request handling error")
             return Response.error("Internal Server Error", 500)
     
-    def run(self, host: Optional[str] = None, port: Optional[int] = None) -> None:
+    def run(self, host: Optional[str] = None, port: Optional[int] = None, debug: bool = False, **kwargs) -> None:
         """Run development server."""
         from wsgiref.simple_server import make_server
         
         host = host or self.config["server"]["host"]
         port = port or self.config["server"]["port"]
+        
+        if debug:
+            self.config["app"]["debug"] = True
+            self._setup_logging()
         
         server = make_server(host, port, self.wsgi_app)
         self.logger.info(f"Server running on http://{host}:{port}")
