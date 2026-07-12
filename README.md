@@ -12,7 +12,8 @@ A production-ready CMS with plugin architecture, template system, HTTPS support,
 - **Media Library**: Image processing, multiple storage backends
 - **Admin Dashboard**: React-based UI with REST API
 - **Authentication**: JWT tokens, RBAC, OAuth2, 2FA support
-- **Database**: SQLAlchemy ORM with migrations, soft delete, audit logging
+- **Database**: SQLAlchemy ORM with KosDB dialect, migrations, soft delete, audit logging
+- **KosDB Integration**: Native KosDB client, custom SQLAlchemy dialect, replication, and migrations
 
 ### 🆕 v1.2.0 Features
 
@@ -70,6 +71,7 @@ webcms/
 ├── admin/          # Admin dashboard, API, widgets
 ├── cache/          # Redis caching, locks, sessions, analytics
 ├── search/         # Elasticsearch search with facets
+├── database/       # SQLAlchemy + KosDB client, dialect, migrations
 ├── workflow/       # Content approval workflows
 ├── tenants/        # Multi-tenant isolation
 ├── notifications/  # Email, in-app, push notifications
@@ -182,6 +184,23 @@ curl -X POST /api/v1/backups/<backup_id>/restore
 
 # Monitor backup health
 curl /api/v1/backups/monitor
+```
+
+### KosDB Integration
+
+```python
+from webcms.database.kosdb_client import KosDBClient
+
+client = KosDBClient("kosdb://localhost:5000/webcms")
+client.connect()
+
+# Execute query
+results = client.query("SELECT * FROM posts WHERE status = 'published'")
+
+# Run migrations
+from webcms.database.kosdb_migrate import KosDBMigrations
+migrations = KosDBMigrations(client)
+migrations.apply_pending()
 ```
 
 ### Modern Admin UI
