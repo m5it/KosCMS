@@ -1,0 +1,93 @@
+
+app:
+  name: WebCMS
+  version: "1.1.0"
+  debug: false
+  secret_key: "your-secret-key-change-in-production"
+  timezone: "UTC"
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  ssl_cert: null
+  ssl_key: null
+
+database:
+  url: "kosdb://admin:skrlat@localhost:5555/webcms"
+  
+  kosdb:
+    host: "localhost"
+    port: 5555
+    username: "admin"
+    password: "skrlat"
+    database: "webcms"
+    pool_size: 2
+    replication:
+      enabled: false
+      role: "standalone"
+      server_id: 1
+
+cache:
+  backend: "memory"
+  redis_url: "redis://localhost:6379/0"
+  default_timeout: 300
+
+security:
+  csrf_enabled: true
+  session_timeout: 3600
+  password_min_length: 8
+  bcrypt_rounds: 12
+  
+  # Content Security Policy
+  csp:
+    enabled: true
+    report_only: false
+    report_uri: "/api/v1/security/csp-report"
+    default_src: ["'self'"]
+    script_src: ["'self'", "'unsafe-inline'"]
+    style_src: ["'self'", "'unsafe-inline'"]
+    img_src: ["'self'", "data:", "https:"]
+    font_src: ["'self'"]
+    connect_src: ["'self'"]
+    media_src: ["'self'"]
+    object_src: ["'none'"]
+    frame_ancestors: ["'none'"]
+  
+  # Security Headers
+  hsts:
+    enabled: true
+    max_age: 31536000
+    include_subdomains: true
+    preload: true
+  
+  frame_options: "DENY"
+  content_type_options: true
+  xss_protection: true
+  referrer_policy: "strict-origin-when-cross-origin"
+  
+  # Rate Limiting
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+    burst_size: 10
+
+uploads:
+  max_size: 10485760
+  allowed_extensions:
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+    - ".gif"
+    - ".pdf"
+    - ".doc"
+    - ".docx"
+  storage: "local"
+  local_path: "media"
+
+plugins:
+  enabled: []
+  disabled: []
+
+themes:
+  active: "default"
