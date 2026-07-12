@@ -85,6 +85,107 @@ open http://localhost:8000/admin
 docker-compose -f docs/deployment/docker-compose.yml up -d
 ```
 
+## Admin User Setup
+
+The React admin panel at `/admin` needs at least one active user to manage content, users, and settings. There are three ways to create the first admin user.
+
+### Option 1: Use the built-in CLI command (recommended)
+
+```bash
+source .venv/bin/activate  # if using a virtual environment
+python -m webcms.cli.commands create-admin \
+  --username admin \
+  --email admin@example.com \
+  --password "ChangeMeNow!"
+```
+
+This creates the user, assigns the `admin` role, and activates the account.
+
+### Option 2: Create a user from a Python shell
+
+```bash
+python - <<'PY'
+from webcms.database import init_db
+from webcms.models.user import User, Role
+from webcms.auth.password import PasswordHasher
+
+db = init_db("sqlite:///webcms.db")
+hasher = PasswordHasher()
+
+# Create the admin role if it does not exist
+admin_role = db.query(Role).filter_by(name="admin").first()
+if not admin_role:
+    admin_role = Role(name="admin", description="Full system access")
+    admin_role.permissions = ",".join([
+        "content:read", "content:write", "content:delete",
+        "media:read", "media:write", "media:delete",
+        "plugins:manage", "users:manage", "roles:manage",
+        "settings:manage", "cache:manage", "backups:manage"
+    ])
+    db.add(admin_role)
+
+# Create the admin user
+user = User(
+    username="admin",
+    email="admin@example.com",
+    password_hash=hasher.hash("ChangeMeNow!"),
+    display_name="Administrator",
+    is_active=True,
+    is_superuser=True
+)
+user.roles.append(admin_role)
+db.add(user)
+db.commit()
+print("Admin user created:", user.id)
+PY
+```
+
+### Option 3: Seed the database automatically
+
+Create a file named `seed_admin.py` in the project root and run it once:
+
+```python
+from webcms.database import init_db
+from webcms.models.user import User, Role
+from webcms.auth.password import PasswordHasher
+
+def seed():
+    db = init_db("sqlite:///webcms.db")
+    hasher = PasswordHasher()
+
+    if not db.query(Role).filter_by(name="admin").first():
+        role = Role(
+            name="admin",
+            description="Full system access",
+            permissions="content:read,content:write,content:delete,media:read,media:write,media:delete,plugins:manage,users:manage,roles:manage,settings:manage,cache:manage,backups:manage"
+        )
+        db.add(role)
+
+    if not db.query(User).filter_by(username="admin").first():
+        user = User(
+            username="admin",
+            email="admin@example.com",
+            password_hash=hasher.hash("ChangeMeNow!"),
+            display_name="Administrator",
+            is_active=True,
+            is_superuser=True
+        )
+        db.add(user)
+        db.commit()
+        print("Seeded admin user")
+
+if __name__ == "__main__":
+    seed()
+```
+
+Run it with:
+
+```bash
+python seed_admin.py
+```
+
+> **Security note:** Change the default password immediately after first login via **Settings** or the **Users** screen. Never commit a file containing a real password to version control.
+
 ## Project Structure
 
 ```

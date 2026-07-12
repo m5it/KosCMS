@@ -1,23 +1,23 @@
-# Plan: Fix Admin Panel Not Loading
-## ID: 1783844596.1984804
-## Created: 2026-07-12 08:23:16
+# Plan: WebCMS v1.3.4 — Admin Panel API Fixes
+## ID: 1783888560.8738713
+## Created: 2026-07-12 20:36:00
 ## Status: in_progress
 
 ### Goal:
-The admin panel at /admin does not load in the browser. The browser console shows /admin/assets/admin.js and /favicon.ico timing out over HTTPS on port 8000, even though the server is running plain HTTP. Diagnose whether the issue is CSP upgrade-insecure-requests, HSTS browser caching, HTTPS redirect middleware, or the deployed files not matching the edited source. Fix the root cause and verify the admin panel renders with menus and controls.
+Fix the admin panel management screens by implementing the missing /api/v1/admin/* REST endpoints that the React UI expects. Also document how to create an admin user and password in README.md. The server log confirms /admin and /admin/assets/admin.js load correctly, but all /api/v1/admin/* calls return 404.
 
 ### Tasks (4):
-1. [pending] Verify deployed files match edited source
-   ID: 1783844599.8584874
+1. [pending] Review current admin API endpoints and UI expectations
+   ID: 1783888563.8601105
 
-2. [pending] Check HTTPS/HSTS redirect behavior
-   ID: 1783844602.5288258
+2. [pending] Implement /api/v1/admin/* REST endpoints
+   ID: 1783888566.986434
 
-3. [pending] Fix admin asset loading
-   ID: 1783844605.2655919
+3. [pending] Document admin user/password setup
+   ID: 1783888570.404498
 
-4. [pending] Browser verify admin panel renders
-   ID: 1783844610.3948958
+4. [pending] Bump version to 1.3.4 and verify
+   ID: 1783888573.6126766
 
 ---
 

@@ -3,7 +3,7 @@
   "title": "Fix Admin Panel Not Loading",
   "instructions": "The admin panel at /admin does not load in the browser. The browser console shows /admin/assets/admin.js and /favicon.ico timing out over HTTPS on port 8000, even though the server is running plain HTTP. Diagnose whether the issue is CSP upgrade-insecure-requests, HSTS browser caching, HTTPS redirect middleware, or the deployed files not matching the edited source. Fix the root cause and verify the admin panel renders with menus and controls.",
   "startTimestamp": 1783844596.1984816,
-  "endTimestamp": 1783844881.664035,
+  "endTimestamp": 1783888377.2282033,
   "tasks": {
     "1783844599.8584874": {
       "id": "1783844599.8584874",
@@ -13,11 +13,11 @@
       "endTimestamp": 1783844723.2672863,
       "log": [
         {
-          "timestamp": 1783844652.3242977,
+          "timestamp": 1783888360.6013632,
           "text": "Build started"
         },
         {
-          "timestamp": 1783844721.1709633,
+          "timestamp": 1783888360.6013641,
           "text": "Verified local source files: webcms/admin/routes.py has ADMIN_CSP without upgrade-insecure-requests; webcms/admin-ui/dist/index.html loads /admin/assets/admin.js externally; webcms/admin-ui/dist/assets/admin.js exists; webcms/core/router.py supports {param:path}. Also identified that SecurityHeadersMiddleware overwrites admin CSP and adds HSTS, so patched it to preserve admin CSP and skip HSTS for /admin paths."
         }
       ]
@@ -30,7 +30,7 @@
       "endTimestamp": 1783844765.3588905,
       "log": [
         {
-          "timestamp": 1783844763.5707736,
+          "timestamp": 1783888360.601368,
           "text": "Updated webcms/security/middleware.py: SecurityHeadersMiddleware now preserves admin CSP and skips HSTS for /admin paths; HTTPSRedirectMiddleware now skips /admin and /favicon.ico redirects. Rewrote the file cleanly after a syntax corruption and verified it compiles."
         }
       ]
@@ -43,7 +43,7 @@
       "endTimestamp": 1783844868.9791312,
       "log": [
         {
-          "timestamp": 1783844866.798459,
+          "timestamp": 1783888360.6013699,
           "text": "Applied fixes: SecurityHeadersMiddleware preserves admin CSP and skips HSTS for /admin; HTTPSRedirectMiddleware skips /admin and /favicon.ico; admin routes serve a fallback favicon. Verified with unit-level middleware tests. Server restart must be done on the deployment machine."
         }
       ]
@@ -56,7 +56,7 @@
       "endTimestamp": 1783844881.6640239,
       "log": [
         {
-          "timestamp": 1783844879.8091724,
+          "timestamp": 1783888360.6013713,
           "text": "Created ADMIN_PANEL_VERIFICATION.md with step-by-step browser verification instructions. Cannot perform actual browser/server restart from this environment; user must execute on the deployed VM."
         }
       ]

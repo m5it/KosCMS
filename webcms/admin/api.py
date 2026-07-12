@@ -16,6 +16,7 @@ from webcms.plugins.marketplace import get_registry
 from webcms.cache.manager import get_tenant_cache, CacheWarmer
 from webcms.admin.widgets import get_widget_registry, WidgetConfig
 from webcms.security.middleware import CSPReportHandler
+from webcms.admin.admin_api import register_admin_api
 
 
 class APIEndpoint:
@@ -522,5 +523,8 @@ def create_api(app, db, auth):
             return endpoint.dispatch(request, **kwargs)
         
         app.router.add(path, handler, endpoint_class.methods)
+    
+    # Register the React admin panel /api/v1/admin/* endpoints
+    register_admin_api(app, db=db, auth=auth)
     
     return app

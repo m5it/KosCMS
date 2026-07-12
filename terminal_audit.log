@@ -931,3 +931,7 @@ for p in ['/admin','/admin/','/admin/assets/admin.js','/admin/dashboard']:
 [2026-07-12 08:25:45] CMD: python3 -m py_compile webcms/security/middleware.py | SUCCESS: True | OUTPUT_LEN: 156
 [2026-07-12 08:26:12] CMD: python3 -m py_compile webcms/security/middleware.py | SUCCESS: True | OUTPUT_LEN: 0
 [2026-07-12 08:26:43] CMD: python3 -m py_compile webcms/admin/routes.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 20:40:54] CMD: python3 -m py_compile webcms/admin/admin_api.py webcms/admin/api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 20:41:04] CMD: rm check_admin_api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 20:43:11] CMD: python3 -m py_compile webcms/__init__.py webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 20:43:30] CMD: rm verify_admin_api.py | SUCCESS: True | OUTPUT_LEN: 0

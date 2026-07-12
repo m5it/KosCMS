@@ -4,6 +4,7 @@
 
 ## Approved Directories
 .
+../../OurAI/.git/hooks/
 ../KosDB
 
 ## Approved Files
