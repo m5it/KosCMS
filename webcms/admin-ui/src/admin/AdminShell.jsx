@@ -72,4 +72,76 @@ function Breadcrumb() {
 function Sidebar() {
   const location = useLocation();
   return (
-n    <aside className=\"admin-sidebar\">\n      <div className=\"admin-brand\">\n        <h2>WebCMS</h2>\n        <small>Admin Control Panel</small>\n      </div>\n      <nav className=\"admin-nav\">\n        {menuGroups.map((group) => (\n          <div key={group.title} className=\"nav-group\">\n            <h4>{group.title}</h4>\n            <ul>\n              {group.items.map((item) => (\n                <li key={item.path}>\n                  <Link\n                    to={item.path}\n                    className={location.pathname.endsWith(item.path) ? 'active' : ''}\n                  >\n                    <span className=\"nav-icon\">{item.icon}</span>\n                    {item.label}\n                  </Link>\n                </li>\n              ))}\n            </ul>\n          </div>\n        ))}\n      </nav>\n    </aside>\n  );\n}\n\nfunction TopBar() {\n  return (\n    <header className=\"admin-topbar\">\n      <Breadcrumb />\n      <div className=\"admin-profile\">\n        <span>👤 Admin User</span>\n        <button className=\"btn btn-secondary\">Logout</button>\n      </div>\n    </header>\n  );\n}\n\nfunction AdminShell() {\n  return (\n    <div className=\"admin-shell\">\n      <Sidebar />\n      <div className=\"admin-main\">\n        <TopBar />\n        <main className=\"admin-content\">\n          <Routes>\n            <Route path=\"/\" element={<Navigate to=\"dashboard\" replace />} />\n            <Route path=\"dashboard\" element={<Dashboard />} />\n            <Route path=\"content\" element={<ContentManager />} />\n            <Route path=\"media\" element={<MediaManager />} />\n            <Route path=\"plugins\" element={<PluginManager />} />\n            <Route path=\"templates\" element={<TemplateManager />} />\n            <Route path=\"themes\" element={<ThemeManager />} />\n            <Route path=\"users\" element={<UserManager />} />\n            <Route path=\"roles\" element={<RoleManager />} />\n            <Route path=\"settings\" element={<Settings />} />\n            <Route path=\"cache\" element={<CacheManager />} />\n            <Route path=\"backups\" element={<BackupManager />} />\n            <Route path=\"workflows\" element={<WorkflowManager />} />\n            <Route path=\"tenants\" element={<TenantManager />} />\n            <Route path=\"search\" element={<SearchManager />} />\n            <Route path=\"notifications\" element={<NotificationManager />} />\n          </Routes>\n        </main>\n      </div>\n    </div>\n  );\n}\n\nexport default AdminShell;
+    <aside className="admin-sidebar">
+      <div className="admin-brand">
+        <h2>WebCMS</h2>
+        <small>Admin Control Panel</small>
+      </div>
+      <nav className="admin-nav">
+        {menuGroups.map((group) => (
+          <div key={group.title} className="nav-group">
+            <h4>{group.title}</h4>
+            <ul>
+              {group.items.map((item) => (
+                <li key={item.path}>
+                  <Link
+                    to={item.path}
+                    className={location.pathname.endsWith(item.path) ? 'active' : ''}
+                  >
+                    <span className="nav-icon">{item.icon}</span>
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </nav>
+    </aside>
+  );
+}
+
+function TopBar() {
+  return (
+    <header className="admin-topbar">
+      <Breadcrumb />
+      <div className="admin-profile">
+        <span>👤 Admin User</span>
+        <button className="btn btn-secondary">Logout</button>
+      </div>
+    </header>
+  );
+}
+
+function AdminShell() {
+  return (
+    <div className="admin-shell">
+      <Sidebar />
+      <div className="admin-main">
+        <TopBar />
+        <main className="admin-content">
+          <Routes>
+            <Route path="/" element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="content" element={<ContentManager />} />
+            <Route path="media" element={<MediaManager />} />
+            <Route path="plugins" element={<PluginManager />} />
+            <Route path="templates" element={<TemplateManager />} />
+            <Route path="themes" element={<ThemeManager />} />
+            <Route path="users" element={<UserManager />} />
+            <Route path="roles" element={<RoleManager />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="cache" element={<CacheManager />} />
+            <Route path="backups" element={<BackupManager />} />
+            <Route path="workflows" element={<WorkflowManager />} />
+            <Route path="tenants" element={<TenantManager />} />
+            <Route path="search" element={<SearchManager />} />
+            <Route path="notifications" element={<NotificationManager />} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default AdminShell;

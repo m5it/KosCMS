@@ -1,23 +1,23 @@
-# Plan: Fix Admin Panel CSP & Asset Routing
-## ID: 1783840287.8256898
-## Created: 2026-07-12 07:11:27
+# Plan: Audit Admin UI and Project Health
+## ID: 1783844090.9833572
+## Created: 2026-07-12 08:14:50
 ## Status: in_progress
 
 ### Goal:
-The admin panel is blank because inline scripts are blocked by CSP nonce policy, and nested static assets under /admin/assets/ fail to route. Fix by moving admin UI JavaScript to an external file, supporting multi-segment path parameters in the router, and verifying /admin renders menus and controls.
+Perform a comprehensive review of the WebCMS project focusing on the admin UI JavaScript, React components, backend admin routes, API endpoints, and run available tests. Identify and document any problems before fixing them.
 
 ### Tasks (4):
-1. [pending] Move admin JS to external file
-   ID: 1783840289.9386477
+1. [pending] Review admin UI JavaScript and React components
+   ID: 1783844093.2641969
 
-2. [pending] Support multi-segment path routes in router
-   ID: 1783840291.8749337
+2. [pending] Review backend admin routes and API wiring
+   ID: 1783844095.5840063
 
-3. [pending] Update admin route to use path parameter
-   ID: 1783840294.0633264
+3. [pending] Run project tests and collect failures
+   ID: 1783844098.4637825
 
-4. [pending] Verify admin panel renders
-   ID: 1783840296.10318
+4. [pending] Document findings and propose fixes
+   ID: 1783844100.6638873
 
 ---
 

@@ -9,6 +9,24 @@ from pathlib import Path
 from webcms.core.response import Response
 
 
+# Relaxed CSP for the admin UI: allow same-origin scripts/styles, inline styles,
+# images from anywhere, and do NOT upgrade insecure requests (server may be HTTP).
+ADMIN_CSP = (
+    "default-src 'self'; "
+    "script-src 'self'; "
+    "style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data: https:; "
+    "font-src 'self'; "
+    "connect-src 'self'; "
+    "media-src 'self'; "
+    "object-src 'none'; "
+    "frame-src 'none'; "
+    "frame-ancestors 'self'; "
+    "form-action 'self'; "
+    "base-uri 'self'"
+)
+
+
 def admin_routes(app):
     """Register admin routes serving the built React admin UI."""
     dist_dir = Path(__file__).parent.parent / 'admin-ui' / 'dist'
@@ -20,7 +38,10 @@ def admin_routes(app):
         content_type = mimetypes.guess_type(str(path))[0] or 'application/octet-stream'
         with open(path, 'rb') as f:
             body = f.read()
-        return Response(body, 200, headers={'Content-Type': content_type})
+        return Response(body, 200, headers={
+            'Content-Type': content_type,
+            'Content-Security-Policy': ADMIN_CSP
+        })
 
     @app.route('/admin', methods=['GET'])
     @app.route('/admin/', methods=['GET'])

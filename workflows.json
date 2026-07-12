@@ -105,7 +105,7 @@
         }
       ],
       "is_default": true,
-      "created_at": "2026-07-12T05:54:41.332618"
+      "created_at": "2026-07-12T08:17:38.190774"
     }
   },
   "instances": {
@@ -385,6 +385,53 @@
         }
       ],
       "created_at": "2026-07-12T05:54:41.333037"
+    },
+    "1c5edb8a-8469-42b0-9f41-33ab9c5ef67e": {
+      "instance_id": "1c5edb8a-8469-42b0-9f41-33ab9c5ef67e",
+      "workflow_id": "default-editorial",
+      "content_id": "post-1",
+      "content_type": "post",
+      "current_state": "published",
+      "assigned_reviewers": [
+        "reviewer1",
+        "reviewer2"
+      ],
+      "scheduled_publish": null,
+      "history": [
+        {
+          "from_state": null,
+          "to_state": "draft",
+          "user_id": null,
+          "username": null,
+          "comment": "Workflow started",
+          "timestamp": "2026-07-12T08:17:38.191047"
+        },
+        {
+          "from_state": "draft",
+          "to_state": "review",
+          "user_id": "author1",
+          "username": "Author",
+          "comment": "Ready for review",
+          "timestamp": "2026-07-12T08:17:38.191799"
+        },
+        {
+          "from_state": "review",
+          "to_state": "approved",
+          "user_id": "reviewer1",
+          "username": "Reviewer One",
+          "comment": "Looks good",
+          "timestamp": "2026-07-12T08:17:38.191974"
+        },
+        {
+          "from_state": "approved",
+          "to_state": "published",
+          "user_id": "editor1",
+          "username": "Editor",
+          "comment": null,
+          "timestamp": "2026-07-12T08:17:38.192133"
+        }
+      ],
+      "created_at": "2026-07-12T08:17:38.191045"
     }
   }
 }

@@ -910,3 +910,18 @@ asyncio.run(test_workflow())
 [2026-07-12 06:21:02] CMD: python3 -m py_compile webcms/admin/admin_api.py webcms/admin/widgets.py | SUCCESS: True | OUTPUT_LEN: 0
 [2026-07-12 06:21:08] CMD: python3 test_admin_dashboard.py | SUCCESS: True | OUTPUT_LEN: 729
 [2026-07-12 06:21:14] CMD: python3 test_admin_dashboard.py | SUCCESS: True | OUTPUT_LEN: 607
+[2026-07-12 08:13:26] CMD: python3 -c from webcms.app_factory import create_app; app=create_app('config_test.json'); import sys; from io import BytesIO;
+def req(path):
+  environ={'REQUEST_METHOD':'GET','PATH_INFO':path,'QUERY_STRING':'','SERVER_NAME':'localhost','SERVER_PORT':'8000','HTTP_HOST':'localhost:8000','wsgi.url_scheme':'http','wsgi.input':BytesIO(b''),'wsgi.errors':sys.stderr,'wsgi.version':(1,0),'wsgi.multithread':False,'wsgi.multiprocess':False,'wsgi.run_once':True};
+  info={}; sr=lambda s,h: info.update({'status':s,'headers':dict(h)}); body=b''.join(app(environ,sr)); return info, body
+info, body = req('/admin'); print('status:', info['status']); print('csp:', info['headers'].get('Content-Security-Policy')); print('upgrade in csp:', 'upgrade-insecure-requests' in (info['headers'].get('Content-Security-Policy') or ''))
+info, body = req('/admin/assets/admin.js'); print('asset status:', info['status']); print('asset csp:', info['headers'].get('Content-Security-Policy')) | SUCCESS: True | OUTPUT_LEN: 841
+[2026-07-12 08:15:27] CMD: find webcms/admin-ui/src/admin -type f | SUCCESS: True | OUTPUT_LEN: 928
+[2026-07-12 08:17:17] CMD: python3 -c from webcms.app_factory import create_app; app=create_app('config_test.json'); import sys; from io import BytesIO;
+def req(path):
+  environ={'REQUEST_METHOD':'GET','PATH_INFO':path,'QUERY_STRING':'','SERVER_NAME':'localhost','SERVER_PORT':'8000','HTTP_HOST':'localhost:8000','wsgi.url_scheme':'http','wsgi.input':BytesIO(b''),'wsgi.errors':sys.stderr,'wsgi.version':(1,0),'wsgi.multithread':False,'wsgi.multiprocess':False,'wsgi.run_once':True};
+  info={}; sr=lambda s,h: info.update({'status':s,'headers':dict(h)}); body=b''.join(app(environ,sr)); return info, body
+for p in ['/admin','/admin/','/admin/assets/admin.js','/admin/dashboard']:
+  info, body = req(p); print(p, info['status'], info['headers'].get('Content-Type'), len(body), 'csp-upgrade:', 'upgrade-insecure-requests' in (info['headers'].get('Content-Security-Policy',''))) | SUCCESS: True | OUTPUT_LEN: 841
+[2026-07-12 08:17:27] CMD: ls test_*.py | SUCCESS: True | OUTPUT_LEN: 83
+[2026-07-12 08:17:29] CMD: find . -maxdepth 1 -name test_*.py -type f | SUCCESS: True | OUTPUT_LEN: 187
