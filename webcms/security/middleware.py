@@ -26,7 +26,7 @@ class CSPConfig:
     media_src: List[str] = field(default_factory=lambda: ["'self'"])
     object_src: List[str] = field(default_factory=lambda: ["'none'"])
     frame_src: List[str] = field(default_factory=lambda: ["'none'"])
-    frame_ancestors: List[str] = field(default_factory=lambda: ["'self'"])  # Changed from 'none'
+    frame_ancestors: List[str] = field(default_factory=lambda: ["'self'"])
     form_action: List[str] = field(default_factory=lambda: ["'self'"])
     base_uri: List[str] = field(default_factory=lambda: ["'self'"])
     report_uri: Optional[str] = None
@@ -37,7 +37,6 @@ class CSPConfig:
         """Build CSP header value."""
         directives = []
         
-        # Build each directive
         policy_map = {
             "default-src": self.default_src,
             "script-src": self.script_src + ([f"'nonce-{nonce}'"] if nonce else []),
@@ -101,7 +100,7 @@ class SecurityHeadersMiddleware:
         hsts_max_age: int = 31536000,
         hsts_include_subdomains: bool = True,
         hsts_preload: bool = True,
-        frame_options: str = "SAMEORIGIN",  # Changed from DENY
+        frame_options: str = "SAMEORIGIN",
         content_type_options: bool = True,
         xss_protection: bool = True,
         referrer_policy: str = "strict-origin-when-cross-origin",
@@ -136,25 +135,32 @@ class SecurityHeadersMiddleware:
         handler: Callable[[Request], Response]
     ) -> Response:
         """Process request and add security headers."""
-        # Generate nonce for this request
+        path = getattr(request, 'path', '/')
+        is_admin = path.startswith('/admin')
+        
+        # Generate nonce for this request, but not for admin paths which use external scripts
+        request_id = getattr(request, 'id', 'default')
         request_nonce = None
-        if self.generate_nonces:
-            request_id = getattr(request, 'id', 'default')
+        if self.generate_nonces and not is_admin:
             request_nonce = self.nonce_generator.generate(request_id)
             request.csp_nonce = request_nonce
         
         # Process request
         response = handler(request)
         
-        # Build CSP with nonce
-        csp_value = self.csp_config.build_policy(request_nonce)
-        if self.csp_config.report_only:
-            response.headers["Content-Security-Policy-Report-Only"] = csp_value
+        # Build CSP with nonce, but preserve admin responses that set their own CSP
+        existing_csp = response.headers.get("Content-Security-Policy")
+        if is_admin and existing_csp:
+            pass
         else:
-            response.headers["Content-Security-Policy"] = csp_value
+            csp_value = self.csp_config.build_policy(request_nonce)
+            if self.csp_config.report_only:
+                response.headers["Content-Security-Policy-Report-Only"] = csp_value
+            else:
+                response.headers["Content-Security-Policy"] = csp_value
         
-        # Strict Transport Security
-        if self.hsts_enabled:
+        # Strict Transport Security - skip for admin paths so the UI works over plain HTTP
+        if self.hsts_enabled and not is_admin:
             hsts_value = f"max-age={self.hsts_max_age}"
             if self.hsts_include_subdomains:
                 hsts_value += "; includeSubDomains"
@@ -187,12 +193,8 @@ class SecurityHeadersMiddleware:
                     perms.append(f"{feature}=()")
             response.headers["Permissions-Policy"] = ", ".join(perms)
         
-        # Cross-Origin headers - DISABLED (caused navigation blocking)
-        # response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
-        # response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
-        
         # Cleanup nonce
-        if self.generate_nonces and request_id:
+        if self.generate_nonces:
             self.nonce_generator.cleanup(request_id)
         
         return response
@@ -210,16 +212,12 @@ class CSPReportHandler:
             return Response.error("Method not allowed", 405)
         
         try:
-            # Parse report
             if request.json:
                 report = request.json
             else:
                 report = json.loads(request.body.decode('utf-8'))
             
-            # Log violation
             self._log_violation(report)
-            
-            # Return 204 No Content (browser doesn't need response)
             return Response("", 204)
             
         except json.JSONDecodeError:
@@ -241,7 +239,6 @@ class CSPReportHandler:
             "script_sample": csp_report.get('script-sample'),
         }
         
-        # Write to log file
         with open(self.log_path, 'a') as f:
             f.write(json.dumps(violation) + "\n")
 
@@ -263,9 +260,13 @@ class HTTPSRedirectMiddleware:
             request.environ.get("HTTP_X_FORWARDED_PROTO") == "https"
         )
         
-        if self.enabled and not is_secure:
+        path = request.environ.get("PATH_INFO", "/")
+        # Never redirect admin panel or favicon to HTTPS - the admin UI must work
+        # over plain HTTP when the server is not behind an HTTPS terminator.
+        skip_redirect = path.startswith('/admin') or path == '/favicon.ico'
+        
+        if self.enabled and not is_secure and not skip_redirect:
             host = request.environ.get("HTTP_HOST", "localhost")
-            path = request.environ.get("PATH_INFO", "/")
             query = request.environ.get("QUERY_STRING", "")
             
             https_url = f"https://{host}{path}"

@@ -925,3 +925,9 @@ for p in ['/admin','/admin/','/admin/assets/admin.js','/admin/dashboard']:
   info, body = req(p); print(p, info['status'], info['headers'].get('Content-Type'), len(body), 'csp-upgrade:', 'upgrade-insecure-requests' in (info['headers'].get('Content-Security-Policy',''))) | SUCCESS: True | OUTPUT_LEN: 841
 [2026-07-12 08:17:27] CMD: ls test_*.py | SUCCESS: True | OUTPUT_LEN: 83
 [2026-07-12 08:17:29] CMD: find . -maxdepth 1 -name test_*.py -type f | SUCCESS: True | OUTPUT_LEN: 187
+[2026-07-12 08:24:18] CMD: grep -n upgrade-insecure-requests webcms/admin/routes.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 08:24:21] CMD: grep -n admin/assets/admin.js webcms/admin-ui/dist/index.html | SUCCESS: True | OUTPUT_LEN: 52
+[2026-07-12 08:24:50] CMD: grep -n SecurityMiddleware\|CSPConfig\|HTTPSRedirect\|middleware\|hsts webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 448
+[2026-07-12 08:25:45] CMD: python3 -m py_compile webcms/security/middleware.py | SUCCESS: True | OUTPUT_LEN: 156
+[2026-07-12 08:26:12] CMD: python3 -m py_compile webcms/security/middleware.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 08:26:43] CMD: python3 -m py_compile webcms/admin/routes.py | SUCCESS: True | OUTPUT_LEN: 0
