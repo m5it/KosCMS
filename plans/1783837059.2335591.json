@@ -1,0 +1,22 @@
+{
+  "id": "1783837059.2335591",
+  "title": "WebCMS v1.3.0 Plan",
+  "instructions": "Plan the next release of WebCMS focusing on real-time collaboration, AI content assistant, and improved analytics.",
+  "startTimestamp": 1783837059.2335613,
+  "endTimestamp": 1783837059.2350159,
+  "tasks": {
+    "1783837059.2337332": {
+      "id": "1783837059.2337332",
+      "status": "in_progress",
+      "instruction": "1. Add WebSocket server for live editing. 2. Implement operational transform for concurrent text edits. 3. Add presence indicators and cursors.",
+      "startTimestamp": 1783837059.2347949,
+      "endTimestamp": null,
+      "log": [
+        {
+          "timestamp": 1783837059.234838,
+          "text": "Build started"
+        }
+      ]
+    }
+  }
+}

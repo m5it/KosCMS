@@ -1,47 +1,38 @@
-# Plan: WebCMS v1.2.0 Development
-## ID: 1783834027.5997694
-## Created: 2026-07-12 05:27:07
+# Plan: WebCMS Admin Control Panel
+## ID: 1783837129.2905695
+## Created: 2026-07-12 06:18:49
 ## Status: in_progress
 
 ### Goal:
-Develop WebCMS v1.2.0 with major new features: real-time collaboration, multi-tenant improvements, content versioning, workflow system, GraphQL API, Redis caching, and enhanced admin UI. Update from current v1.1.0.
+Build a functional admin control panel at /admin with management screens for plugins, pages, posts, media, templates, themes, users, roles, settings, cache, backups, workflows, tenants, search, and notifications. Include backend API endpoints, frontend React components, navigation, and dashboard widgets.
 
-### Tasks (12):
-1. [pending] Update Version to 1.2.0 and Core Setup
-   ID: 1783834032.2042513
+### Tasks (9):
+1. [pending] Build admin backend API foundation
+   ID: 1783837132.0711699
 
-2. [pending] Real-Time Collaboration System
-   ID: 1783834036.037351
+2. [pending] Create admin dashboard widgets
+   ID: 1783837134.4620793
 
-3. [pending] Content Versioning System
-   ID: 1783834040.0016634
+3. [pending] Build React admin control panel shell
+   ID: 1783837136.8881493
 
-4. [pending] Workflow and Approval System
-   ID: 1783834044.7507782
+4. [pending] Build Pages and Posts management screens
+   ID: 1783837140.627099
 
-5. [pending] GraphQL API Implementation
-   ID: 1783834048.1962008
+5. [pending] Build Media, Plugins, Templates, Themes screens
+   ID: 1783837143.4613008
 
-6. [pending] Redis Caching and Performance
-   ID: 1783834051.578707
+6. [pending] Build Users, Roles, Settings screens
+   ID: 1783837145.9699597
 
-7. [pending] Multi-Tenant Architecture Improvements
-   ID: 1783834055.8665898
+7. [pending] Build Cache, Backups, Workflows operational screens
+   ID: 1783837149.0413644
 
-8. [pending] Enhanced Admin UI with React/Vue
-   ID: 1783834059.153682
+8. [pending] Build Tenants, Search, Notifications screens
+   ID: 1783837151.6537328
 
-9. [pending] Advanced Search with Elasticsearch
-   ID: 1783834062.6662185
-
-10. [pending] Email and Notification System
-   ID: 1783834066.7521498
-
-11. [pending] Backup and Disaster Recovery
-   ID: 1783834070.7921603
-
-12. [pending] Comprehensive Testing and Documentation
-   ID: 1783834076.2624395
+9. [pending] Wire /admin route and verify control panel
+   ID: 1783837154.1657403
 
 ---
 

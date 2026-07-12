@@ -905,3 +905,8 @@ asyncio.run(test_workflow())
 [2026-07-12 05:54:35] CMD: python3 -m pytest tests/ --cov=webcms --cov-report=term | SUCCESS: True | OUTPUT_LEN: 1377
 [2026-07-12 05:54:38] CMD: python3 -m pytest tests/integration/ tests/unit/ tests/benchmark/ --cov=webcms.workflow,webcms.tenants,webcms.cache,webcms.notifications,webcms.backup,webcms.search,webcms.graphql --cov-report=term | SUCCESS: True | OUTPUT_LEN: 8942
 [2026-07-12 05:54:41] CMD: python3 -m pytest tests/integration/ tests/unit/ tests/benchmark/ --cov=webcms --cov-report=term --cov-fail-under=0 | SUCCESS: True | OUTPUT_LEN: 17915
+[2026-07-12 06:20:15] CMD: python3 -m py_compile webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 06:20:39] CMD: python3 -m py_compile webcms/admin/admin_api.py webcms/admin/widgets.py | SUCCESS: True | OUTPUT_LEN: 120
+[2026-07-12 06:21:02] CMD: python3 -m py_compile webcms/admin/admin_api.py webcms/admin/widgets.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 06:21:08] CMD: python3 test_admin_dashboard.py | SUCCESS: True | OUTPUT_LEN: 729
+[2026-07-12 06:21:14] CMD: python3 test_admin_dashboard.py | SUCCESS: True | OUTPUT_LEN: 607

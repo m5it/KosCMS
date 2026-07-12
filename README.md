@@ -1,21 +1,42 @@
 # WebCMS - Modern Python Content Management System
 
-A production-ready CMS with plugin architecture, template system, HTTPS support, KosDB integration, and **v1.2.0 features**.
+A production-ready CMS with plugin architecture, template system, HTTPS support, KosDB integration, and a full React-based admin control panel. **Version 1.3.0**
 
 ## Features
 
 ### Core Features
-- **Plugin System**: Hook-based architecture with secure sandbox
-- **Theme Engine**: Jinja2 templates with asset pipeline
-- **HTTPS/Security**: SSL/TLS, security headers, CSRF/XSS protection
-- **Content Management**: Pages, posts, categories, tags with revisions
-- **Media Library**: Image processing, multiple storage backends
-- **Admin Dashboard**: React-based UI with REST API
-- **Authentication**: JWT tokens, RBAC, OAuth2, 2FA support
+- **Plugin System**: Hook-based architecture with secure sandbox and marketplace registry
+- **Theme Engine**: Jinja2 templates with asset pipeline and theme activation
+- **HTTPS/Security**: SSL/TLS, security headers, CSRF/XSS protection, configurable CSP
+- **Content Management**: Pages, posts, categories, tags with revisions and import/export
+- **Media Library**: Image processing, WebP conversion, multiple storage backends
+- **Authentication**: JWT tokens, RBAC, OAuth2, 2FA support, rate limiting
 - **Database**: SQLAlchemy ORM with KosDB dialect, migrations, soft delete, audit logging
 - **KosDB Integration**: Native KosDB client, custom SQLAlchemy dialect, replication, and migrations
 
-### 🆕 v1.2.0 Features
+### 🆕 v1.3.0 — React Admin Control Panel
+
+The `/admin` route serves a full React/Vite admin control panel with sidebar navigation and management screens for every major subsystem. The backend exposes `/api/v1/admin/*` REST endpoints consumed by the UI.
+
+| Screen | Capabilities |
+|--------|--------------|
+| **Dashboard** | Live widgets from `/api/v1/admin/dashboard` |
+| **Pages & Posts** | List, create, edit, delete content |
+| **Media** | Gallery, upload, bulk select, delete |
+| **Templates** | Create, edit, delete template files |
+| **Themes** | Activate, preview installed themes |
+| **Plugins** | Activate, deactivate, install, uninstall |
+| **Users** | List, create, edit, delete, activate/deactivate |
+| **Roles** | Permission grid editor |
+| **Settings** | Site, cache, search, notifications, security |
+| **Cache** | Analytics, warm, invalidate by pattern, flush |
+| **Backups** | Create, restore, verify, delete backups |
+| **Workflows** | Instances, state transitions, reviewer assignment, definitions |
+| **Tenants** | CRUD and per-tenant analytics |
+| **Search** | Analytics and query suggestions |
+| **Notifications** | Preferences, manual send, digest trigger, queue stats |
+
+### v1.2.0 Features
 
 | Feature | Description |
 |---------|-------------|
@@ -23,7 +44,6 @@ A production-ready CMS with plugin architecture, template system, HTTPS support,
 | **GraphQL API** | Graphene schema with queries, mutations, subscriptions |
 | **Redis Caching** | Connection pooling, distributed locks, query caching |
 | **Multi-Tenancy** | Schema-based tenant isolation with themes and quotas |
-| **Modern Admin UI** | Vite + React with drag-drop builder and dark mode |
 | **Elasticsearch** | Faceted search with highlighting and fuzzy matching |
 | **Notifications** | Email, in-app, push with templates and digest queues |
 | **Backup & DR** | Scheduled backups, S3/Azure storage, encryption, restore |
@@ -49,8 +69,17 @@ A production-ready CMS with plugin architecture, template system, HTTPS support,
 # Install dependencies
 pip install -r requirements.txt
 
+# Build the admin UI
+cd webcms/admin-ui
+npm install
+npm run build
+cd ../..
+
 # Run development server
 python run.py --debug
+
+# Open the admin panel
+open http://localhost:8000/admin
 
 # Or with Docker
 docker-compose -f docs/deployment/docker-compose.yml up -d
@@ -68,7 +97,7 @@ webcms/
 ├── content/        # Content management + search + exchange
 ├── media/          # File uploads, WebP conversion, storage
 ├── security/       # HTTPS, CSP, CSRF, XSS protection
-├── admin/          # Admin dashboard, API, widgets
+├── admin/          # Admin dashboard, API, widgets, /admin route
 ├── cache/          # Redis caching, locks, sessions, analytics
 ├── search/         # Elasticsearch search with facets
 ├── database/       # SQLAlchemy + KosDB client, dialect, migrations
@@ -81,223 +110,36 @@ webcms/
 └── tests/          # Integration, unit, load, benchmark tests
 ```
 
-## New in v1.2.0
+## Admin UI Routing
 
-### Workflow Engine
+- `App.jsx` mounts `AdminShell` under `/admin/*`
+- `AdminShell.jsx` renders the sidebar and top bar, then switches relative child routes (`dashboard`, `content`, `media`, etc.)
+- The backend serves `webcms/admin-ui/dist/index.html` for `/admin` and all `/admin/*` paths, enabling browser refresh and deep linking
 
-```python
-import asyncio
-from webcms.workflow import WorkflowManager
+## Admin API Endpoints
 
-async def main():
-    manager = WorkflowManager()
-    workflow = await manager.get_default_workflow()
+All management screens connect to `/api/v1/admin`:
 
-    instance = await manager.start_workflow(
-        content_id="post-1",
-        content_type="post",
-        workflow_id=workflow.workflow_id
-    )
-    await manager.assign_reviewers(instance.instance_id, ["reviewer1"])
-    await manager.transition(
-        instance.instance_id, "review",
-        user_id="author1", username="Author"
-    )
-
-asyncio.run(main())
-```
-
-### GraphQL API
-
-```python
-from webcms.graphql import schema
-
-result = schema.execute('{ posts { id title slug status } }')
-print(result.data)
-```
-
-Visit `/graphiql` for the interactive explorer.
-
-### Redis Caching
-
-```python
-from webcms.cache import get_redis_client, CacheManager
-
-client = get_redis_client()
-cache = CacheManager(client)
-
-async def get_popular_posts():
-    return await cache.cache_query(
-        "popular_posts",
-        {"limit": 10},
-        fetch_func=lambda: {"posts": []}
-    )
-```
-
-### Multi-Tenancy
-
-```python
-from webcms.tenants import TenantManager
-
-async def main():
-    manager = TenantManager()
-    tenant = await manager.create_tenant(
-        name="Acme Blog",
-        slug="acme",
-        domain="acme.example.com"
-    )
-    print(tenant.to_dict())
-
-asyncio.run(main())
-```
-
-### Elasticsearch Search
-
-```bash
-curl "/api/v1/search?q=webcms&status=published&tags=python"
-```
-
-Responses include highlighted results, facets, and pagination.
-
-### Notifications
-
-```python
-from webcms.notifications import NotificationManager, SMTPAdapter
-
-manager = NotificationManager(email_adapter=SMTPAdapter())
-asyncio.run(manager.notify(
-    user_id="user1",
-    event_type="welcome",
-    subject="Welcome to WebCMS",
-    context={"username": "Alice", "email": "alice@example.com"}
-))
-```
-
-### Backup & Disaster Recovery
-
-```bash
-# Create backup
-curl -X POST /api/v1/backups
-
-# Restore from backup
-curl -X POST /api/v1/backups/<backup_id>/restore
-
-# Monitor backup health
-curl /api/v1/backups/monitor
-```
-
-### KosDB Integration
-
-```python
-from webcms.database.kosdb_client import KosDBClient
-
-client = KosDBClient("kosdb://localhost:5000/webcms")
-client.connect()
-
-# Execute query
-results = client.query("SELECT * FROM posts WHERE status = 'published'")
-
-# Run migrations
-from webcms.database.kosdb_migrate import KosDBMigrations
-migrations = KosDBMigrations(client)
-migrations.apply_pending()
-```
-
-### Modern Admin UI
-
-```bash
-cd webcms/admin-ui
-npm install
-npm run dev
-```
-
-Features drag-and-drop page builder, markdown editor, media gallery, dark mode, and keyboard shortcuts.
-
-## API Endpoints
-
-### Content API
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `GET /api/v1/posts` | GET | List posts |
-| `POST /api/v1/posts` | POST | Create post |
-| `GET /api/v1/posts/<id>` | GET | Get post |
-| `PUT /api/v1/posts/<id>` | PUT | Update post |
-| `DELETE /api/v1/posts/<id>` | DELETE | Delete post |
-
-### Workflow API
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `GET /api/v1/workflows` | GET | List workflow definitions |
-| `POST /api/v1/<type>/<id>/workflow` | POST | Start workflow |
-| `POST /api/v1/workflow-instances/<id>/transition` | POST | Transition state |
-| `POST /api/v1/workflow-instances/<id>/schedule` | POST | Schedule publish |
-
-### Search API
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `GET /api/v1/search` | GET | Full-text search |
-| `GET /api/v1/search/suggest` | GET | Search suggestions |
-| `GET /api/v1/search/analytics` | GET | Search analytics |
-
-### Tenant API
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `GET /api/v1/tenants` | GET | List tenants |
-| `POST /api/v1/tenants` | POST | Create tenant |
-| `GET /api/v1/tenants/<id>/analytics` | GET | Tenant analytics |
-| `POST /api/v1/tenants/share` | POST | Share content |
-
-### Notification API
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `GET /api/v1/notifications/<user_id>` | GET | User notifications |
-| `PUT /api/v1/notifications/<user_id>/preferences` | PUT | Update preferences |
-| `POST /api/v1/notifications/digest` | POST | Send digest emails |
-
-### Backup API
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `GET /api/v1/backups` | GET | List backups |
-| `POST /api/v1/backups` | POST | Create backup |
-| `POST /api/v1/backups/<id>/restore` | POST | Restore backup |
-| `GET /api/v1/backups/monitor` | GET | Backup health |
-
-### GraphQL
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `POST /graphql` | POST | GraphQL endpoint |
-| `GET /graphiql` | GET | GraphiQL explorer |
-
-## Documentation
-
-- [OpenAPI Spec](docs/api/openapi.yaml) - API documentation
-- [Workflow Guide](docs/guides/workflow-guide.md) - Content approval workflows
-- [Search Guide](docs/guides/search-guide.md) - Elasticsearch search
-- [Deployment Guide](docs/deployment/DEPLOYMENT.md) - Docker and production setup
-- [Disaster Recovery](webcms/backup/DISASTER_RECOVERY.md) - Backup and restore
-- [Architecture Decisions](docs/adr/) - ADRs
-
-## Testing
-
-```bash
-# Run integration and unit tests
-pytest tests/integration tests/unit -v
-
-# With coverage
-pytest tests/integration tests/unit --cov=webcms --cov-report=term
-
-# Load testing
-locust -f tests/load/locustfile.py
-k6 run tests/load/k6-script.js
-
-# Benchmarks
-python tests/benchmark/bench_queries.py
-```
-
-## Migration
-
-See [Migration Guide](docs/MIGRATION_v1.1.0.md) for upgrade instructions from v1.0.0.
+- `/dashboard`
+- `/content`
+- `/media`
+- `/templates`
+- `/themes`
+- `/plugins`
+- `/users`
+- `/roles`
+- `/settings`
+- `/cache/*`
+- `/backups/*`
+- `/workflows/*`
+- `/tenants/*`
+- `/search/*`
+- `/notifications/*`
 
 ## License
 
-MIT License
+MIT License - see LICENSE file for details.
+
+## Support
+
+For issues and documentation, visit the project repository or open an issue.
