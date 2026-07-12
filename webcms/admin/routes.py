@@ -1,9 +1,9 @@
-"""Admin Routes
+"""
+Admin Routes
 
 Serve the React-based admin UI for /admin and /admin/* paths.
 """
 
-import os
 import mimetypes
 from pathlib import Path
 from webcms.core.response import Response
@@ -29,7 +29,7 @@ def admin_routes(app):
             return Response.html('<p>Admin UI not built. Run <code>npm run build</code> in webcms/admin-ui.</p>', 503)
         return _serve_file(index_path)
 
-    @app.route('/admin/<path:filename>', methods=['GET'])
+    @app.route('/admin/{filename:path}', methods=['GET'])
     def admin_assets(request, filename):
         asset_path = dist_dir / filename
         try:

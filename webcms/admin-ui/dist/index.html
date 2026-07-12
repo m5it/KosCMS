@@ -1,49 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WebCMS Admin</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #1f2937; }
-    .admin-shell { display: flex; min-height: 100vh; }
-    .admin-sidebar { width: 260px; background: #111827; color: #fff; padding: 1.5rem; flex-shrink: 0; }
-    .admin-brand { margin-bottom: 2rem; }
-    .admin-brand h2 { font-size: 1.5rem; }
-    .admin-brand small { color: #9ca3af; }
-    .nav-group { margin-bottom: 1.5rem; }
-    .nav-group h4 { color: #6b7280; text-transform: uppercase; font-size: 0.75rem; margin-bottom: 0.5rem; }
-    .nav-group ul { list-style: none; }
-    .nav-group li { margin-bottom: 0.25rem; }
-    .nav-group a { color: #d1d5db; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-radius: 6px; }
-    .nav-group a:hover, .nav-group a.active { background: #1f2937; color: #fff; }
-    .admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-    .admin-topbar { background: #fff; padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
-    .admin-content { padding: 1.5rem; overflow-y: auto; }
-    .admin-page h1 { margin-bottom: 1rem; }
-    .btn { background: #2563eb; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; margin-right: 0.5rem; }
-    .btn-secondary { background: #6b7280; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .toolbar, .form-actions { margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
-    .card { background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-    .data-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .data-table th, .data-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
-    .data-table th { background: #f3f4f6; font-weight: 600; cursor: pointer; }
-    .data-table tr:hover { background: #f9fafb; }
-    .form-grid { display: grid; grid-template-columns: 120px 1fr; gap: 0.75rem; align-items: center; margin-bottom: 1rem; }
-    .form-grid input, .form-grid select, .form-grid textarea { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; width: 100%; }
-    .settings-group { background: #fff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .settings-group h3 { margin-bottom: 0.75rem; }
-    .media-grid, .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
-    .media-card, .theme-card { background: #fff; padding: 1rem; border-radius: 6px; border: 2px solid transparent; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .media-card.selected, .theme-card.active { border-color: #2563eb; }
-    .plugin-row, .workflow-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: #fff; border-bottom: 1px solid #e5e7eb; }
-    .permission-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; }
-    .permission-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 4px; }
-    .alert { padding: 0.75rem; background: #dbeafe; color: #1e40af; border-radius: 6px; margin-bottom: 1rem; }
-    .status-badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 999px; background: #2563eb; color: #fff; font-size: 0.75rem; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f5f7fa; color:#1f2937; }
+    .admin-shell { display:flex; min-height:100vh; }
+    .admin-sidebar { width:260px; background:#111827; color:#fff; padding:1.5rem; flex-shrink:0; }
+    .admin-brand { margin-bottom:2rem; }
+    .admin-brand h2 { font-size:1.5rem; }
+    .admin-brand small { color:#9ca3af; }
+    .nav-group { margin-bottom:1.5rem; }
+    .nav-group h4 { color:#6b7280; text-transform:uppercase; font-size:.75rem; margin-bottom:.5rem; }
+    .nav-group ul { list-style:none; }
+    .nav-group li { margin-bottom:.25rem; }
+    .nav-group a { color:#d1d5db; text-decoration:none; display:flex; align-items:center; gap:.5rem; padding:.5rem; border-radius:6px; }
+    .nav-group a:hover, .nav-group a.active { background:#1f2937; color:#fff; }
+    .admin-main { flex:1; display:flex; flex-direction:column; min-width:0; }
+    .admin-topbar { background:#fff; padding:1rem 1.5rem; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; }
+    .admin-content { padding:1.5rem; overflow-y:auto; }
+    .admin-page h1 { margin-bottom:1rem; }
+    .btn { background:#2563eb; color:#fff; border:none; padding:.5rem 1rem; border-radius:6px; cursor:pointer; margin-right:.5rem; margin-bottom:.5rem; }
+    .btn-secondary { background:#6b7280; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+    .toolbar, .form-actions { margin-bottom:1rem; display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; }
+    .card { background:#fff; padding:1rem; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+    .dashboard-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+    .data-table { width:100%; border-collapse:collapse; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+    .data-table th, .data-table td { padding:.75rem; text-align:left; border-bottom:1px solid #e5e7eb; }
+    .data-table th { background:#f3f4f6; font-weight:600; }
+    .data-table tr:hover { background:#f9fafb; }
+    .form-grid { display:grid; grid-template-columns:140px 1fr; gap:.75rem; align-items:center; margin-bottom:1rem; }
+    .form-grid input, .form-grid select, .form-grid textarea { padding:.5rem; border:1px solid #d1d5db; border-radius:4px; width:100%; }
+    .settings-group { background:#fff; padding:1rem; border-radius:8px; margin-bottom:1rem; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+    .settings-group h3 { margin-bottom:.75rem; }
+    .media-grid, .theme-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:1rem; }
+    .media-card, .theme-card { background:#fff; padding:1rem; border-radius:6px; border:2px solid transparent; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+    .media-card.selected, .theme-card.active { border-color:#2563eb; }
+    .plugin-row, .workflow-row { display:flex; justify-content:space-between; align-items:center; padding:.75rem; background:#fff; border-bottom:1px solid #e5e7eb; gap:.5rem; flex-wrap:wrap; }
+    .permission-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:.5rem; }
+    .permission-item { display:flex; align-items:center; gap:.5rem; padding:.5rem; border:1px solid #e5e7eb; border-radius:4px; }
+    .alert { padding:.75rem; background:#dbeafe; color:#1e40af; border-radius:6px; margin-bottom:1rem; }
+    .status-badge { display:inline-block; padding:.25rem .5rem; border-radius:999px; background:#2563eb; color:#fff; font-size:.75rem; }
+    .error-box { background:#fee2e2; color:#991b1b; padding:1rem; border-radius:6px; margin:1rem 0; }
+    pre { white-space:pre-wrap; word-break:break-word; }
   </style>
 </head>
 <body>
@@ -63,171 +65,6 @@
       <main class="admin-content" id="content"></main>
     </div>
   </div>
-  <script>
-    const API = '/api/v1/admin';
-    const menuGroups = [
-      { title: 'Content', items: [
-        { path: 'dashboard', label: 'Dashboard', icon: '📊' },
-        { path: 'content', label: 'Pages & Posts', icon: '📝' },
-        { path: 'media', label: 'Media', icon: '🖼️' }
-      ]},
-      { title: 'Design', items: [
-        { path: 'templates', label: 'Templates', icon: '📄' },
-        { path: 'themes', label: 'Themes', icon: '🎨' },
-        { path: 'plugins', label: 'Plugins', icon: '🔌' }
-      ]},
-      { title: 'Access', items: [
-        { path: 'users', label: 'Users', icon: '👤' },
-        { path: 'roles', label: 'Roles', icon: '🛡️' },
-        { path: 'settings', label: 'Settings', icon: '⚙️' }
-      ]},
-      { title: 'Operations', items: [
-        { path: 'cache', label: 'Cache', icon: '⚡' },
-        { path: 'backups', label: 'Backups', icon: '💾' },
-        { path: 'workflows', label: 'Workflows', icon: '🔁' },
-        { path: 'tenants', label: 'Tenants', icon: '🏢' },
-        { path: 'search', label: 'Search', icon: '🔍' },
-        { path: 'notifications', label: 'Notifications', icon: '🔔' }
-      ]}
-    ];
-
-    function currentRoute() { return location.hash.slice(1) || 'dashboard'; }
-
-    function renderNav() {
-      document.getElementById('sidebar-nav').innerHTML = menuGroups.map(g => `
-        <div class="nav-group">
-          <h4>${g.title}</h4>
-          <ul>${g.items.map(i => `
-            <li><a href="#${i.path}" class="${currentRoute() === i.path ? 'active' : ''}" onclick="navigate('${i.path}')">
-              <span>${i.icon}</span> ${i.label}
-            </a></li>`).join('')}</ul>
-        </div>`).join('');
-    }
-
-    function breadcrumb() {
-      document.getElementById('breadcrumb').innerHTML =
-        `<a href="#dashboard" onclick="navigate('dashboard')">Admin</a> / ${currentRoute().charAt(0).toUpperCase() + currentRoute().slice(1)}`;
-    }
-
-    function navigate(route) { location.hash = route; render(); }
-
-    async function get(url) { return fetch(API + url).then(r => r.json()); }
-    async function post(url, body) { return fetch(API + url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body||{}) }).then(r => r.json()); }
-
-    function table(cols, rows) {
-      return `<table class="data-table"><thead><tr>${cols.map(c => `<th>${c.label}</th>`).join('')}<th>Actions</th></tr></thead><tbody>
-        ${rows.map(r => `<tr>${cols.map(c => `<td>${r[c.key] !== undefined ? r[c.key] : ''}</td>`).join('')}<td><button class="btn" onclick="alert('Edit ${r.id}')">Edit</button></td></tr>`).join('')}
-      </tbody></table>`;
-    }
-
-    const screens = {
-      dashboard: async () => {
-        const data = await get('/dashboard');
-        return `<h1>Dashboard</h1><div class="dashboard-grid">
-          ${(data.widgets || []).map(w => `<div class="card"><h3>${w.icon || ''} ${w.title}</h3><pre>${JSON.stringify(w.data, null, 2)}</pre></div>`).join('')}
-        </div>`;
-      },
-      content: async () => {
-        const data = await get('/content');
-        return `<h1>Pages & Posts</h1><div class="toolbar"><button class="btn" onclick="alert('New content')">New</button></div>
-          ${table([{key:'title',label:'Title'},{key:'type',label:'Type'},{key:'status',label:'Status'}], data.content || [])}`;
-      },
-      media: async () => {
-        const data = await get('/media');
-        return `<h1>Media</h1><div class="media-grid">${(data.media || []).map(m => `
-          <div class="media-card"><p>${m.name}</p><small>${m.mime_type}</small></div>`).join('')}</div>`;
-      },
-      templates: async () => {
-        const data = await get('/templates');
-        return `<h1>Templates</h1><div class="toolbar"><button class="btn" onclick="alert('New template')">New</button></div>
-          ${table([{key:'name',label:'Name'},{key:'path',label:'Path'}], data.templates || [])}`;
-      },
-      themes: async () => {
-        const data = await get('/themes');
-        return `<h1>Themes</h1><div class="theme-grid">${(data.themes || []).map(t => `
-          <div class="theme-card ${t.active ? 'active' : ''}"><h3>${t.name}</h3><p>${t.description}</p>
-            <button class="btn" onclick="post('/themes/${t.id}/activate')">Activate</button>
-          </div>`).join('')}</div>`;
-      },
-      plugins: async () => {
-        const data = await get('/plugins');
-        return `<h1>Plugins</h1>${(data.plugins || []).map(p => `
-          <div class="plugin-row"><strong>${p.name}</strong>
-            <button class="btn" onclick="post('/plugins/${p.id}/${p.active ? 'deactivate' : 'activate'}')">${p.active ? 'Deactivate' : 'Activate'}</button>
-          </div>`).join('')}`;
-      },
-      users: async () => {
-        const data = await get('/users');
-        return `<h1>Users</h1><div class="toolbar"><button class="btn" onclick="alert('New user')">New User</button></div>
-          ${table([{key:'username',label:'Username'},{key:'email',label:'Email'},{key:'role',label:'Role'},{key:'is_active',label:'Active'}], data.users || [])}`;
-      },
-      roles: async () => {
-        const data = await get('/roles');
-        return `<h1>Roles</h1>${(data.roles || []).map(r => `
-          <div class="plugin-row"><strong>${r.name}</strong><span>${(r.permissions || []).join(', ')}</span></div>`).join('')}`;
-      },
-      settings: async () => {
-        const data = await get('/settings');
-        const s = data.settings || {};
-        return `<h1>Settings</h1><div class="settings-group"><h3>Site</h3>
-          <div class="form-grid"><label>Site Name</label><input value="${s.site_name || ''}" /></div>
-          <div class="form-actions"><button class="btn" onclick="alert('Saved')">Save</button></div></div>`;
-      },
-      cache: async () => {
-        const data = await get('/cache/stats');
-        return `<h1>Cache</h1><div class="dashboard-grid">
-          <div class="card"><h3>Keys</h3><p>${data.keys || 0}</p></div>
-          <div class="card"><h3>Hit Rate</h3><p>${data.hit_rate || 0}%</p></div>
-          <div class="card"><h3>Memory</h3><p>${data.memory || 0}</p></div>
-        </div>
-        <div class="form-actions"><button class="btn" onclick="post('/cache/warm')">Warm</button>
-          <button class="btn btn-secondary" onclick="post('/cache/invalidate', {pattern:'*'})">Flush</button></div>`;
-      },
-      backups: async () => {
-        const data = await get('/backups');
-        return `<h1>Backups</h1><div class="form-actions"><button class="btn" onclick="post('/backups')">Create</button></div>
-          ${table([{key:'id',label:'ID'},{key:'created_at',label:'Created'},{key:'size',label:'Size'}], data.backups || [])}`;
-      },
-      workflows: async () => {
-        const data = await get('/workflows/instances');
-        return `<h1>Workflows</h1>${(data.instances || []).map(i => `
-          <div class="workflow-row"><strong>${i.content_title}</strong> <span class="status-badge">${i.state}</span></div>`).join('')}`;
-      },
-      tenants: async () => {
-        const data = await get('/tenants');
-        return `<h1>Tenants</h1><div class="toolbar"><button class="btn" onclick="alert('New tenant')">New</button></div>
-          ${table([{key:'name',label:'Name'},{key:'domain',label:'Domain'},{key:'active',label:'Active'}], data.tenants || [])}`;
-      },
-      search: async () => {
-        const data = await get('/search/analytics');
-        return `<h1>Search</h1><div class="dashboard-grid">
-          <div class="card"><h3>Queries 24h</h3><p>${data.queries_24h || 0}</p></div>
-          <div class="card"><h3>Top Query</h3><p>${data.top_query || '—'}</p></div>
-        </div>`;
-      },
-      notifications: async () => {
-        const data = await get('/notifications/queue');
-        return `<h1>Notifications</h1><div class="dashboard-grid">
-          <div class="card"><h3>Pending</h3><p>${data.pending || 0}</p></div>
-          <div class="card"><h3>Sent 24h</h3><p>${data.sent_24h || 0}</p></div>
-        </div>`;
-      }
-    };
-
-    async function render() {
-      renderNav();
-      breadcrumb();
-      const route = currentRoute();
-      const screen = screens[route] || screens.dashboard;
-      try {
-        document.getElementById('content').innerHTML = await screen();
-      } catch (e) {
-        document.getElementById('content').innerHTML = `<div class="alert">Error loading ${route}: ${e.message}</div>`;
-      }
-    }
-
-    window.addEventListener('hashchange', render);
-    window.addEventListener('DOMContentLoaded', render);
-  </script>
+  <script src="/admin/assets/admin.js"></script>
 </body>
 </html>

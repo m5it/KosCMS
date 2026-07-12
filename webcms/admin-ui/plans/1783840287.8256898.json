@@ -1,0 +1,65 @@
+{
+  "id": "1783840287.8256898",
+  "title": "Fix Admin Panel CSP & Asset Routing",
+  "instructions": "The admin panel is blank because inline scripts are blocked by CSP nonce policy, and nested static assets under /admin/assets/ fail to route. Fix by moving admin UI JavaScript to an external file, supporting multi-segment path parameters in the router, and verifying /admin renders menus and controls.",
+  "startTimestamp": 1783840287.8256912,
+  "endTimestamp": 1783840352.4823372,
+  "tasks": {
+    "1783840289.9386477": {
+      "id": "1783840289.9386477",
+      "status": "completed",
+      "instruction": "Extract inline JavaScript from webcms/admin-ui/dist/index.html into webcms/admin-ui/dist/assets/admin.js and update index.html to load it via script src=\"/admin/assets/admin.js\". This avoids CSP inline-script blocking.",
+      "startTimestamp": 1783840297.4364839,
+      "endTimestamp": 1783840304.4305363,
+      "log": [
+        {
+          "timestamp": 1783840297.436577,
+          "text": "Build started"
+        },
+        {
+          "timestamp": 1783840302.920494,
+          "text": "Verified admin.js is extracted to webcms/admin-ui/dist/assets/admin.js and index.html loads it via external script tag /admin/assets/admin.js, satisfying CSP requirements."
+        }
+      ]
+    },
+    "1783840291.8749337": {
+      "id": "1783840291.8749337",
+      "status": "completed",
+      "instruction": "Update webcms/core/router.py _compile_pattern to support {param:path} greedy path matching so /admin/{filename:path} can serve nested assets like /admin/assets/admin.js.",
+      "startTimestamp": 1783840304.4305372,
+      "endTimestamp": 1783840320.1462164,
+      "log": [
+        {
+          "timestamp": 1783840318.196691,
+          "text": "Rewrote webcms/core/router.py cleanly, adding support for {param:path} greedy multi-segment path matching so nested admin assets can be routed."
+        }
+      ]
+    },
+    "1783840294.0633264": {
+      "id": "1783840294.0633264",
+      "status": "completed",
+      "instruction": "Change webcms/admin/routes.py asset route from /admin/&lt;path:filename&gt; to /admin/{filename:path} so nested files are served correctly.",
+      "startTimestamp": 1783840320.1462176,
+      "endTimestamp": 1783840341.2208188,
+      "log": [
+        {
+          "timestamp": 1783840339.5969222,
+          "text": "Rewrote webcms/admin/routes.py cleanly with /admin/{filename:path} route for serving nested admin UI assets and SPA fallback to index.html."
+        }
+      ]
+    },
+    "1783840296.10318": {
+      "id": "1783840296.10318",
+      "status": "completed",
+      "instruction": "Run WSGI-level checks that /admin returns HTML with external script reference and navigation, /admin/assets/admin.js returns 200 with correct content type, and hash navigation loads management screens.",
+      "startTimestamp": 1783840341.22082,
+      "endTimestamp": 1783840352.4823256,
+      "log": [
+        {
+          "timestamp": 1783840350.4097133,
+          "text": "Verified via WSGI test that /admin, /admin/, and /admin/dashboard return 200 with navigation HTML, and /admin/assets/admin.js returns 200 with text/javascript content type. All checks passed."
+        }
+      ]
+    }
+  }
+}

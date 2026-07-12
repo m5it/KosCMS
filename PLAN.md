@@ -1,38 +1,23 @@
-# Plan: WebCMS Admin Control Panel
-## ID: 1783837129.2905695
-## Created: 2026-07-12 06:18:49
+# Plan: Fix Admin Panel CSP & Asset Routing
+## ID: 1783840287.8256898
+## Created: 2026-07-12 07:11:27
 ## Status: in_progress
 
 ### Goal:
-Build a functional admin control panel at /admin with management screens for plugins, pages, posts, media, templates, themes, users, roles, settings, cache, backups, workflows, tenants, search, and notifications. Include backend API endpoints, frontend React components, navigation, and dashboard widgets.
+The admin panel is blank because inline scripts are blocked by CSP nonce policy, and nested static assets under /admin/assets/ fail to route. Fix by moving admin UI JavaScript to an external file, supporting multi-segment path parameters in the router, and verifying /admin renders menus and controls.
 
-### Tasks (9):
-1. [pending] Build admin backend API foundation
-   ID: 1783837132.0711699
+### Tasks (4):
+1. [pending] Move admin JS to external file
+   ID: 1783840289.9386477
 
-2. [pending] Create admin dashboard widgets
-   ID: 1783837134.4620793
+2. [pending] Support multi-segment path routes in router
+   ID: 1783840291.8749337
 
-3. [pending] Build React admin control panel shell
-   ID: 1783837136.8881493
+3. [pending] Update admin route to use path parameter
+   ID: 1783840294.0633264
 
-4. [pending] Build Pages and Posts management screens
-   ID: 1783837140.627099
-
-5. [pending] Build Media, Plugins, Templates, Themes screens
-   ID: 1783837143.4613008
-
-6. [pending] Build Users, Roles, Settings screens
-   ID: 1783837145.9699597
-
-7. [pending] Build Cache, Backups, Workflows operational screens
-   ID: 1783837149.0413644
-
-8. [pending] Build Tenants, Search, Notifications screens
-   ID: 1783837151.6537328
-
-9. [pending] Wire /admin route and verify control panel
-   ID: 1783837154.1657403
+4. [pending] Verify admin panel renders
+   ID: 1783840296.10318
 
 ---
 

@@ -42,7 +42,9 @@ class Router:
     
     def _compile_pattern(self, path: str) -> re.Pattern:
         """Compile path pattern to regex."""
-        # Convert {param} to regex groups
+        # Convert {param:path} to greedy path regex for nested paths
+        path = re.sub(r"\{(\w+):path\}", r"(?P<\1>.+)", path)
+        # Convert {param} to single-segment regex
         pattern = re.sub(r"\{(\w+)\}", r"(?P<\1>[^/]+)", path)
         return re.compile(f"^{pattern}$")
     
@@ -84,26 +86,8 @@ class Router:
         
         # Check static routes
         for path, methods in self.static_routes.items():
-            if handler in methods.values():
-                return path
+            for route_handler in methods.values():
+                if route_handler is handler:
+                    return path
         
         return None
-    
-    def get_routes(self) -> List[Dict[str, Any]]:
-        """Get all registered routes."""
-        all_routes = []
-        for path, methods in self.static_routes.items():
-            for method, handler in methods.items():
-                all_routes.append({
-                    "path": path,
-                    "method": method,
-                    "handler": handler.__name__
-                })
-        for route in self.routes:
-            for method in route["methods"]:
-                all_routes.append({
-                    "path": route["path"],
-                    "method": method,
-                    "handler": route["handler"].__name__
-                })
-        return all_routes
