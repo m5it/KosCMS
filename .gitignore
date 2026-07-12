@@ -1,2 +1,5 @@
 webcms/config/config.yaml
 .venv
+venv/
+__pycache__/
+*.pyc

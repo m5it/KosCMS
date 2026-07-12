@@ -84,15 +84,23 @@ class KosDBConnection:
             welcome = self._receive()
             logger.debug(f"Server welcome: {welcome[:100]}...")
             
-            # Send USER command
+            # Try LOGIN command (KosDB v2.3+)
+            self._send(f"LOGIN {self.config.username} {self.config.password}")
+            login_response = self._receive()
+            
+            if login_response.startswith("OK"):
+                self.authenticated = True
+                logger.debug(f"Authenticated as {self.config.username}")
+                return True
+            
+            # Fallback to USER/PASS (KosDB v2.2 and earlier)
             self._send(f"USER {self.config.username}")
             user_response = self._receive()
             
             if not user_response.startswith("OK"):
-                logger.error(f"USER failed: {user_response}")
+                logger.error(f"Auth failed: {login_response} / {user_response}")
                 return False
             
-            # Send PASS command
             self._send(f"PASS {self.config.password}")
             pass_response = self._receive()
             

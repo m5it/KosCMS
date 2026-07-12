@@ -206,7 +206,7 @@ def create_app(config_path: str = None) -> Application:
             <a href="/health">Health Check</a>
             <a href="/api/v1/status">API Status</a>
         </div>
-        <div class="versions"><a href="https://github.com/m5it/KosCMS">KosCMS v1.2.0</a> · <a href="https://github.com/m5it/KosDB">KosDB v2.2.0</a></div>
+        <div class="versions"><a href="https://github.com/m5it/KosCMS">KosCMS v1.3.3</a> · <a href="https://github.com/m5it/KosDB">KosDB v2.3.1</a></div>
     </div>
 </body>
 </html>'''
