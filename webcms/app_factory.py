@@ -205,7 +205,7 @@ def create_app(config_path: str = None) -> Application:
             <a href="/health">Health Check</a>
             <a href="/api/v1/status">API Status</a>
         </div>
-        <div class="versions"><a href="https://github.com/m5it/KosCMS">KosCMS v1.3.3</a> · <a href="https://github.com/m5it/KosDB">KosDB v2.3.1</a></div>
+        <div class="versions"><a href="https://github.com/m5it/KosCMS">KosCMS v{__version__}</a> · <a href="https://github.com/m5it/KosDB">KosDB v2.3.1</a></div>
     </div>
 </body>
 </html>'''
@@ -216,7 +216,7 @@ def create_app(config_path: str = None) -> Application:
         """Health check endpoint."""
         status = {
             "status": "healthy",
-            "version": "1.1.0",
+            "version": __version__,
             "database": "kosdb" if "kosdb" in app.container._services else "sql"
         }
         
@@ -234,7 +234,7 @@ def create_app(config_path: str = None) -> Application:
     def status(request):
         """Detailed status endpoint."""
         return Response.json({
-            "webcms": "1.1.0",
+            "webcms": __version__,
             "database_type": "kosdb" if "kosdb" in app.container._services else "sql",
             "features": {
                 "kosdb": "kosdb" in app.container._services,

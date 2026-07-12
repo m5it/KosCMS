@@ -8,6 +8,7 @@ import json
 from typing import Dict, List, Callable
 from datetime import datetime
 
+from webcms import __version__
 from webcms.core.request import Request
 from webcms.core.response import Response
 from webcms.content.search_service import SearchService
@@ -92,7 +93,7 @@ class DashboardStats(APIEndpoint):
             },
             "system": {
                 "timestamp": datetime.utcnow().isoformat(),
-                "version": "1.1.0"
+                "version": __version__
             }
         }
         

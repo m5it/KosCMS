@@ -13,6 +13,7 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from packaging.version import Version, parse as parse_version
+from webcms import __version__
 
 
 @dataclass
@@ -41,7 +42,7 @@ class PluginRegistry:
     """Plugin registry and marketplace manager."""
     
     REGISTRY_FILE = "plugin_registry.json"
-    CMS_VERSION = "1.1.0"  # Current WebCMS version
+    CMS_VERSION = __version__  # Current WebCMS version
     
     def __init__(self, registry_path: str = None, plugins_dir: str = None):
         self.registry_path = Path(registry_path or self.REGISTRY_FILE)
