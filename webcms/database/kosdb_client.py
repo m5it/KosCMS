@@ -119,11 +119,27 @@ class KosDBConnection:
             self.socket.sendall(command.encode() + b'\n')
     
     def _receive(self) -> str:
-        """Receive response from server."""
+        """Receive full response from server."""
         if not self.socket:
             return "ERROR: Not connected"
         
-        data = self.socket.recv(4096)
+        data = b""
+        try:
+            self.socket.settimeout(2.0)
+            while True:
+                try:
+                    chunk = self.socket.recv(4096)
+                    if not chunk:
+                        break
+                    data += chunk
+                    self.socket.settimeout(0.3)
+                except socket.timeout:
+                    break
+        except Exception:
+            pass
+        finally:
+            self.socket.settimeout(self.config.query_timeout)
+        
         return data.decode().strip() if data else ""
     
     def execute(self, command: str) -> str:
@@ -183,23 +199,24 @@ class KosDBConnection:
         if len(lines) < 3:
             return {"columns": [], "rows": [], "raw": response}
         
-        # Find header line (starts with |)
         columns = []
         rows = []
-        in_table = False
+        header_seen = False
         
         for line in lines:
             line = line.strip()
             
             if line.startswith('+') and line.endswith('+'):
-                in_table = not in_table
+                if header_seen:
+                    continue
                 continue
             
-            if in_table and line.startswith('|'):
+            if line.startswith('|'):
                 cells = [cell.strip() for cell in line.split('|')[1:-1]]
                 
                 if not columns:
                     columns = cells
+                    header_seen = True
                 else:
                     row = {}
                     for i, col in enumerate(columns):
@@ -207,7 +224,6 @@ class KosDBConnection:
                             row[col] = cells[i]
                     rows.append(row)
         
-        # Extract count from last line
         count = len(rows)
         for line in lines:
             if "row(s) in set" in line:
@@ -303,6 +319,9 @@ class KosDBConnectionPool:
             if not conn.ping():
                 conn.close()
                 conn.connect()
+            
+            if self.config.database:
+                conn.execute(f"USE {self.config.database}")
             
             yield conn
             

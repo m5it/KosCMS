@@ -75,6 +75,30 @@ def create_app(config_path: str = None) -> Application:
         # Register KosDB admin
         register_kosdb_admin(app, kosdb)
         
+        # Flag to track if counters table is initialized
+        app._kosdb_counters_ready = False
+        
+        def _init_counters():
+            """Initialize counters table on first use."""
+            if app._kosdb_counters_ready:
+                return
+            try:
+                kosdb.execute("CREATE DATABASE webcms")
+            except Exception:
+                pass
+            try:
+                kosdb.execute("CREATE TABLE counters (id INTEGER, name TEXT, count INTEGER)")
+                result = kosdb.query("SELECT * FROM counters WHERE name = 'visitors'")
+                if not result.get("rows"):
+                    kosdb.execute("INSERT INTO counters VALUES (1, 'visitors', 0)")
+                app._kosdb_counters_ready = True
+            except Exception as e:
+                if "already exists" in str(e).lower():
+                    app._kosdb_counters_ready = True
+                else:
+                    import logging
+                    logging.getLogger("webcms").warning(f"Counter init deferred: {e}")
+        
     else:
         # Use standard SQLAlchemy
         db = init_db(
@@ -127,6 +151,21 @@ def create_app(config_path: str = None) -> Application:
         kosdb_connected = "kosdb" in app.container._services
         cls = "connected" if kosdb_connected else "disconnected"
         status = "Connected" if kosdb_connected else "Disconnected"
+        visitor_count = 0
+        
+        if kosdb_connected:
+            _init_counters()
+            kosdb = app.container.get("kosdb")
+            try:
+                result = kosdb.query("SELECT count FROM counters WHERE name = 'visitors'")
+                if result.get("rows"):
+                    visitor_count = int(result["rows"][0]["count"]) + 1
+                    kosdb.execute(f"UPDATE counters SET count = {visitor_count} WHERE name = 'visitors'")
+                else:
+                    kosdb.execute("INSERT INTO counters VALUES (1, 'visitors', 1)")
+                    visitor_count = 1
+            except Exception:
+                pass
         
         html = f'''<!DOCTYPE html>
 <html lang="en">
@@ -143,12 +182,17 @@ def create_app(config_path: str = None) -> Application:
                 box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 500px; width: 90%; }}
         h1 {{ font-size: 2.5em; margin-bottom: 12px; color: #667eea; }}
         p {{ font-size: 1.1em; color: #666; margin-bottom: 24px; }}
-        .status {{ display: inline-block; padding: 8px 20px; border-radius: 24px; font-size: 0.9em; font-weight: 600; }}
+        .visitor-count {{ font-size: 3em; font-weight: 700; color: #764ba2; margin: 20px 0; }}
+        .visitor-label {{ font-size: 0.9em; color: #999; text-transform: uppercase; letter-spacing: 2px; }}
+        .status {{ display: inline-block; padding: 8px 20px; border-radius: 24px; font-size: 0.9em; font-weight: 600; margin-bottom: 20px; }}
         .connected {{ background: #d4edda; color: #155724; }}
         .disconnected {{ background: #f8d7da; color: #721c24; }}
         .links {{ margin-top: 24px; }}
         .links a {{ color: #667eea; text-decoration: none; margin: 0 12px; font-weight: 500; }}
         .links a:hover {{ text-decoration: underline; }}
+        .versions {{ margin-top: 20px; font-size: 0.8em; color: #bbb; }}
+        .versions a {{ color: #bbb; text-decoration: none; }}
+        .versions a:hover {{ text-decoration: underline; color: #999; }}
     </style>
 </head>
 <body>
@@ -156,10 +200,13 @@ def create_app(config_path: str = None) -> Application:
         <h1>Hello World!</h1>
         <p>Welcome to <strong>WebCMS</strong> - A Modern Python Content Management System</p>
         <span class="status {cls}">KosDB: {status}</span>
+        <div class="visitor-label">Visitor Count</div>
+        <div class="visitor-count">{visitor_count}</div>
         <div class="links">
             <a href="/health">Health Check</a>
             <a href="/api/v1/status">API Status</a>
         </div>
+        <div class="versions"><a href="https://github.com/m5it/KosCMS">KosCMS v1.1.0</a> · <a href="https://github.com/m5it/KosDB">KosDB v2.2.0</a></div>
     </div>
 </body>
 </html>'''
