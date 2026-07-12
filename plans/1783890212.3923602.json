@@ -1,0 +1,38 @@
+{
+  "id": "1783890212.3923602",
+  "title": "Fix AUTOVERSION single-source-of-truth sync",
+  "instructions": "Repair the corrupted imports in webcms/app_factory.py, replace all hardcoded version strings with imports from webcms.__version__ (which comes from AUTOVERSION.py), update the admin_api.py docstring version, and verify the result with a Python syntax/import check.",
+  "startTimestamp": 1783890212.3923628,
+  "endTimestamp": 1783890309.190019,
+  "tasks": {
+    "1783890215.0271313": {
+      "id": "1783890215.0271313",
+      "status": "in_progress",
+      "instruction": "webcms/app_factory.py currently has duplicate 'from webcms import Application' lines and may be missing imports. Consolidate into a single clean import block:\nfrom webcms import Application, __version__\nfrom webcms.database import init_db, KosDBClient, KosDBConfig\nfrom webcms.database.kosdb_replication import KosDBReplicationManager, ReplicationConfig, ReplicationRole\nfrom webcms.security import SecurityMiddleware, HTTPSRedirectMiddleware\nfrom webcms.security.middleware import CSPConfig\nfrom webcms.core.response import Response\nfrom webcms.admin.api import create_api\nfrom webcms.admin.routes import admin_routes\nfrom webcms.admin.kosdb_admin import register_kosdb_admin\nThen verify with ReadFile.",
+      "startTimestamp": 1783890225.0770721,
+      "endTimestamp": null,
+      "log": [
+        {
+          "timestamp": 1783890225.077176,
+          "text": "Build started"
+        }
+      ]
+    },
+    "1783890219.4099796": {
+      "id": "1783890219.4099796",
+      "status": "pending",
+      "instruction": "In webcms/app_factory.py, replace the hardcoded version string \"1.1.0\" in the /health JSON response and the /api/v1/status JSON response with the imported __version__ variable. Also replace the homepage HTML footer string \"KosCMS v1.3.3\" with an f-string using __version__.",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1783890222.8838978": {
+      "id": "1783890222.8838978",
+      "status": "pending",
+      "instruction": "Update the module docstring in webcms/admin/admin_api.py from \"Admin API v1.3.4\" to reference the current webcms.__version__ (1.3.6 from AUTOVERSION.py).",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    }
+  }
+}

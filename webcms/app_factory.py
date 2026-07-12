@@ -4,7 +4,7 @@ Application Factory
 Create and configure WebCMS application instance with KosDB support.
 """
 
-from webcms import Application
+from webcms import Application, __version__
 from webcms.database import init_db, KosDBClient, KosDBConfig
 from webcms.database.kosdb_replication import KosDBReplicationManager, ReplicationConfig, ReplicationRole
 from webcms.security import SecurityMiddleware, HTTPSRedirectMiddleware
@@ -13,7 +13,6 @@ from webcms.core.response import Response
 from webcms.admin.api import create_api
 from webcms.admin.routes import admin_routes
 from webcms.admin.kosdb_admin import register_kosdb_admin
-
 
 def create_app(config_path: str = None) -> Application:
     """

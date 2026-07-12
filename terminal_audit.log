@@ -935,3 +935,26 @@ for p in ['/admin','/admin/','/admin/assets/admin.js','/admin/dashboard']:
 [2026-07-12 20:41:04] CMD: rm check_admin_api.py | SUCCESS: True | OUTPUT_LEN: 0
 [2026-07-12 20:43:11] CMD: python3 -m py_compile webcms/__init__.py webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 0
 [2026-07-12 20:43:30] CMD: rm verify_admin_api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 21:04:18] CMD: python3 -c from pathlib import Path
+p = Path('webcms/app_factory.py')
+t = p.read_text()
+# Remove duplicate import block that appears twice
+block = '''from webcms import Application, __version__
+from webcms.database import init_db, KosDBClient, KosDBConfig
+from webcms.database.kosdb_replication import KosDBReplicationManager, ReplicationConfig, ReplicationRole
+from webcms.security import SecurityMiddleware, HTTPSRedirectMiddleware
+from webcms.security.middleware import CSPConfig
+from webcms.core.response import Response
+from webcms.admin.api import create_api
+from webcms.admin.routes import admin_routes
+from webcms.admin.kosdb_admin import register_kosdb_admin'''
+if t.count(block) == 2:
+    t = t.replace(block, block, 1)  # no-op? need to remove second occurrence
+    # Actually replace the second occurrence by splitting
+    first, sep, rest = t.partition(block)
+    second, sep2, rest2 = rest.partition(block)
+    t = first + block + '\n' + rest2
+    p.write_text(t)
+    print('removed duplicate import block')
+else:
+    print('expected 2 occurrences, found', t.count(block)) | SUCCESS: True | OUTPUT_LEN: 32

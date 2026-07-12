@@ -1,3 +1,12 @@
+## 2026-07-12 — v1.3.7
+
+### Auto: Version v1.3.7
+
+- Version auto-incremented from v1.3.6
+- Files changed: HISTORY.md, PLAN.md, README.md, background.log, current_task.txt, fix_header.py, fix_imports.py, plans/1783888560.8738713.json, plans/1783890212.3923602.json, state.aiia, terminal_audit.log, webcms/__init__.py, webcms/admin-ui/package.json, webcms/app_factory.py
+
+---
+
 ## 2026-07-12 — v1.3.6
 
 ### Auto: Version v1.3.6

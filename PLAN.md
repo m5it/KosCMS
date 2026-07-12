@@ -1,23 +1,20 @@
-# Plan: WebCMS v1.3.4 — Admin Panel API Fixes
-## ID: 1783888560.8738713
-## Created: 2026-07-12 20:36:00
+# Plan: Fix AUTOVERSION single-source-of-truth sync
+## ID: 1783890212.3923602
+## Created: 2026-07-12 21:03:32
 ## Status: in_progress
 
 ### Goal:
-Fix the admin panel management screens by implementing the missing /api/v1/admin/* REST endpoints that the React UI expects. Also document how to create an admin user and password in README.md. The server log confirms /admin and /admin/assets/admin.js load correctly, but all /api/v1/admin/* calls return 404.
+Repair the corrupted imports in webcms/app_factory.py, replace all hardcoded version strings with imports from webcms.__version__ (which comes from AUTOVERSION.py), update the admin_api.py docstring version, and verify the result with a Python syntax/import check.
 
-### Tasks (4):
-1. [pending] Review current admin API endpoints and UI expectations
-   ID: 1783888563.8601105
+### Tasks (3):
+1. [pending] Fix app_factory.py imports
+   ID: 1783890215.0271313
 
-2. [pending] Implement /api/v1/admin/* REST endpoints
-   ID: 1783888566.986434
+2. [pending] Replace hardcoded versions in app_factory.py endpoints
+   ID: 1783890219.4099796
 
-3. [pending] Document admin user/password setup
-   ID: 1783888570.404498
-
-4. [pending] Bump version to 1.3.4 and verify
-   ID: 1783888573.6126766
+3. [pending] Update admin_api.py docstring version
+   ID: 1783890222.8838978
 
 ---
 
