@@ -16,11 +16,109 @@ from webcms.admin.widgets import get_widget_registry, WidgetConfig
 
 
 class AdminAPI:
-    """Synchronous admin API handlers backed by the registered database service."""
-
     def __init__(self, db=None, auth=None):
         self.db = db
         self.auth = auth
+
+    # ---------------- Database Helpers ----------------
+
+    def _is_kosdb(self) -> bool:
+        """Detect if self.db is a KosDB client (dict-like) vs SQLAlchemy session."""
+        if self.db is None:
+            return False
+        # KosDB client lacks SQLAlchemy's query attribute
+        return not hasattr(self.db, 'query')
+
+    def _get_model_count(self, model_class, filter_conditions=None) -> int:
+        """Get count of model records, works with both SQLAlchemy and KosDB."""
+        if self.db is None:
+            return 0
+        
+        if self._is_kosdb():
+            # KosDB: use table name from model, apply simple filters
+            table_name = getattr(model_class, '__tablename__', 
+                                getattr(model_class, '__name__', '').lower() + 's')
+            records = self.db.get(table_name, [])
+            if filter_conditions:
+                # Apply simple equality filters
+                for key, value in filter_conditions.items():
+                    records = [r for r in records if r.get(key) == value]
+            return len(records)
+        else:
+            # SQLAlchemy: use ORM query
+            query = self.db.query(model_class)
+            if filter_conditions:
+                for key, value in filter_conditions.items():
+                    query = query.filter(getattr(model_class, key) == value)
+            return query.count()
+
+    def _get_model_list(self, model_class, filter_conditions=None, 
+                       order_by=None, limit=None, desc=True) -> list:
+        """Get list of model records, works with both SQLAlchemy and KosDB."""
+        if self.db is None:
+            return []
+        
+        if self._is_kosdb():
+            # KosDB: get records from table
+            table_name = getattr(model_class, '__tablename__', 
+                                getattr(model_class, '__name__', '').lower() + 's')
+            records = self.db.get(table_name, [])
+            if filter_conditions:
+                for key, value in filter_conditions.items():
+                    records = [r for r in records if r.get(key) == value]
+            # Sort
+            if order_by:
+                reverse = desc
+                records = sorted(records, 
+                               key=lambda x: x.get(order_by) or '', 
+                               reverse=reverse)
+            # Limit
+            if limit:
+                records = records[:limit]
+            return records
+        else:
+            # SQLAlchemy ORM
+            query = self.db.query(model_class)
+            if filter_conditions:
+                for key, value in filter_conditions.items():
+                    query = query.filter(getattr(model_class, key) == value)
+            if order_by:
+                order_col = getattr(model_class, order_by)
+                if desc:
+                    order_col = order_col.desc()
+                query = query.order_by(order_col)
+            if limit:
+                query = query.limit(limit)
+            return query.all()
+
+    def _get_model_by_id(self, model_class, record_id: str, 
+                        id_field='id', extra_filters=None) -> any:
+        """Get single record by ID, works with both SQLAlchemy and KosDB."""
+        if self.db is None:
+            return None
+        
+        filters = {id_field: record_id}
+        if extra_filters:
+            filters.update(extra_filters)
+        
+        if self._is_kosdb():
+            table_name = getattr(model_class, '__tablename__', 
+                                getattr(model_class, '__name__', '').lower() + 's')
+            records = self.db.get(table_name, [])
+            for r in records:
+                match = True
+                for key, value in filters.items():
+                    if r.get(key) != value:
+                        match = False
+                        break
+                if match:
+                    return r
+            return None
+        else:
+            query = self.db.query(model_class)
+            for key, value in filters.items():
+                query = query.filter(getattr(model_class, key) == value)
+            return query.first()
 
     # ---------------- Dashboard ----------------
 
@@ -34,17 +132,15 @@ class AdminAPI:
         if self.db:
             stats = {
                 "users": {
-                    "total": self.db.query(User).filter(User.is_deleted == False).count(),
-                    "active": self.db.query(User).filter(
-                        User.is_deleted == False, User.is_active == True
-                    ).count()
+                    "total": self._get_model_count(User, {"is_deleted": False}),
+                    "active": self._get_model_count(User, {"is_deleted": False, "is_active": True})
                 },
                 "content": {
-                    "posts": self.db.query(Post).filter(Post.is_deleted == False).count(),
-                    "pages": self.db.query(Page).filter(Page.is_deleted == False).count()
+                    "posts": self._get_model_count(Post, {"is_deleted": False}),
+                    "pages": self._get_model_count(Page, {"is_deleted": False})
                 },
                 "media": {
-                    "total": self.db.query(Media).filter(Media.is_deleted == False).count()
+                    "total": self._get_model_count(Media, {"is_deleted": False})
                 }
             }
 
@@ -63,7 +159,7 @@ class AdminAPI:
         # Ensure every widget has the keys Dashboard.jsx expects
         for i, widget in enumerate(widgets):
             widget.setdefault("icon", "")
-            widget.setdefault("data", {})
+            widget.setdefault("data", "")
 
         return Response.json({"widgets": widgets})
 
@@ -93,7 +189,7 @@ class AdminAPI:
         from webcms.models.content import Page
         if not self.db:
             return Response.json({"pages": []})
-        pages = self.db.query(Page).filter(Page.is_deleted == False).order_by(Page.updated_at.desc()).limit(50).all()
+        pages = self._get_model_list(Page, {"is_deleted": False}, order_by="updated_at", limit=50, desc=True)
         return Response.json({"pages": [self._serialize_page(p) for p in pages]})
 
     def create_page(self, request: Request) -> Response:
@@ -138,7 +234,7 @@ class AdminAPI:
         from webcms.models.content import Post
         if not self.db:
             return Response.json({"posts": []})
-        posts = self.db.query(Post).filter(Post.is_deleted == False).order_by(Post.updated_at.desc()).limit(50).all()
+        posts = self._get_model_list(Post, {"is_deleted": False}, order_by="updated_at", limit=50, desc=True)
         return Response.json({"posts": [self._serialize_post(p) for p in posts]})
 
     def create_post(self, request: Request) -> Response:
@@ -184,18 +280,30 @@ class AdminAPI:
         from webcms.models.media import Media
         if not self.db:
             return Response.json({"media": []})
-        media = self.db.query(Media).filter(Media.is_deleted == False).order_by(Media.created_at.desc()).limit(50).all()
+        media = self._get_model_list(Media, {"is_deleted": False}, order_by="created_at", limit=50, desc=True)
         result = []
         for m in media:
-            result.append({
-                "id": m.id,
-                "name": m.filename,
-                "filename": m.filename,
-                "url": m.file_url,
-                "mime_type": m.mime_type,
-                "width": m.width,
-                "height": m.height
-            })
+            # Handle both dict (KosDB) and object (SQLAlchemy) access
+            if isinstance(m, dict):
+                result.append({
+                    "id": m.get('id'),
+                    "name": m.get('filename'),
+                    "filename": m.get('filename'),
+                    "url": m.get('file_url'),
+                    "mime_type": m.get('mime_type'),
+                    "width": m.get('width'),
+                    "height": m.get('height')
+                })
+            else:
+                result.append({
+                    "id": m.id,
+                    "name": m.filename,
+                    "filename": m.filename,
+                    "url": m.file_url,
+                    "mime_type": m.mime_type,
+                    "width": m.width,
+                    "height": m.height
+                })
         return Response.json({"media": result})
 
     def upload_media(self, request: Request) -> Response:
@@ -329,7 +437,7 @@ class AdminAPI:
         from webcms.models.user import User
         if not self.db:
             return Response.json({"users": []})
-        users = self.db.query(User).filter(User.is_deleted == False).order_by(User.created_at.desc()).limit(50).all()
+        users = self._get_model_list(User, {"is_deleted": False}, order_by="created_at", limit=50, desc=True)
         result = []
         for u in users:
             role_name = u.roles[0].name if u.roles else "user"
@@ -362,17 +470,26 @@ class AdminAPI:
                 display_name=data.get("display_name", data.get("username")),
                 is_active=data.get("is_active", True)
             )
-            self.db.add(user)
-            self.db.commit()
+            if self._is_kosdb():
+                # KosDB: append to users list
+                users = self.db.get('users', [])
+                user.id = str(uuid.uuid4())
+                users.append(user.__dict__ if hasattr(user, '__dict__') else user)
+                self.db['users'] = users
+            else:
+                # SQLAlchemy
+                self.db.add(user)
+                self.db.commit()
             return Response.json({
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
+                "id": user.id if hasattr(user, 'id') else user.get('id'),
+                "username": user.username if hasattr(user, 'username') else user.get('username'),
+                "email": user.email if hasattr(user, 'email') else user.get('email'),
                 "role": "user",
-                "is_active": user.is_active
+                "is_active": user.is_active if hasattr(user, 'is_active') else user.get('is_active')
             }, 201)
         except Exception as e:
-            self.db.rollback()
+            if not self._is_kosdb():
+                self.db.rollback()
             return Response.error(str(e), 400)
 
     def update_user(self, request: Request, user_id: str) -> Response:
@@ -380,7 +497,7 @@ class AdminAPI:
         data = request.json or {}
         if not self.db:
             return Response.json({"id": user_id, "updated": True})
-        user = self.db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
+        user = self._get_model_by_id(User, user_id, extra_filters={"is_deleted": False})
         if not user:
             return Response.not_found()
         try:
@@ -395,7 +512,8 @@ class AdminAPI:
             if "password" in data and data["password"]:
                 from webcms.auth.password import PasswordHasher
                 user.password_hash = PasswordHasher().hash(data["password"])
-            self.db.commit()
+            if not self._is_kosdb():
+                self.db.commit()
             return Response.json({
                 "id": user.id,
                 "username": user.username,
@@ -404,33 +522,46 @@ class AdminAPI:
                 "is_active": user.is_active
             })
         except Exception as e:
-            self.db.rollback()
+            if not self._is_kosdb():
+                self.db.rollback()
             return Response.error(str(e), 400)
 
     def delete_user(self, request: Request, user_id: str) -> Response:
         from webcms.models.user import User
         if not self.db:
             return Response.json({"id": user_id, "deleted": True})
-        user = self.db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
+        user = self._get_model_by_id(User, user_id, extra_filters={"is_deleted": False})
         if not user:
             return Response.not_found()
         user.is_deleted = True
-        self.db.commit()
+        if not self._is_kosdb():
+            self.db.commit()
         return Response.json({"id": user_id, "deleted": True})
 
     def list_roles(self, request: Request) -> Response:
         from webcms.models.user import Role
         if not self.db:
             return Response.json({"roles": []})
-        roles = self.db.query(Role).order_by(Role.name).all()
+        roles = self._get_model_list(Role, order_by="name")
         result = []
         for r in roles:
-            result.append({
-                "id": r.id,
-                "name": r.name,
-                "description": r.description,
-                "permissions": r.permissions_list
-            })
+            # Handle both dict (KosDB) and object (SQLAlchemy) access
+            if isinstance(r, dict):
+                perms = r.get('permissions', '')
+                perms_list = [p.strip() for p in perms.split(',')] if perms else []
+                result.append({
+                    "id": r.get('id'),
+                    "name": r.get('name'),
+                    "description": r.get('description'),
+                    "permissions": perms_list
+                })
+            else:
+                result.append({
+                    "id": r.id,
+                    "name": r.name,
+                    "description": r.description,
+                    "permissions": r.permissions_list
+                })
         return Response.json({"roles": result})
 
     def update_role(self, request: Request, role_id: str) -> Response:
@@ -438,23 +569,47 @@ class AdminAPI:
         data = request.json or {}
         if not self.db:
             return Response.json({"id": role_id, "updated": True})
-        role = self.db.query(Role).filter(Role.id == role_id).first()
+        role = self._get_model_by_id(Role, role_id)
         if not role:
             return Response.not_found()
         try:
-            if "permissions" in data:
-                role.permissions = ",".join(data["permissions"])
-            if "description" in data:
-                role.description = data["description"]
-            self.db.commit()
-            return Response.json({
-                "id": role.id,
-                "name": role.name,
-                "description": role.description,
-                "permissions": role.permissions_list
-            })
+            if self._is_kosdb():
+                # KosDB: update dict directly
+                if "permissions" in data:
+                    role['permissions'] = ",".join(data["permissions"])
+                if "description" in data:
+                    role['description'] = data["description"]
+                # Save back to db
+                roles = self.db.get('roles', [])
+                for i, r in enumerate(roles):
+                    if r.get('id') == role_id:
+                        roles[i] = role
+                        break
+                self.db['roles'] = roles
+                perms = role.get('permissions', '')
+                perms_list = [p.strip() for p in perms.split(',')] if perms else []
+                return Response.json({
+                    "id": role.get('id'),
+                    "name": role.get('name'),
+                    "description": role.get('description'),
+                    "permissions": perms_list
+                })
+            else:
+                # SQLAlchemy
+                if "permissions" in data:
+                    role.permissions = ",".join(data["permissions"])
+                if "description" in data:
+                    role.description = data["description"]
+                self.db.commit()
+                return Response.json({
+                    "id": role.id,
+                    "name": role.name,
+                    "description": role.description,
+                    "permissions": role.permissions_list
+                })
         except Exception as e:
-            self.db.rollback()
+            if not self._is_kosdb():
+                self.db.rollback()
             return Response.error(str(e), 400)
 
     # ---------------- Settings ----------------
@@ -482,9 +637,14 @@ class AdminAPI:
         if not self.db:
             return Response.json({"settings": defaults})
         try:
-            settings = self.db.query(Setting).all()
-            for s in settings:
-                defaults[s.key] = self._coerce_setting(s.value, s.type)
+            if self._is_kosdb():
+                settings = self.db.get('settings', [])
+                for s in settings:
+                    defaults[s.get('key')] = self._coerce_setting(s.get('value'), s.get('type'))
+            else:
+                settings = self.db.query(Setting).all()
+                for s in settings:
+                    defaults[s.key] = self._coerce_setting(s.value, s.type)
         except Exception:
             pass
         return Response.json({"settings": defaults})
@@ -495,18 +655,34 @@ class AdminAPI:
         if not self.db:
             return Response.json({"updated": True, "settings": data})
         try:
-            for key, value in data.items():
-                existing = self.db.query(Setting).filter(Setting.key == key).first()
-                if existing:
-                    existing.value = str(value)
-                    existing.type = self._guess_type(value)
-                else:
-                    setting = Setting(key=key, value=str(value), type=self._guess_type(value))
-                    self.db.add(setting)
-            self.db.commit()
+            if self._is_kosdb():
+                settings = self.db.get('settings', [])
+                for key, value in data.items():
+                    existing = next((s for s in settings if s.get('key') == key), None)
+                    if existing:
+                        existing['value'] = str(value)
+                        existing['type'] = self._guess_type(value)
+                    else:
+                        settings.append({
+                            'key': key,
+                            'value': str(value),
+                            'type': self._guess_type(value)
+                        })
+                self.db['settings'] = settings
+            else:
+                for key, value in data.items():
+                    existing = self.db.query(Setting).filter(Setting.key == key).first()
+                    if existing:
+                        existing.value = str(value)
+                        existing.type = self._guess_type(value)
+                    else:
+                        setting = Setting(key=key, value=str(value), type=self._guess_type(value))
+                        self.db.add(setting)
+                self.db.commit()
             return Response.json({"updated": True, "settings": data})
         except Exception as e:
-            self.db.rollback()
+            if not self._is_kosdb():
+                self.db.rollback()
             return Response.error(str(e), 400)
 
     @staticmethod
@@ -760,24 +936,6 @@ class AdminAPI:
             "storage": "0 MB",
             "requests_24h": 0
         })
-    def delete_tenant(self, request: Request, tenant_id: str) -> Response:
-        from webcms.tenants.models import Tenant
-        if not self.db:
-            return Response.json({"id": tenant_id, "deleted": True})
-        tenant = self.db.query(Tenant).filter(Tenant.id == tenant_id).first()
-        if not tenant:
-            return Response.not_found()
-        self.db.delete(tenant)
-        self.db.commit()
-        return Response.json({"id": tenant_id, "deleted": True})
-
-    def tenant_analytics(self, request: Request, tenant_id: str) -> Response:
-        return Response.json({
-            "users": 0,
-            "content_count": 0,
-            "storage": "0 MB",
-            "requests_24h": 0
-        })
 
     # ---------------- Search ----------------
 
@@ -968,6 +1126,4 @@ def register_admin_api(app, db=None, auth=None):
     add("/api/v1/admin/notifications/preferences", api.update_notification_preferences, ["PUT"])
     add("/api/v1/admin/notifications/queue", api.notification_queue, ["GET"])
     add("/api/v1/admin/notifications/send", api.send_notifications, ["POST"])
-    add("/api/v1/admin/notifications/digest", api.trigger_digest, ["POST"])
-
-    return app
+    add("/api/v1/admin/notifications/trigger-digest", api.trigger_digest, ["POST"])

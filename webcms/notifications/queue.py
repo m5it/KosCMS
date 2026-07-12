@@ -2,7 +2,7 @@
 Email queue with retry logic.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict
 
 
@@ -73,3 +73,98 @@ class EmailQueue:
             "failed": len(self._failed),
             "total": len(self._queue)
         }
+
+
+class NotificationQueue:
+    """Notification queue manager for admin API.
+    
+    Provides a unified interface for notification queue statistics
+    that works with both SQLAlchemy and KosDB backends.
+    """
+    
+    def __init__(self, db=None):
+        self.db = db
+        self._email_queue = EmailQueue()
+    
+    def pending_count(self) -> int:
+        """Get count of pending notifications."""
+        if self.db is None:
+            return len([i for i in self._email_queue._queue if i.get("status") == "pending"])
+        # For KosDB or SQLAlchemy, query the notifications table/collection
+        try:
+            if hasattr(self.db, 'query'):
+                # SQLAlchemy backend
+                from webcms.models.system import Notification
+                return self.db.query(Notification).filter_by(status='pending').count()
+            else:
+                # KosDB backend - assume dict-like interface with notification keys
+                notifications = self.db.get('notifications', [])
+                return len([n for n in notifications if n.get('status') == 'pending'])
+        except Exception:
+            return 0
+    
+    def sent_count(self, hours: int = 24) -> int:
+        """Get count of notifications sent in the last N hours."""
+        cutoff = datetime.utcnow() - timedelta(hours=hours)
+        
+        if self.db is None:
+            return len([
+                i for i in self._email_queue._sent 
+                if i.get('sent_at') and datetime.fromisoformat(i['sent_at']) > cutoff
+            ])
+        
+        try:
+            if hasattr(self.db, 'query'):
+                from webcms.models.system import Notification
+                return self.db.query(Notification).filter(
+                    Notification.status == 'sent',
+                    Notification.sent_at > cutoff
+                ).count()
+            else:
+                notifications = self.db.get('notifications', [])
+                return len([
+                    n for n in notifications 
+                    if n.get('status') == 'sent' and n.get('sent_at') and 
+                       datetime.fromisoformat(n['sent_at']) > cutoff
+                ])
+        except Exception:
+            return 0
+    
+    def failed_count(self) -> int:
+        """Get count of failed notifications."""
+        if self.db is None:
+            return len(self._email_queue._failed)
+        
+        try:
+            if hasattr(self.db, 'query'):
+                from webcms.models.system import Notification
+                return self.db.query(Notification).filter_by(status='failed').count()
+            else:
+                notifications = self.db.get('notifications', [])
+                return len([n for n in notifications if n.get('status') == 'failed'])
+        except Exception:
+            return 0
+    
+    def retrying_count(self) -> int:
+        """Get count of notifications currently retrying."""
+        if self.db is None:
+            return len([
+                i for i in self._email_queue._queue 
+                if i.get('status') == 'pending' and i.get('attempts', 0) > 0
+            ])
+        
+        try:
+            if hasattr(self.db, 'query'):
+                from webcms.models.system import Notification
+                return self.db.query(Notification).filter(
+                    Notification.status == 'pending',
+                    Notification.attempts > 0
+                ).count()
+            else:
+                notifications = self.db.get('notifications', [])
+                return len([
+                    n for n in notifications 
+                    if n.get('status') == 'pending' and n.get('attempts', 0) > 0
+                ])
+        except Exception:
+            return 0

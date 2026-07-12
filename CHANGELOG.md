@@ -1,3 +1,12 @@
+## 2026-07-12 — v1.3.8
+
+### Auto: Version v1.3.8
+
+- Version auto-incremented from v1.3.7
+- Files changed: HISTORY.md, PLAN.md, background.log, current_task.txt, plans/1783893354.576747.json, state.aiia, webcms/admin/admin_api.py, webcms/notifications/queue.py
+
+---
+
 ## 2026-07-12 — v1.3.7
 
 ### Auto: Version v1.3.7
