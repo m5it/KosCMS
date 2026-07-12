@@ -1,3 +1,12 @@
+## 2026-07-12 — v1.3.6
+
+### Auto: Version v1.3.6
+
+- Version auto-incremented from v1.3.5
+- Files changed: testversion
+
+---
+
 ## 2026-07-12 — v1.3.5
 
 ### Auto: Version v1.3.5
