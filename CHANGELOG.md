@@ -1,3 +1,12 @@
+## 2026-07-12 — v0.0.2
+
+### Auto: Version v0.0.2
+
+- Version auto-incremented from v0.0.1
+- Files changed: AUTOVERSION.py
+
+---
+
 # WebCMS Changelog
 
 ## [1.2.0] - 2024-02-01
