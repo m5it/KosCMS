@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  webcms:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - DATABASE_URL=postgresql://webcms:webcms@postgres:5432/webcms
+    depends_on:
+      - redis
+      - elasticsearch
+      - postgres
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=webcms
+      - POSTGRES_PASSWORD=webcms
+      - POSTGRES_DB=webcms
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

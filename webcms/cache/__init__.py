@@ -1,20 +1,22 @@
 """
-Cache Module
-
-Multi-level caching with tagging and warming support.
+Redis caching system for WebCMS
 """
 
-from .manager import CacheManager, CacheTag, CacheWarmer, get_tenant_cache
-from .backends import CacheBackend, MemoryCache, RedisCache
+from .redis_client import RedisClient, get_redis_client
+from .cache_manager import CacheManager
+from .lock import DistributedLock
+from .session_store import RedisSessionStore
+from .analytics import CacheAnalytics
+from .warmers import CacheWarmer
+from .invalidation import CacheInvalidator
 
 __all__ = [
+    "RedisClient",
+    "get_redis_client",
     "CacheManager",
-    "CacheTag",
+    "DistributedLock",
+    "RedisSessionStore",
+    "CacheAnalytics",
     "CacheWarmer",
-    "get_tenant_cache",
-    "CacheBackend",
-    "MemoryCache",
-    "RedisCache"
+    "CacheInvalidator"
 ]
-
-__all__ = ["CacheManager", "MemoryCache", "RedisCache"]

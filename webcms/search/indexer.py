@@ -1,82 +1,71 @@
 """
-Content Indexer
-
-Indexes content models for full-text search.
+Elasticsearch index management and document indexing.
 """
 
-import re
-from typing import Optional
-
-from .engine import SearchEngine
+import json
+from datetime import datetime
 
 
-class ContentIndexer:
-    """Indexes content for search."""
-    
-    def __init__(self, engine: Optional[SearchEngine] = None):
-        self.engine = engine or SearchEngine()
-    
-    def _clean_text(self, html: str) -> str:
-        """Strip HTML tags and normalize whitespace."""
-        # Simple HTML tag removal
-        text = re.sub(r'<[^>]+>', '', html)
-        # Normalize whitespace
-        text = ' '.join(text.split())
-        return text
-    
-    def _generate_excerpt(self, content: str, length: int = 200) -> str:
-        """Generate excerpt from content."""
-        text = self._clean_text(content)
-        if len(text) <= length:
-            return text
-        return text[:length].rsplit(' ', 1)[0] + "..."
-    
-    def index_post(self, post) -> bool:
-        """Index a Post model."""
-        content_type = "post"
-        content_id = f"post:{post.id}"
-        
-        clean_content = self._clean_text(post.content)
-        excerpt = post.excerpt or self._generate_excerpt(post.content)
-        
-        return self.engine.index_document(
-            content_id=content_id,
-            content_type=content_type,
-            title=post.title,
-            content=clean_content,
-            excerpt=excerpt
-        )
-    
-    def index_page(self, page) -> bool:
-        """Index a Page model."""
-        content_id = f"page:{page.id}"
-        clean_content = self._clean_text(page.content)
-        excerpt = page.excerpt or self._generate_excerpt(page.content)
-        
-        return self.engine.index_document(
-            content_id=content_id,
-            content_type="page",
-            title=page.title,
-            content=clean_content,
-            excerpt=excerpt
-        )
-    
-    def remove_content(self, content_id: str, content_type: str) -> bool:
-        """Remove content from index."""
-        full_id = f"{content_type}:{content_id}"
-        return self.engine.remove_document(full_id)
-    
-    def reindex_all(self, posts, pages):
-        """Reindex all content."""
-        self.engine.clear_index()
-        
-        indexed = 0
-        for post in posts:
-            if self.index_post(post):
-                indexed += 1
-        
-        for page in pages:
-            if self.index_page(page):
-                indexed += 1
-        
-        return indexed
+class SearchIndexer:
+    """Manages Elasticsearch indices and documents."""
+
+    def __init__(self, es_client):
+        self.es = es_client
+
+    def create_index(self, content_type, mappings=None):
+        """Create index with mappings."""
+        index = self.es.index_name(content_type)
+        default_mappings = {
+            "properties": {
+                "id": {"type": "keyword"},
+                "title": {"type": "text", "analyzer": "standard"},
+                "content": {"type": "text", "analyzer": "standard"},
+                "excerpt": {"type": "text"},
+                "slug": {"type": "keyword"},
+                "status": {"type": "keyword"},
+                "author_id": {"type": "keyword"},
+                "author_name": {"type": "keyword"},
+                "tags": {"type": "keyword"},
+                "categories": {"type": "keyword"},
+                "published_at": {"type": "date"},
+                "created_at": {"type": "date"}
+            }
+        }
+        body = {
+            "settings": {
+                "number_of_shards": 1,
+                "number_of_replicas": 0
+            },
+            "mappings": mappings or default_mappings
+        }
+        return self.es.connect().indices.create(index=index, body=body, ignore=400)
+
+    def delete_index(self, content_type):
+        """Delete index."""
+        index = self.es.index_name(content_type)
+        return self.es.connect().indices.delete(index=index, ignore=[400, 404])
+
+    def index_document(self, content_type, doc_id, document):
+        """Index a document."""
+        index = self.es.index_name(content_type)
+        document["indexed_at"] = datetime.utcnow().isoformat()
+        return self.es.connect().index(index=index, id=doc_id, body=document)
+
+    def delete_document(self, content_type, doc_id):
+        """Delete document from index."""
+        index = self.es.index_name(content_type)
+        return self.es.connect().delete(index=index, id=doc_id, ignore=[400, 404])
+
+    def refresh_index(self, content_type):
+        """Refresh index for immediate search."""
+        index = self.es.index_name(content_type)
+        return self.es.connect().indices.refresh(index=index)
+
+    def index_exists(self, content_type):
+        """Check if index exists."""
+        index = self.es.index_name(content_type)
+        return self.es.connect().indices.exists(index=index)
+
+
+# Compatibility alias for existing code
+ContentIndexer = SearchIndexer

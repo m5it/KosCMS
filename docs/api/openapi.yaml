@@ -1,0 +1,113 @@
+openapi: 3.0.0
+info:
+  title: WebCMS API
+  version: 1.2.0
+  description: API documentation for WebCMS v1.2.0
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development server
+
+paths:
+  /workflows:
+    get:
+      summary: List workflow definitions
+      responses:
+        '200':
+          description: List of workflows
+
+  /workflow-instances:
+    get:
+      summary: List workflow instances
+      responses:
+        '200':
+          description: List of workflow instances
+
+  /search:
+    get:
+      summary: Search content
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Search results
+
+  /tenants:
+    get:
+      summary: List tenants
+      responses:
+        '200':
+          description: List of tenants
+    post:
+      summary: Create tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                slug:
+                  type: string
+                domain:
+                  type: string
+      responses:
+        '201':
+          description: Tenant created
+
+  /notifications/{user_id}:
+    get:
+      summary: Get user notifications
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User notifications
+
+  /backups:
+    get:
+      summary: List backups
+      responses:
+        '200':
+          description: List of backups
+    post:
+      summary: Create backup
+      responses:
+        '201':
+          description: Backup created
+
+  /graphql:
+    post:
+      summary: GraphQL endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+      responses:
+        '200':
+          description: GraphQL response

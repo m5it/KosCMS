@@ -1,0 +1,390 @@
+{
+  "definitions": {
+    "default-editorial": {
+      "workflow_id": "default-editorial",
+      "name": "Default Editorial Workflow",
+      "content_types": [
+        "post",
+        "page"
+      ],
+      "states": [
+        {
+          "state_id": "draft",
+          "name": "Draft",
+          "label": "Draft",
+          "is_initial": true,
+          "is_final": false,
+          "requires_approval": false,
+          "color": "#6c757d"
+        },
+        {
+          "state_id": "review",
+          "name": "Review",
+          "label": "In Review",
+          "is_initial": false,
+          "is_final": false,
+          "requires_approval": true,
+          "color": "#fd7e14"
+        },
+        {
+          "state_id": "approved",
+          "name": "Approved",
+          "label": "Approved",
+          "is_initial": false,
+          "is_final": false,
+          "requires_approval": false,
+          "color": "#198754"
+        },
+        {
+          "state_id": "published",
+          "name": "Published",
+          "label": "Published",
+          "is_initial": false,
+          "is_final": true,
+          "requires_approval": false,
+          "color": "#0d6efd"
+        },
+        {
+          "state_id": "rejected",
+          "name": "Rejected",
+          "label": "Rejected",
+          "is_initial": false,
+          "is_final": false,
+          "requires_approval": false,
+          "color": "#dc3545"
+        }
+      ],
+      "transitions": [
+        {
+          "transition_id": "submit",
+          "from_state": "draft",
+          "to_state": "review",
+          "name": "Submit for Review",
+          "required_role": "editor",
+          "requires_comment": false
+        },
+        {
+          "transition_id": "approve",
+          "from_state": "review",
+          "to_state": "approved",
+          "name": "Approve",
+          "required_role": "reviewer",
+          "requires_comment": false
+        },
+        {
+          "transition_id": "reject",
+          "from_state": "review",
+          "to_state": "rejected",
+          "name": "Reject",
+          "required_role": "reviewer",
+          "requires_comment": true
+        },
+        {
+          "transition_id": "publish",
+          "from_state": "approved",
+          "to_state": "published",
+          "name": "Publish",
+          "required_role": "publisher",
+          "requires_comment": false
+        },
+        {
+          "transition_id": "revise",
+          "from_state": "rejected",
+          "to_state": "draft",
+          "name": "Revise",
+          "required_role": "editor",
+          "requires_comment": false
+        },
+        {
+          "transition_id": "unpublish",
+          "from_state": "published",
+          "to_state": "draft",
+          "name": "Unpublish",
+          "required_role": "publisher",
+          "requires_comment": false
+        }
+      ],
+      "is_default": true,
+      "created_at": "2026-07-12T05:54:41.332618"
+    }
+  },
+  "instances": {
+    "e6495707-6c31-443d-ae88-983d1a3823c1": {
+      "instance_id": "e6495707-6c31-443d-ae88-983d1a3823c1",
+      "workflow_id": "default-editorial",
+      "content_id": "post-1",
+      "content_type": "post",
+      "current_state": "published",
+      "assigned_reviewers": [
+        "reviewer1",
+        "reviewer2"
+      ],
+      "scheduled_publish": null,
+      "history": [
+        {
+          "from_state": null,
+          "to_state": "draft",
+          "user_id": null,
+          "username": null,
+          "comment": "Workflow started",
+          "timestamp": "2026-07-12T05:39:49.381877"
+        },
+        {
+          "from_state": "draft",
+          "to_state": "review",
+          "user_id": "author1",
+          "username": "Author",
+          "comment": "Ready for review",
+          "timestamp": "2026-07-12T05:39:49.382500"
+        },
+        {
+          "from_state": "review",
+          "to_state": "approved",
+          "user_id": "reviewer1",
+          "username": "Reviewer One",
+          "comment": "Looks good",
+          "timestamp": "2026-07-12T05:39:49.382605"
+        },
+        {
+          "from_state": "approved",
+          "to_state": "published",
+          "user_id": "editor1",
+          "username": "Editor",
+          "comment": null,
+          "timestamp": "2026-07-12T05:39:49.382718"
+        }
+      ],
+      "created_at": "2026-07-12T05:39:49.381874"
+    },
+    "33992c20-745b-4fac-9b02-6db41e173abc": {
+      "instance_id": "33992c20-745b-4fac-9b02-6db41e173abc",
+      "workflow_id": "default-editorial",
+      "content_id": "post-1",
+      "content_type": "post",
+      "current_state": "published",
+      "assigned_reviewers": [
+        "reviewer1"
+      ],
+      "scheduled_publish": null,
+      "history": [
+        {
+          "from_state": null,
+          "to_state": "draft",
+          "user_id": null,
+          "username": null,
+          "comment": "Workflow started",
+          "timestamp": "2026-07-12T05:53:11.002589"
+        },
+        {
+          "from_state": "draft",
+          "to_state": "review",
+          "user_id": "author1",
+          "username": "Author",
+          "comment": null,
+          "timestamp": "2026-07-12T05:53:11.004192"
+        },
+        {
+          "from_state": "review",
+          "to_state": "approved",
+          "user_id": "reviewer1",
+          "username": "Reviewer",
+          "comment": null,
+          "timestamp": "2026-07-12T05:53:11.004294"
+        },
+        {
+          "from_state": "approved",
+          "to_state": "published",
+          "user_id": "editor1",
+          "username": "Editor",
+          "comment": null,
+          "timestamp": "2026-07-12T05:53:11.004395"
+        }
+      ],
+      "created_at": "2026-07-12T05:53:11.002588"
+    },
+    "cf4c0405-2681-491d-9ef9-e8e6f2399ba2": {
+      "instance_id": "cf4c0405-2681-491d-9ef9-e8e6f2399ba2",
+      "workflow_id": "default-editorial",
+      "content_id": "post-1",
+      "content_type": "post",
+      "current_state": "published",
+      "assigned_reviewers": [
+        "reviewer1"
+      ],
+      "scheduled_publish": null,
+      "history": [
+        {
+          "from_state": null,
+          "to_state": "draft",
+          "user_id": null,
+          "username": null,
+          "comment": "Workflow started",
+          "timestamp": "2026-07-12T05:53:22.866310"
+        },
+        {
+          "from_state": "draft",
+          "to_state": "review",
+          "user_id": "author1",
+          "username": "Author",
+          "comment": null,
+          "timestamp": "2026-07-12T05:53:22.866607"
+        },
+        {
+          "from_state": "review",
+          "to_state": "approved",
+          "user_id": "reviewer1",
+          "username": "Reviewer",
+          "comment": null,
+          "timestamp": "2026-07-12T05:53:22.866739"
+        },
+        {
+          "from_state": "approved",
+          "to_state": "published",
+          "user_id": "editor1",
+          "username": "Editor",
+          "comment": null,
+          "timestamp": "2026-07-12T05:53:22.866870"
+        }
+      ],
+      "created_at": "2026-07-12T05:53:22.866307"
+    },
+    "c584fce4-96da-497d-b881-7300a800fed8": {
+      "instance_id": "c584fce4-96da-497d-b881-7300a800fed8",
+      "workflow_id": "default-editorial",
+      "content_id": "post-1",
+      "content_type": "post",
+      "current_state": "published",
+      "assigned_reviewers": [
+        "reviewer1"
+      ],
+      "scheduled_publish": null,
+      "history": [
+        {
+          "from_state": null,
+          "to_state": "draft",
+          "user_id": null,
+          "username": null,
+          "comment": "Workflow started",
+          "timestamp": "2026-07-12T05:53:30.436296"
+        },
+        {
+          "from_state": "draft",
+          "to_state": "review",
+          "user_id": "author1",
+          "username": "Author",
+          "comment": null,
+          "timestamp": "2026-07-12T05:53:30.436723"
+        },
+        {
+          "from_state": "review",
+          "to_state": "approved",
+          "user_id": "reviewer1",
+          "username": "Reviewer",
+          "comment": null,
+          "timestamp": "2026-07-12T05:53:30.436903"
+        },
+        {
+          "from_state": "approved",
+          "to_state": "published",
+          "user_id": "editor1",
+          "username": "Editor",
+          "comment": null,
+          "timestamp": "2026-07-12T05:53:30.437076"
+        }
+      ],
+      "created_at": "2026-07-12T05:53:30.436286"
+    },
+    "13aaac7c-1d57-4d4e-bc1d-05708c793f8a": {
+      "instance_id": "13aaac7c-1d57-4d4e-bc1d-05708c793f8a",
+      "workflow_id": "default-editorial",
+      "content_id": "post-1",
+      "content_type": "post",
+      "current_state": "published",
+      "assigned_reviewers": [
+        "reviewer1"
+      ],
+      "scheduled_publish": null,
+      "history": [
+        {
+          "from_state": null,
+          "to_state": "draft",
+          "user_id": null,
+          "username": null,
+          "comment": "Workflow started",
+          "timestamp": "2026-07-12T05:54:38.527272"
+        },
+        {
+          "from_state": "draft",
+          "to_state": "review",
+          "user_id": "author1",
+          "username": "Author",
+          "comment": null,
+          "timestamp": "2026-07-12T05:54:38.527638"
+        },
+        {
+          "from_state": "review",
+          "to_state": "approved",
+          "user_id": "reviewer1",
+          "username": "Reviewer",
+          "comment": null,
+          "timestamp": "2026-07-12T05:54:38.527801"
+        },
+        {
+          "from_state": "approved",
+          "to_state": "published",
+          "user_id": "editor1",
+          "username": "Editor",
+          "comment": null,
+          "timestamp": "2026-07-12T05:54:38.527971"
+        }
+      ],
+      "created_at": "2026-07-12T05:54:38.527262"
+    },
+    "37711f22-4e0e-4d7c-9f38-66dc1e8fe199": {
+      "instance_id": "37711f22-4e0e-4d7c-9f38-66dc1e8fe199",
+      "workflow_id": "default-editorial",
+      "content_id": "post-1",
+      "content_type": "post",
+      "current_state": "published",
+      "assigned_reviewers": [
+        "reviewer1"
+      ],
+      "scheduled_publish": null,
+      "history": [
+        {
+          "from_state": null,
+          "to_state": "draft",
+          "user_id": null,
+          "username": null,
+          "comment": "Workflow started",
+          "timestamp": "2026-07-12T05:54:41.333046"
+        },
+        {
+          "from_state": "draft",
+          "to_state": "review",
+          "user_id": "author1",
+          "username": "Author",
+          "comment": null,
+          "timestamp": "2026-07-12T05:54:41.333465"
+        },
+        {
+          "from_state": "review",
+          "to_state": "approved",
+          "user_id": "reviewer1",
+          "username": "Reviewer",
+          "comment": null,
+          "timestamp": "2026-07-12T05:54:41.333642"
+        },
+        {
+          "from_state": "approved",
+          "to_state": "published",
+          "user_id": "editor1",
+          "username": "Editor",
+          "comment": null,
+          "timestamp": "2026-07-12T05:54:41.333803"
+        }
+      ],
+      "created_at": "2026-07-12T05:54:41.333037"
+    }
+  }
+}

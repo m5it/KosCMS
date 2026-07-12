@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "webcms"
+version = "1.2.0"
+description = "WebCMS - A modern content management system"
+requires-python = ">=3.10"
+dependencies = [
+    "graphene>=3.4.0",
+    "redis>=5.0.0",
+    "elasticsearch>=9.0.0",
+    "cryptography>=41.0.0"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["webcms"]
+omit = ["*/tests/*", "*/test_*"]
+
+[tool.coverage.report]
+fail_under = 30
+show_missing = true

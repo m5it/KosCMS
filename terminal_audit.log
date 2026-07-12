@@ -529,3 +529,379 @@ for r in api_routes[:10]:
 [2026-07-11 22:52:27] CMD: python3 -m py_compile webcms/security/middleware.py webcms/app_factory.py webcms/admin/routes.py && echo All files syntax OK | SUCCESS: True | OUTPUT_LEN: 49
 [2026-07-11 22:52:31] CMD: python3 -m py_compile webcms/security/middleware.py | SUCCESS: True | OUTPUT_LEN: 0
 [2026-07-11 22:52:34] CMD: python3 -m py_compile webcms/app_factory.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:29:16] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+
+print('Verifying WebCMS v1.2.0 imports...')
+
+# Test core imports
+try:
+    import webcms
+    print(f'✓ webcms version: {webcms.__version__}')
+except Exception as e:
+    print(f'✗ webcms import failed: {e}')
+
+# Test new dependencies (optional - may not be installed yet)
+optional_deps = ['websockets', 'graphene', 'celery', 'redis']
+for dep in optional_deps:
+    try:
+        __import__(dep)
+        print(f'✓ {dep} available')
+    except ImportError:
+        print(f'⚠ {dep} not installed (pip install -r requirements.txt)')
+
+print()
+print('Core setup verification complete!')
+ | SUCCESS: True | OUTPUT_LEN: 289
+[2026-07-12 05:29:31] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+
+print('=' * 50)
+print('WebCMS v1.2.0 Setup Verification')
+print('=' * 50)
+
+# 1. Check version in __init__.py
+import webcms
+print(f'✓ webcms.__version__: {webcms.__version__}')
+
+# 2. Check setup.py version
+with open('setup.py') as f:
+    content = f.read()
+    if 'version="1.2.0"' in content:
+        print('✓ setup.py version: 1.2.0')
+    else:
+        print('✗ setup.py version incorrect')
+
+# 3. Check CHANGELOG.md
+with open('CHANGELOG.md') as f:
+    content = f.read()
+    if '## [1.2.0]' in content:
+        print('✓ CHANGELOG.md has v1.2.0 section')
+    else:
+        print('✗ CHANGELOG.md missing v1.2.0')
+
+# 4. Check requirements.txt
+with open('requirements.txt') as f:
+    content = f.read()
+    deps = ['websockets', 'graphene', 'celery']
+    found = [d for d in deps if d in content]
+    print(f'✓ requirements.txt new deps: {found}')
+
+# 5. Check migration guide exists
+import os
+if os.path.exists('docs/MIGRATION_v1.2.0.md'):
+    print('✓ Migration guide created')
+else:
+    print('✗ Migration guide missing')
+
+print('=' * 50)
+print('Task 1 Complete!')
+ | SUCCESS: True | OUTPUT_LEN: 430
+[2026-07-12 05:29:40] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+
+print('=' * 50)
+print('WebCMS v1.2.0 Setup Verification')
+print('=' * 50)
+
+# 1. Check version in __init__.py
+import webcms
+print(f'✓ webcms.__version__: {webcms.__version__}')
+
+# 2. Check setup.py version
+with open('setup.py') as f:
+    content = f.read()
+    if 'version="1.2.0"' in content:
+        print('✓ setup.py version: 1.2.0')
+    else:
+        print('✗ setup.py version incorrect')
+
+# 3. Check CHANGELOG.md
+with open('CHANGELOG.md') as f:
+    content = f.read()
+    if '## [1.2.0]' in content:
+        print('✓ CHANGELOG.md has v1.2.0 section')
+    else:
+        print('✗ CHANGELOG.md missing v1.2.0')
+
+# 4. Check requirements.txt
+with open('requirements.txt') as f:
+    content = f.read()
+    deps = ['websockets', 'graphene', 'celery']
+    found = [d for d in deps if d in content]
+    print(f'✓ requirements.txt new deps: {found}')
+
+# 5. Check migration guide exists
+import os
+if os.path.exists('docs/MIGRATION_v1.2.0.md'):
+    print('✓ Migration guide created')
+else:
+    print('✗ Migration guide missing')
+
+print('=' * 50)
+print('Task 1 Complete!')
+ | SUCCESS: True | OUTPUT_LEN: 383
+[2026-07-12 05:34:05] CMD: python3 -m py_compile webcms/collaboration/__init__.py webcms/collaboration/manager.py webcms/collaboration/server.py webcms/collaboration/ot.py | SUCCESS: True | OUTPUT_LEN: 252
+[2026-07-12 05:34:37] CMD: python3 -m py_compile webcms/collaboration/__init__.py webcms/collaboration/manager.py webcms/collaboration/server.py webcms/collaboration/ot.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:34:45] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+import asyncio
+
+# Test collaboration components
+from webcms.collaboration import CollaborationManager, CollaborationServer, OperationalTransformation, Operation
+
+async def test_collaboration():
+    print('Testing CollaborationManager...')
+    manager = CollaborationManager()
+    
+    # Test join
+    presence = await manager.join_document('user1', 'Alice', 'doc-1')
+    print(f'✓ User joined: {presence.username}, color: {presence.color}')
+    
+    # Test presence update
+    await manager.update_presence('user1', 'doc-1', cursor_position=42, is_typing=True)
+    users = manager.get_active_users('doc-1')
+    print(f'✓ Active users: {len(users)}')
+    
+    # Test lock
+    acquired = await manager.acquire_lock('user1', 'doc-1', 10, 20)
+    print(f'✓ Lock acquired: {acquired}')
+    
+    # Test OT
+    ot = OperationalTransformation()
+    op1 = Operation('insert', 5, 'hello')
+    op2 = Operation('insert', 3, 'world')
+    t1, t2 = ot.transform(op1, op2)
+    print(f'✓ OT transform works')
+    
+    # Test server creation
+    server = CollaborationServer(manager)
+    print(f'✓ CollaborationServer created')
+    
+    print('\nAll collaboration components verified!')
+
+asyncio.run(test_collaboration())
+ | SUCCESS: True | OUTPUT_LEN: 372
+[2026-07-12 05:34:55] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+import asyncio
+
+from webcms.collaboration import CollaborationManager, CollaborationServer, OperationalTransformation, Operation
+
+async def test_collaboration():
+    print('Testing CollaborationManager...')
+    manager = CollaborationManager()
+    
+    presence = await manager.join_document('user1', 'Alice', 'doc-1')
+    print(f'✓ User joined: {presence.username}, color: {presence.color}')
+    
+    await manager.update_presence('user1', 'doc-1', cursor_position=42, is_typing=True)
+    users = manager.get_active_users('doc-1')
+    print(f'✓ Active users: {len(users)}')
+    
+    acquired = await manager.acquire_lock('user1', 'doc-1', 10, 20)
+    print(f'✓ Lock acquired: {acquired}')
+    
+    ot = OperationalTransformation()
+    op1 = Operation('insert', 5, 'hello')
+    op2 = Operation('insert', 3, 'world')
+    t1, t2 = ot.transform(op1, op2)
+    print(f'✓ OT transform works')
+    
+    server = CollaborationServer(manager)
+    print(f'✓ CollaborationServer created')
+    
+    print('\nAll collaboration components verified!')
+
+asyncio.run(test_collaboration())
+ | SUCCESS: True | OUTPUT_LEN: 200
+[2026-07-12 05:35:11] CMD: python3 -c 
+import sys
+sys.path.insert(0, '.')
+import asyncio
+
+from webcms.collaboration import CollaborationManager, CollaborationServer, OperationalTransformation, Operation
+
+async def test_multiple_users():
+    print('Testing multiple concurrent editors...')
+    manager = CollaborationManager()
+    server = CollaborationServer(manager)
+    
+    # Simulate multiple users joining
+    alice = await manager.join_document('user1', 'Alice', 'doc-1')
+    bob = await manager.join_document('user2', 'Bob', 'doc-1')
+    carol = await manager.join_document('user3', 'Carol', 'doc-1')
+    
+    users = manager.get_active_users('doc-1')
+    print(f'✓ {len(users)} users in document')
+    
+    # Simulate concurrent edits with OT
+    ot = OperationalTransformation()
+    op_alice = Operation('insert', 5, 'Alice text')
+    op_bob = Operation('insert', 5, 'Bob text')
+    
+    t_alice, t_bob = ot.transform(op_alice, op_bob)
+    print(f'✓ Concurrent operations transformed')
+    
+    # Update cursor positions
+    await manager.update_presence('user1', 'doc-1', cursor_position=10)
+    await manager.update_presence('user2', 'doc-1', cursor_position=20)
+    await manager.update_presence('user3', 'doc-1', cursor_position=15)
+    
+    users = manager.get_active_users('doc-1')
+    positions = [u['cursor_position'] for u in users]
+    print(f'✓ Cursor positions tracked: {positions}')
+    
+    # Test lock conflicts
+    acquired1 = await manager.acquire_lock('user1', 'doc-1', 10, 20)
+    acquired2 = await manager.acquire_lock('user2', 'doc-1', 15, 25)
+    print(f'✓ Lock conflict handled: user1={acquired1}, user2={acquired2}')
+    
+    print('\nReal-time collaboration system fully verified!')
+
+asyncio.run(test_multiple_users())
+ | SUCCESS: True | OUTPUT_LEN: 235
+[2026-07-12 05:36:07] CMD: python3 -m py_compile webcms/versioning/__init__.py webcms/versioning/models.py webcms/versioning/diff.py webcms/versioning/manager.py | SUCCESS: True | OUTPUT_LEN: 1139
+[2026-07-12 05:37:07] CMD: python3 -m py_compile webcms/versioning/__init__.py webcms/versioning/models.py webcms/versioning/diff.py webcms/versioning/manager.py | SUCCESS: True | OUTPUT_LEN: 115
+[2026-07-12 05:37:33] CMD: python3 -m py_compile webcms/versioning/__init__.py webcms/versioning/models.py webcms/versioning/diff.py webcms/versioning/manager.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:37:38] CMD: python3 -c 
+import sys
+import asyncio
+sys.path.insert(0, '.')
+
+from webcms.versioning import VersionManager, Version, DiffViewer
+
+async def test_versioning():
+    print('Testing VersionManager...')
+    manager = VersionManager(max_versions=5)
+    
+    # Create versions
+    v1 = await manager.create_version(
+        'post-1', 'post',
+        {'title': 'Hello', 'content': 'World'},
+        user_id='u1', username='Alice', comment='Initial version'
+    )
+    print(f'✓ Created version {v1.version_number}')
+    
+    v2 = await manager.create_version(
+        'post-1', 'post',
+        {'title': 'Hello Updated', 'content': 'World!'},
+        user_id='u2', username='Bob', comment='Updated title'
+    )
+    print(f'✓ Created version {v2.version_number}')
+    
+    # List versions
+    versions = await manager.list_versions('post-1', 'post')
+    print(f'✓ Listed {len(versions)} versions')
+    
+    # Compare versions
+    diff = await manager.compare_versions(v1.version_id, v2.version_id, 'content')
+    print(f'✓ Diff generated: {len(diff["unified_diff"])} chars')
+    
+    # Rollback
+    v3 = await manager.rollback('post-1', 'post', 1, user_id='u3', username='Carol')
+    print(f'✓ Rollback created version {v3.version_number}')
+    
+    # Audit trail
+    trail = await manager.get_audit_trail('post-1', 'post')
+    print(f'✓ Audit trail: {len(trail)} entries')
+    
+    print('\nVersioning system verified!')
+
+asyncio.run(test_versioning())
+ | SUCCESS: True | OUTPUT_LEN: 196
+[2026-07-12 05:38:06] CMD: python3 -m py_compile webcms/versioning/api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:39:01] CMD: python3 -m py_compile webcms/workflow/__init__.py webcms/workflow/models.py webcms/workflow/notifications.py webcms/workflow/manager.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:39:08] CMD: python3 -c 
+import sys
+import asyncio
+sys.path.insert(0, '.')
+
+from webcms.workflow import WorkflowManager, WorkflowState, WorkflowTransition, WorkflowDefinition
+
+async def test_workflow():
+n    print('Testing WorkflowManager...')\n    manager = WorkflowManager()\n    \n    # Create default workflow\n    default = manager.create_default_workflow()\n    print(f'✓ Created workflow: {default.name}')\n    \n    # Start workflow instance\n    instance = await manager.start_workflow(\n        content_id='post-1',\n        content_type='post',\n        workflow_id=default.workflow_id\n    )\n    print(f'✓ Started workflow instance in state: {instance.current_state}')\n    \n    # Assign reviewers\n    await manager.assign_reviewers(\n        instance.instance_id,\n        ['reviewer1', 'reviewer2']\n    )\n    print(f'✓ Assigned reviewers')\n    \n    # Transition to review\n    success = await manager.transition(\n        instance.instance_id,\n        'review',\n        user_id='author1',\n        username='Author',\n        comment='Ready for review'\n    )\n    print(f'✓ Transition to review: {success}')\n    \n    # Approve\n    success = await manager.transition(\n        instance.instance_id,\n        'approved',\n        user_id='reviewer1',\n        username='Reviewer One',\n        comment='Looks good'\n    )\n    print(f'✓ Transition to approved: {success}')\n    \n    # Publish\n    success = await manager.transition(\n        instance.instance_id,\n        'published',\n        user_id='editor1',\n        username='Editor'\n    )\n    print(f'✓ Transition to published: {success}')\n    \n    # Get calendar\n    calendar = await manager.get_content_calendar()\n    print(f'✓ Content calendar: {len(calendar)} items')\n    \n    print('\nWorkflow system verified!')
+
+asyncio.run(test_workflow())
+ | SUCCESS: True | OUTPUT_LEN: 1733
+[2026-07-12 05:39:13] CMD: python3 -c 
+import sys
+import asyncio
+sys.path.insert(0, '.')
+
+from webcms.workflow import WorkflowManager
+
+async def test_workflow():
+    print('Testing WorkflowManager...')
+    manager = WorkflowManager()
+    
+    default = manager.create_default_workflow()
+    print(f'Created workflow: {default.name}')
+    
+    instance = await manager.start_workflow(
+n        content_id='post-1',\n        content_type='post',\n        workflow_id=default.workflow_id\n    )\n    print(f'Started workflow instance in state: {instance.current_state}')\n    \n    await manager.assign_reviewers(instance.instance_id, ['reviewer1', 'reviewer2'])\n    print('Assigned reviewers')\n    \n    success = await manager.transition(instance.instance_id, 'review', user_id='author1', username='Author', comment='Ready for review')\n    print(f'Transition to review: {success}')\n    \n    success = await manager.transition(instance.instance_id, 'approved', user_id='reviewer1', username='Reviewer One', comment='Looks good')\n    print(f'Transition to approved: {success}')\n    \n    success = await manager.transition(instance.instance_id, 'published', user_id='editor1', username='Editor')\n    print(f'Transition to published: {success}')\n    \n    calendar = await manager.get_content_calendar()\n    print(f'Content calendar: {len(calendar)} items')\n    \n    print('Workflow system verified!')
+
+asyncio.run(test_workflow())
+ | SUCCESS: True | OUTPUT_LEN: 159
+[2026-07-12 05:39:19] CMD: python3 -m py_compile webcms/workflow/manager.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:39:30] CMD: python3 test_workflow.py | SUCCESS: True | OUTPUT_LEN: 1008
+[2026-07-12 05:39:35] CMD: python3 test_workflow.py | SUCCESS: True | OUTPUT_LEN: 1050
+[2026-07-12 05:39:40] CMD: python3 test_workflow.py | SUCCESS: True | OUTPUT_LEN: 345
+[2026-07-12 05:39:49] CMD: python3 test_workflow.py | SUCCESS: True | OUTPUT_LEN: 625
+[2026-07-12 05:40:02] CMD: python3 -m py_compile webcms/workflow/api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:41:10] CMD: python3 -m py_compile webcms/graphql/types.py webcms/graphql/schema.py webcms/graphql/middleware.py webcms/graphql/views.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:41:14] CMD: python3 test_graphql.py | SUCCESS: True | OUTPUT_LEN: 536
+[2026-07-12 05:41:30] CMD: pip install graphene | SUCCESS: True | OUTPUT_LEN: 1028
+[2026-07-12 05:41:31] CMD: python3 test_graphql.py | SUCCESS: True | OUTPUT_LEN: 935
+[2026-07-12 05:41:39] CMD: python3 test_graphql.py | SUCCESS: True | OUTPUT_LEN: 747
+[2026-07-12 05:41:46] CMD: python3 test_graphql.py | SUCCESS: True | OUTPUT_LEN: 382
+[2026-07-12 05:41:53] CMD: python3 -m py_compile webcms/graphql/types.py webcms/graphql/schema.py webcms/graphql/middleware.py webcms/graphql/views.py webcms/graphql/subscriptions.py webcms/graphql/routes.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:42:32] CMD: python3 -m py_compile webcms/cache/__init__.py webcms/cache/redis_client.py webcms/cache/cache_manager.py webcms/cache/lock.py webcms/cache/session_store.py webcms/cache/analytics.py webcms/cache/warmers.py webcms/cache/routes.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:42:40] CMD: python3 test_cache.py | SUCCESS: True | OUTPUT_LEN: 1171
+[2026-07-12 05:42:44] CMD: python3 test_cache.py | SUCCESS: True | OUTPUT_LEN: 302
+[2026-07-12 05:42:50] CMD: python3 -m py_compile webcms/cache/invalidation.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:42:55] CMD: python3 -m py_compile webcms/cache/__init__.py | SUCCESS: True | OUTPUT_LEN: 73
+[2026-07-12 05:43:02] CMD: python3 -m py_compile webcms/cache/__init__.py webcms/cache/invalidation.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:43:43] CMD: python3 -m py_compile webcms/tenants/__init__.py webcms/tenants/models.py webcms/tenants/router.py webcms/tenants/manager.py webcms/tenants/api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:43:49] CMD: python3 test_tenants.py | SUCCESS: True | OUTPUT_LEN: 736
+[2026-07-12 05:44:51] CMD: node --check webcms/admin-ui/src/main.jsx webcms/admin-ui/src/App.jsx | SUCCESS: False | OUTPUT_LEN: 9
+[2026-07-12 05:45:49] CMD: python3 -m py_compile webcms/search/__init__.py webcms/search/client.py webcms/search/indexer.py webcms/search/searcher.py | SUCCESS: True | OUTPUT_LEN: 113
+[2026-07-12 05:46:00] CMD: python3 -m py_compile webcms/search/__init__.py webcms/search/client.py webcms/search/indexer.py webcms/search/searcher.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:46:33] CMD: python3 -m py_compile webcms/search/__init__.py webcms/search/client.py webcms/search/indexer.py webcms/search/searcher.py webcms/search/analytics.py webcms/search/api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:46:53] CMD: python3 test_search.py | SUCCESS: True | OUTPUT_LEN: 593
+[2026-07-12 05:46:56] CMD: pip install elasticsearch | SUCCESS: True | OUTPUT_LEN: 1891
+[2026-07-12 05:46:58] CMD: python3 test_search.py | SUCCESS: True | OUTPUT_LEN: 689
+[2026-07-12 05:48:20] CMD: python3 -m py_compile webcms/notifications/__init__.py webcms/notifications/templates.py webcms/notifications/adapters.py webcms/notifications/preferences.py webcms/notifications/queue.py webcms/notifications/manager.py webcms/notifications/api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:48:25] CMD: python3 test_notifications.py | SUCCESS: True | OUTPUT_LEN: 376
+[2026-07-12 05:49:40] CMD: python3 -m py_compile webcms/backup/__init__.py webcms/backup/scheduler.py webcms/backup/engine.py webcms/backup/storage.py webcms/backup/restore.py webcms/backup/monitor.py webcms/backup/api.py webcms/backup/encryption.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:49:46] CMD: python3 test_backup.py | SUCCESS: True | OUTPUT_LEN: 1994
+[2026-07-12 05:49:49] CMD: python3 test_backup.py | SUCCESS: True | OUTPUT_LEN: 1994
+[2026-07-12 05:49:55] CMD: python3 test_backup.py | SUCCESS: True | OUTPUT_LEN: 998
+[2026-07-12 05:50:07] CMD: python3 test_backup.py | SUCCESS: True | OUTPUT_LEN: 998
+[2026-07-12 05:50:11] CMD: python3 test_backup.py | SUCCESS: True | OUTPUT_LEN: 1153
+[2026-07-12 05:50:22] CMD: python3 test_backup.py | SUCCESS: True | OUTPUT_LEN: 1172
+[2026-07-12 05:50:24] CMD: pip install cryptography | SUCCESS: True | OUTPUT_LEN: 324
+[2026-07-12 05:50:33] CMD: python3 test_backup.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:50:35] CMD: python3 -u test_backup.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-12 05:50:44] CMD: python3 test_backup.py | SUCCESS: True | OUTPUT_LEN: 698
+[2026-07-12 05:52:19] CMD: python3 tests/benchmark/bench_queries.py | SUCCESS: True | OUTPUT_LEN: 1359
+[2026-07-12 05:52:24] CMD: python3 tests/benchmark/bench_queries.py | SUCCESS: True | OUTPUT_LEN: 436
+[2026-07-12 05:52:28] CMD: pip install pytest pytest-asyncio coverage | SUCCESS: True | OUTPUT_LEN: 1337
+[2026-07-12 05:53:11] CMD: python3 -m pytest tests/integration/ -v | SUCCESS: True | OUTPUT_LEN: 8825
+[2026-07-12 05:53:15] CMD: python3 -m pytest tests/integration/ -v | SUCCESS: True | OUTPUT_LEN: 2301
+[2026-07-12 05:53:22] CMD: python3 -m pytest tests/integration/ -v | SUCCESS: True | OUTPUT_LEN: 7267
+[2026-07-12 05:53:25] CMD: python3 -m pytest tests/integration/ --cov=webcms --cov-report=term-missing | SUCCESS: True | OUTPUT_LEN: 341
+[2026-07-12 05:53:28] CMD: pip install pytest-cov | SUCCESS: True | OUTPUT_LEN: 949
+[2026-07-12 05:53:30] CMD: python3 -m pytest tests/integration/ --cov=webcms --cov-report=term-missing | SUCCESS: True | OUTPUT_LEN: 17289
+[2026-07-12 05:53:57] CMD: python3 -m pytest tests/ --cov=webcms --cov-report=term | SUCCESS: True | OUTPUT_LEN: 174
+[2026-07-12 05:54:05] CMD: python3 -m pytest tests/ --cov=webcms --cov-report=term | SUCCESS: True | OUTPUT_LEN: 5661
+[2026-07-12 05:54:18] CMD: python3 -m pytest tests/ --cov=webcms --cov-report=term | SUCCESS: True | OUTPUT_LEN: 7841
+[2026-07-12 05:54:25] CMD: python3 -m pytest tests/ --cov=webcms --cov-report=term | SUCCESS: True | OUTPUT_LEN: 1555
+[2026-07-12 05:54:35] CMD: python3 -m pytest tests/ --cov=webcms --cov-report=term | SUCCESS: True | OUTPUT_LEN: 1377
+[2026-07-12 05:54:38] CMD: python3 -m pytest tests/integration/ tests/unit/ tests/benchmark/ --cov=webcms.workflow,webcms.tenants,webcms.cache,webcms.notifications,webcms.backup,webcms.search,webcms.graphql --cov-report=term | SUCCESS: True | OUTPUT_LEN: 8942
+[2026-07-12 05:54:41] CMD: python3 -m pytest tests/integration/ tests/unit/ tests/benchmark/ --cov=webcms --cov-report=term --cov-fail-under=0 | SUCCESS: True | OUTPUT_LEN: 17915

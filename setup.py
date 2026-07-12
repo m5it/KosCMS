@@ -13,7 +13,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="webcms",
-    version="1.1.0",
+    version="1.2.0",
     author="WebCMS Team",
     description="Modern Python Content Management System",
     long_description=long_description,

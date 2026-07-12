@@ -4,10 +4,13 @@ Media Manager
 File uploads with validation and image processing.
 Includes WebP conversion support.
 """
-
 import os
-import imghdr
+try:
+    import imghdr
+except ModuleNotFoundError:
+    from webcms.compat import imghdr
 from datetime import datetime
+from pathlib import Path
 from pathlib import Path
 from typing import BinaryIO, List, Optional, Tuple
 from PIL import Image
