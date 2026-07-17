@@ -1,0 +1,118 @@
+{
+  "id": "1784277190.5321908",
+  "title": "WebCMS Security Hardening - Attack Prevention & Request Validation",
+  "instructions": "",
+  "startTimestamp": 1784277190.5321925,
+  "endTimestamp": 1784278237.434847,
+  "tasks": {
+    "1784277196.7630212": {
+      "id": "1784277196.7630212",
+      "status": "in_progress",
+      "instruction": "",
+      "startTimestamp": 1784277251.3980641,
+      "endTimestamp": null,
+      "log": [
+        {
+          "timestamp": 1784277251.3982759,
+          "text": "Build started"
+        }
+      ]
+    },
+    "1784277199.7329": {
+      "id": "1784277199.7329",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277203.409806": {
+      "id": "1784277203.409806",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277206.6869853": {
+      "id": "1784277206.6869853",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277212.6156645": {
+      "id": "1784277212.6156645",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277215.9014168": {
+      "id": "1784277215.9014168",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277219.3926718": {
+      "id": "1784277219.3926718",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277223.1395652": {
+      "id": "1784277223.1395652",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277229.655777": {
+      "id": "1784277229.655777",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277232.5676441": {
+      "id": "1784277232.5676441",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277235.5560694": {
+      "id": "1784277235.5560694",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277242.2830124": {
+      "id": "1784277242.2830124",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277248.5664008": {
+      "id": "1784277248.5664008",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    }
+  }
+}

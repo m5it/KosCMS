@@ -1,32 +1,48 @@
-# Plan: Fix KosCMS Admin API Errors
-## ID: 1783893354.576747
-## Created: 2026-07-12 21:55:54
-## Status: in_progress
+# Plan: WebCMS Security Hardening - Attack Prevention & Request Validation
+## ID: 1784277190.5321908
+## Created: 2026-07-17 08:33:10
+## Status: completed
 
-### Goal:
-Fix two critical errors in the KosCMS admin API: (1) ImportError for NotificationQueue class, and (2) AttributeError where dict object has no 'filter' attribute due to KosDB/SQLAlchemy interface mismatch.
+### Tasks (13):
+1. [in_progress] Create RequestValidationMiddleware
+   ID: 1784277196.7630212
+   Progress logs: 1 entries
 
-### Tasks (7):
-1. [pending] Create NotificationQueue class in queue.py
-   ID: 1783893357.6022527
+2. [pending] Create PathTraversalProtectionMiddleware
+   ID: 1784277199.7329
 
-2. [pending] Add KosDB detection helper to admin_api.py
-   ID: 1783893366.2778819
+3. [pending] Create RateLimitingMiddleware
+   ID: 1784277203.409806
 
-3. [pending] Fix dashboard() method for KosDB compatibility
-   ID: 1783893366.2780678
+4. [pending] Create ErrorHandlingMiddleware
+   ID: 1784277206.6869853
 
-4. [pending] Fix content list methods for KosDB
-   ID: 1783893366.2793355
+5. [pending] Create IPBlacklistMiddleware
+   ID: 1784277212.6156645
 
-5. [pending] Fix user CRUD methods for KosDB
-   ID: 1783893366.2795057
+6. [pending] Create SecurityHeadersMiddleware
+   ID: 1784277215.9014168
 
-6. [pending] Fix media and roles methods for KosDB
-   ID: 1783893366.2796092
+7. [pending] Create SQLInjectionDetectionMiddleware
+   ID: 1784277219.3926718
 
-7. [pending] Fix settings methods for KosDB
-   ID: 1783893366.2797115
+8. [pending] Create XSSFilterMiddleware
+   ID: 1784277223.1395652
+
+9. [pending] Create UserAgentFilterMiddleware
+   ID: 1784277229.655777
+
+10. [pending] Create HostHeaderValidationMiddleware
+   ID: 1784277232.5676441
+
+11. [pending] Create CSRFProtectionMiddleware
+   ID: 1784277235.5560694
+
+12. [pending] Create ContentSecurityPolicyMiddleware
+   ID: 1784277242.2830124
+
+13. [pending] Create RequestTimeoutMiddleware
+   ID: 1784277248.5664008
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "id": "1783893354.576747",
-  "title": "Fix KosCMS Admin API Errors",
+  "title": "WebCMS Security Hardening - Request Validation & Attack Prevention",
   "instructions": "Fix two critical errors in the KosCMS admin API: (1) ImportError for NotificationQueue class, and (2) AttributeError where dict object has no 'filter' attribute due to KosDB/SQLAlchemy interface mismatch.",
   "startTimestamp": 1783893354.5767508,
   "endTimestamp": 1783893844.5930598,
@@ -13,11 +13,11 @@
       "endTimestamp": 1783893439.3361373,
       "log": [
         {
-          "timestamp": 1783893366.279881,
+          "timestamp": 1784277050.2077324,
           "text": "Build started"
         },
         {
-          "timestamp": 1783893437.2417543,
+          "timestamp": 1784277050.2077339,
           "text": "Created NotificationQueue class in webcms/notifications/queue.py with all required methods: __init__(db), pending_count(), sent_count(hours), failed_count(), retrying_count(). The class handles both SQLAlchemy and KosDB backends with fallback to EmailQueue for in-memory operation."
         }
       ]
@@ -30,7 +30,7 @@
       "endTimestamp": 1783893466.0288255,
       "log": [
         {
-          "timestamp": 1783893464.1186001,
+          "timestamp": 1784277050.2077365,
           "text": "Added helper methods to AdminAPI class: _is_kosdb() detects KosDB client vs SQLAlchemy session, _get_model_count() gets counts with filters, _get_model_list() gets sorted/limited lists, and _get_model_by_id() fetches single records. All helpers work with both KosDB (dict-like) and SQLAlchemy backends."
         }
       ]
@@ -43,7 +43,7 @@
       "endTimestamp": 1783893493.5772126,
       "log": [
         {
-          "timestamp": 1783893491.4446793,
+          "timestamp": 1784277050.2077382,
           "text": "Updated dashboard() method to use _get_model_count() helper instead of direct SQLAlchemy query patterns. Now uses self._get_model_count(Model, {\"is_deleted\": False}) which works with both KosDB and SQLAlchemy backends."
         }
       ]
@@ -56,7 +56,7 @@
       "endTimestamp": 1783893576.6983438,
       "log": [
         {
-          "timestamp": 1783893574.0332751,
+          "timestamp": 1784277050.2077396,
           "text": "Fixed list_pages() and list_posts() methods to use _get_model_list() helper with KosDB-compatible parameters. Also fixed list_media(), list_users(), list_roles() and all other query methods throughout admin_api.py. Rewrote entire file to fix corruption and ensure all database operations use KosDB-compatible helpers."
         }
       ]
@@ -83,6 +83,142 @@
       "instruction": "Update get_settings() and update_settings() methods in webcms/admin/admin_api.py to handle KosDB backend. These methods query the Setting model which needs KosDB-compatible access patterns.",
       "startTimestamp": 1783893761.929859,
       "endTimestamp": 1783893844.5930114,
+      "log": []
+    },
+    "1784277083.0532005": {
+      "id": "1784277083.0532005",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277085.6548762": {
+      "id": "1784277085.6548762",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277088.207922": {
+      "id": "1784277088.207922",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277092.6120374": {
+      "id": "1784277092.6120374",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277098.078023": {
+      "id": "1784277098.078023",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277101.2089443": {
+      "id": "1784277101.2089443",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277103.9583197": {
+      "id": "1784277103.9583197",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277106.9515808": {
+      "id": "1784277106.9515808",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277109.4101374": {
+      "id": "1784277109.4101374",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277115.6687436": {
+      "id": "1784277115.6687436",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277118.1177623": {
+      "id": "1784277118.1177623",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277120.592456": {
+      "id": "1784277120.592456",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277123.34458": {
+      "id": "1784277123.34458",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277125.7941923": {
+      "id": "1784277125.7941923",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277131.2313564": {
+      "id": "1784277131.2313564",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277133.906674": {
+      "id": "1784277133.906674",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
+      "log": []
+    },
+    "1784277136.9587028": {
+      "id": "1784277136.9587028",
+      "status": "pending",
+      "instruction": "",
+      "startTimestamp": null,
+      "endTimestamp": null,
       "log": []
     }
   }
