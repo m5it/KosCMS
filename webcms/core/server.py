@@ -8,8 +8,6 @@ and other low-level socket errors without crashing the server.
 
 import logging
 import sys
-import socket
-from http.server import BaseHTTPRequestHandler
 from wsgiref.simple_server import WSGIRequestHandler, WSGIServer
 
 
@@ -99,10 +97,11 @@ class HardenedWSGIServer(WSGIServer):
     request_timeout = 30
     allow_reuse_address = True
 
-    def __init__(self, *args, **kwargs):
-        # Allow callers to override the request handler class.
-        kwargs.setdefault("handler_class", HardenedWSGIRequestHandler)
-        super().__init__(*args, **kwargs)
+    def __init__(self, server_address, app, handler_class=None):
+        # Default to hardened handler if not provided.
+        if handler_class is None:
+            handler_class = HardenedWSGIRequestHandler
+        super().__init__(server_address, app, handler_class)
 
     def handle_error(self, request, client_address):
         """
@@ -143,6 +142,6 @@ def make_hardened_server(host, port, app, handler_class=None, timeout=30):
         HardenedWSGIServer instance.
     """
     handler_class = handler_class or HardenedWSGIRequestHandler
-    server = HardenedWSGIServer((host, port), app, handler_class=handler_class)
+    server = HardenedWSGIServer((host, port), app, handler_class)
     server.request_timeout = timeout
     return server
