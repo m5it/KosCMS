@@ -1,3 +1,4 @@
+
 """
 Admin Routes
 
@@ -10,10 +11,10 @@ from webcms.core.response import Response
 
 
 # Relaxed CSP for the admin UI: allow same-origin scripts/styles, inline styles,
-# images from anywhere, and do NOT upgrade insecure requests (server may be HTTP).
+# inline scripts (needed for event handlers), and do NOT upgrade insecure requests.
 ADMIN_CSP = (
     "default-src 'self'; "
-    "script-src 'self'; "
+    "script-src 'self' 'unsafe-inline' 'unsafe-hashes'; "
     "style-src 'self' 'unsafe-inline'; "
     "img-src 'self' data: https:; "
     "font-src 'self'; "

@@ -10479,3 +10479,17 @@ Usage:
 [18:10:44] INFO: AI response: 75621 prompt + 174 response tokens (total: 30147693 / 250118)
 [18:10:44] [after +174] [Context: 94442/262144 (36.0%)]
 [18:10:44] You: 
+[18:22:56] [Context: 95766/262144 (36.5%)]
+[18:22:56] [iter 1] [Context: 95766/262144 (36.5%)]
+[18:22:56] INFO: AI request (iteration 1, msgs=234)
+[18:23:01] INFO: AI response: 77547 prompt + 103 response tokens (total: 30225240 / 250221)
+[18:23:01] [after +103] [Context: 96555/262144 (36.8%)]
+[18:23:01] [iter 2] [Context: 96555/262144 (36.8%)]
+[18:23:01] INFO: AI request (iteration 2, msgs=236)
+[18:23:09] INFO: AI response: 78513 prompt + 1022 response tokens (total: 30303753 / 251243)
+[18:23:09] [after +1022] [Context: 97368/262144 (37.1%)]
+[18:23:09] [iter 3] [Context: 97368/262144 (37.1%)]
+[18:23:09] INFO: AI request (iteration 3, msgs=238)
+[18:23:12] INFO: AI response: 79510 prompt + 161 response tokens (total: 30383263 / 251404)
+[18:23:12] [after +161] [Context: 97539/262144 (37.2%)]
+[18:23:12] You: 

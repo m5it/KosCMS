@@ -3136,3 +3136,100 @@ Now restart your server to apply the fix:
 
 <!-- {"role": "assistant", "content": "Now restart your server to apply the fix:\n\n```bash\n# Stop the current server (Ctrl+C), then restart:\npython3 run.py -d\n```\n\nThe fix adds `'unsafe-inline'` and `'unsafe-hashes'` to the CSP `script-src` directive for admin routes, which allows the inline event handlers used by the admin panel JavaScript.\n\n**What changed:**\n- Modified `CSPConfig.build_policy()` to accept an `allow_inline` parameter\n- For admin routes (`/admin/*`), the CSP now includes `'unsafe-inline'` and `'unsafe-hashes'`\n- This allows inline event handlers like `onclick` attributes in the admin panel\n\nAfter restarting, navigate to `/admin#settings` again and the JavaScript errors should be gone.", "sessionId": 343, "rowId": 166, "timestamp": 1784398244.1294897, "date": "2026-07-18", "thinking": "Now I need to restart the server to apply the changes. Let me provide instructions to the user.", "prompt_tokens": 75621, "response_tokens": 174} -->
 
+## [18:22] USER
+on admin/settings when trying to change sitee name dont work.. button dont take effect.. and on same page is full of errors like:
+> 
+> Content-Security-Policy: La configuración de la página bloqueó la ejecución de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: “script-src 'self'”. Considere usar un hash ('sha256-E5Atl69xgo35X/FCmIpWZw68CAFspTGM0Pi0/L2OMrg=') junto con 'unsafe-hashes'. admin.js:50:12
+> Content-Security-Policy: La configuración de la página bloqueó la e...
+> (truncated, 5266 chars total)
+
+---
+
+<!-- {"role": "user", "content": "on admin/settings when trying to change sitee name dont work.. button dont take effect.. and on same page is full of errors like:\n\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-E5Atl69xgo35X/FCmIpWZw68CAFspTGM0Pi0/L2OMrg=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-y+vQ05VC2rxGVGfBOQau1j/8a2RWVJL93IDZA7fJrfU=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-/9cJv+Y4rt6WYRfiqd8P849P8wsjMwigj+aToROusMY=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-Bf3gQOf5vSz54FaJFfR36HG37BfIP+8ZHaFK65JNSWM=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-LDO99tAK1v5dq+nK3SZbAw88/bMOTSu9G10vj7fb/68=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-H00A+/e1QCxWuDPT7uEfnHFq4m3iwGIb1fhanw17+4Q=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-mn+xyg3ENcZSnD19dJuFOP0VMupgeG7WgjBauu6y+Rg=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-A+wy30xKSlILiOCmhsGxp4IKWrbcl/K0HW7YT4XTU/w=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-CSGhlHGflShy82+KqrN/WJcivNC+IpBcado5GyRUCtU=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-0PsQpfUWDXeKnZv0CBy6lltBvMmq0rxEBe+QnIy+HpU=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-HQsSk5iyHirG7a31WGtXGlAYSRWr5KkMKbuXtevlzIE=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-Sa7Lbl4kwx77p2CzhUHRMBRiD92pa2sMirBNpvzEDW0=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-ywL4RBSUyXl5Ld+gZrtnu8hvPWpSCZiuzm4C5EV8GIs=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-HmiXlDI96OQODaf0U9G/X3/EjxEXpLu6bfnRElYGr9g=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-4NIrW2dT3dGticcUf0cKHHbFBOFytwmVOdgK4x7WFj4=') junto con 'unsafe-hashes'. admin.js:50:12\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-E5Atl69xgo35X/FCmIpWZw68CAFspTGM0Pi0/L2OMrg=') junto con 'unsafe-hashes'. admin.js:57:35\nContent-Security-Policy: La configuraci\u00f3n de la p\u00e1gina bloque\u00f3 la ejecuci\u00f3n de un controlador de eventos (script-src-attr) porque viola la siguiente directiva: \u201cscript-src 'self'\u201d. Considere usar un hash ('sha256-w4P0U2E+caqlCEldfqAsC7CKaF9S0SETrOnDh4d8Hys=') junto con 'unsafe-hashes'. admin.js:238:16\n", "sessionId": 343, "rowId": 167, "timestamp": 1784398976.9211946, "date": "2026-07-18"} -->
+
+## [18:23] ASSISTANT
+The CSP is still being set by the admin panel itself. Let me check where the admin routes set their CSP headers:  <ReadFile>
+> <fileName>webcms/admin/routes.py</fileName>
+> </ReadFile>
+
+---
+
+<!-- {"role": "assistant", "content": "The CSP is still being set by the admin panel itself. Let me check where the admin routes set their CSP headers:  <ReadFile>\n<fileName>webcms/admin/routes.py</fileName>\n</ReadFile>", "sessionId": 343, "rowId": 167, "timestamp": 1784398981.8211956, "date": "2026-07-18", "thinking": "", "prompt_tokens": 77547, "response_tokens": 103} -->
+
+## [18:23] tool: ReadFile
+"""
+> Admin Routes
+> 
+> Serve the React-based admin UI for /admin and /admin/* paths.
+> """
+> 
+> import mimetypes
+> from pathlib import Path
+> from webcms.core.response import Response
+> 
+> 
+> # Relaxed CSP for the admin UI: allow same-origin scripts/styles, inline styles,
+> # images from anywhere, and do NOT upgrade insecure requests (server may be HTTP).
+> ADMIN_CSP = (
+>     "default-src 'self'; "
+>     "script-src 'self'; "
+>     "style-src 'self' 'unsafe-inline'; "
+>     "img-src 'self' data: https:; "
+>     "font-src 'self';...
+> (truncated, 2915 chars total)
+
+---
+
+<!-- {"role": "tool", "content": "\"\"\"\nAdmin Routes\n\nServe the React-based admin UI for /admin and /admin/* paths.\n\"\"\"\n\nimport mimetypes\nfrom pathlib import Path\nfrom webcms.core.response import Response\n\n\n# Relaxed CSP for the admin UI: allow same-origin scripts/styles, inline styles,\n# images from anywhere, and do NOT upgrade insecure requests (server may be HTTP).\nADMIN_CSP = (\n    \"default-src 'self'; \"\n    \"script-src 'self'; \"\n    \"style-src 'self' 'unsafe-inline'; \"\n    \"img-src 'self' data: https:; \"\n    \"font-src 'self'; \"\n    \"connect-src 'self'; \"\n    \"media-src 'self'; \"\n    \"object-src 'none'; \"\n    \"frame-src 'none'; \"\n    \"frame-ancestors 'self'; \"\n    \"form-action 'self'; \"\n    \"base-uri 'self'\"\n)\n\n\ndef admin_routes(app):\n    \"\"\"Register admin routes serving the built React admin UI.\"\"\"\n    dist_dir = Path(__file__).parent.parent / 'admin-ui' / 'dist'\n    index_path = dist_dir / 'index.html'\n\n    def _serve_file(path):\n        if not path.exists() or not path.is_file():\n            return None\n        content_type = mimetypes.guess_type(str(path))[0] or 'application/octet-stream'\n        with open(path, 'rb') as f:\n            body = f.read()\n        return Response(body, 200, headers={\n            'Content-Type': content_type,\n            'Content-Security-Policy': ADMIN_CSP\n        })\n\n    @app.route('/admin', methods=['GET'])\n    @app.route('/admin/', methods=['GET'])\n    def admin_index(request):\n        if not index_path.exists():\n            return Response.html('<p>Admin UI not built. Run <code>npm run build</code> in webcms/admin-ui.</p>', 503)\n        return _serve_file(index_path)\n\n    @app.route('/admin/{filename:path}', methods=['GET'])\n    def admin_assets(request, filename):\n        asset_path = dist_dir / filename\n        try:\n            asset_path.resolve().relative_to(dist_dir.resolve())\n        except ValueError:\n            return Response.not_found()\n        response = _serve_file(asset_path)\n        if response is None:\n            return _serve_file(index_path)\n        return response\n\n    @app.route('/favicon.ico', methods=['GET'])\n    def favicon(request):\n        \"\"\"Serve a tiny transparent favicon to prevent 404/timeout noise.\"\"\"\n        favicon_path = dist_dir / 'favicon.ico'\n        if favicon_path.exists():\n            return _serve_file(favicon_path)\n        # 1x1 transparent ICO bytes\n        ico = bytes([\n            0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x01,\n            0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x0A, 0x00,\n            0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x28, 0x00,\n            0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00,\n            0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,\n            0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00,\n            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\n            0x00, 0x00, 0x00, 0x00, 0x00, 0x00\n        ])\n        return Response(ico, 200, headers={'Content-Type': 'image/x-icon'})\n", "sessionId": 343, "rowId": 167, "timestamp": 1784398981.8217506, "date": "2026-07-18", "name": "ReadFile"} -->
+
+## [18:23] ASSISTANT
+I found it! The admin routes set their own CSP with `script-src 'self'`. Let me fix this:  <WriteFile>
+> <fileName>webcms/admin/routes.py</fileName>
+> <contentOfFile>
+> """
+> Admin Routes
+> 
+> Serve the React-based admin UI for /admin and /admin/* paths.
+> """
+> 
+> import mimetypes
+> from pathlib import Path
+> from webcms.core.response import Response
+> 
+> 
+> # Relaxed CSP for the admin UI: allow same-origin scripts/styles, inline styles,
+> # inline scripts (needed for event handlers), and do NOT upgrade insecure requests.
+> A...
+> (truncated, 3140 chars total)
+> </contentOfFile>
+> </WriteFile>
+
+---
+
+<!-- {"role": "assistant", "content": "I found it! The admin routes set their own CSP with `script-src 'self'`. Let me fix this:  <WriteFile>\n<fileName>webcms/admin/routes.py</fileName>\n<contentOfFile>\n\"\"\"\nAdmin Routes\n\nServe the React-based admin UI for /admin and /admin/* paths.\n\"\"\"\n\nimport mimetypes\nfrom pathlib import Path\nfrom webcms.core.response import Response\n\n\n# Relaxed CSP for the admin UI: allow same-origin scripts/styles, inline styles,\n# inline scripts (needed for event handlers), and do NOT upgrade insecure requests.\nADMIN_CSP = (\n    \"default-src 'self'; \"\n    \"script-src 'self' 'unsafe-inline' 'unsafe-hashes'; \"\n    \"style-src 'self' 'unsafe-inline'; \"\n    \"img-src 'self' data: https:; \"\n    \"font-src 'self'; \"\n    \"connect-src 'self'; \"\n    \"media-src 'self'; \"\n    \"object-src 'none'; \"\n    \"frame-src 'none'; \"\n    \"frame-ancestors 'self'; \"\n    \"form-action 'self'; \"\n    \"base-uri 'self'\"\n)\n\n\ndef admin_routes(app):\n    \"\"\"Register admin routes serving the built React admin UI.\"\"\"\n    dist_dir = Path(__file__).parent.parent / 'admin-ui' / 'dist'\n    index_path = dist_dir / 'index.html'\n\n    def _serve_file(path):\n        if not path.exists() or not path.is_file():\n            return None\n        content_type = mimetypes.guess_type(str(path))[0] or 'application/octet-stream'\n        with open(path, 'rb') as f:\n            body = f.read()\n        return Response(body, 200, headers={\n            'Content-Type': content_type,\n            'Content-Security-Policy': ADMIN_CSP\n        })\n\n    @app.route('/admin', methods=['GET'])\n    @app.route('/admin/', methods=['GET'])\n    def admin_index(request):\n        if not index_path.exists():\n            return Response.html('<p>Admin UI not built. Run <code>npm run build</code> in webcms/admin-ui.</p>', 503)\n        return _serve_file(index_path)\n\n    @app.route('/admin/{filename:path}', methods=['GET'])\n    def admin_assets(request, filename):\n        asset_path = dist_dir / filename\n        try:\n            asset_path.resolve().relative_to(dist_dir.resolve())\n        except ValueError:\n            return Response.not_found()\n        response = _serve_file(asset_path)\n        if response is None:\n            return _serve_file(index_path)\n        return response\n\n    @app.route('/favicon.ico', methods=['GET'])\n    def favicon(request):\n        \"\"\"Serve a tiny transparent favicon to prevent 404/timeout noise.\"\"\"\n        favicon_path = dist_dir / 'favicon.ico'\n        if favicon_path.exists():\n            return _serve_file(favicon_path)\n        # 1x1 transparent ICO bytes\n        ico = bytes([\n            0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x01,\n            0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x0A, 0x00,\n            0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x28, 0x00,\n            0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00,\n            0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,\n            0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00,\n            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\n            0x00, 0x00, 0x00, 0x00, 0x00, 0x00\n        ])\n        return Response(ico, 200, headers={'Content-Type': 'image/x-icon'})\n</contentOfFile>\n</WriteFile>", "sessionId": 343, "rowId": 167, "timestamp": 1784398989.138604, "date": "2026-07-18", "thinking": "", "prompt_tokens": 78513, "response_tokens": 1022} -->
+
+## [18:23] tool: WriteFile
+webcms/admin/routes.py was created with length 2949
+
+---
+
+<!-- {"role": "tool", "content": "webcms/admin/routes.py was created with length 2949", "sessionId": 343, "rowId": 167, "timestamp": 1784398989.1392276, "date": "2026-07-18", "name": "WriteFile"} -->
+
+## [18:23] ASSISTANT
+Now restart your server:
+> 
+> ```bash
+> # Stop current server (Ctrl+C), then:
+> python3 run.py -d
+> ```
+> 
+> **What changed:**
+> - Added `'unsafe-inline'` and `'unsafe-hashes'` to `script-src` in the admin CSP
+> - This allows inline event handlers like `onclick` in the admin panel JavaScript
+> 
+> After restarting, the settings page should work properly and the CSP errors should be gone.
+
+---
+
+<!-- {"role": "assistant", "content": "Now restart your server:\n\n```bash\n# Stop current server (Ctrl+C), then:\npython3 run.py -d\n```\n\n**What changed:**\n- Added `'unsafe-inline'` and `'unsafe-hashes'` to `script-src` in the admin CSP\n- This allows inline event handlers like `onclick` in the admin panel JavaScript\n\nAfter restarting, the settings page should work properly and the CSP errors should be gone.", "sessionId": 343, "rowId": 167, "timestamp": 1784398992.1841314, "date": "2026-07-18", "thinking": "The key change is in the `ADMIN_CSP` constant. I changed:\n```python\n\"script-src 'self'; \"\n```\nto:\n```python\n\"script-src 'self' 'unsafe-inline' 'unsafe-hashes'; \"\n```\n\nThis allows inline scripts and event handlers in the admin panel. Now the user needs to restart the server to apply the fix.", "prompt_tokens": 79510, "response_tokens": 161} -->
+
