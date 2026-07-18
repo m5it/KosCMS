@@ -1,3 +1,12 @@
+## 2026-07-18 — v1.3.28
+
+### Auto: Version v1.3.28
+
+- Version auto-incremented from v1.3.27
+- Files changed: HISTORY.md, background.log, state.aiia, webcms/security/middleware.py
+
+---
+
 ## 2026-07-18 — v1.3.27
 
 ### Auto: Version v1.3.27
