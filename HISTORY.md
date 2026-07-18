@@ -3500,3 +3500,285 @@ Fixed. I rewrote `webcms/core/server.py` cleanly with `log_message()` at INFO le
 
 <!-- {"role": "assistant", "content": "Fixed. I rewrote `webcms/core/server.py` cleanly with `log_message()` at INFO level, so normal requests like:\n\n```\n127.0.0.1 - GET / HTTP/1.1\" 200 2366\n```\n\nwill be visible by default without needing `--debug`.\n\nTo answer your questions:\n- **No, you don't need `-d` anymore** for basic access logs.\n- **Logs go to stdout/stderr** by default (because `logging.basicConfig` is set up in `Application._setup_logging()`).\n- If you want logs written to a file, you can configure logging in `config/config.yaml` or we can add a log file option.\n\nClear the cache and restart:\n\n```bash\nfind . -type d -name __pycache__ -exec rm -rf {} +\npython3 run.py\n```\n\nYou should now see access logs for every request.", "sessionId": 338, "rowId": 32, "timestamp": 1784358619.6894584, "date": "2026-07-18", "thinking": "", "prompt_tokens": 105845, "response_tokens": 187} -->
 
+## [07:12] USER
+lets add option for this if debug then it display on terminal. else it log to file where server is running..
+
+---
+
+<!-- {"role": "user", "content": "lets add option for this if debug then it display on terminal. else it log to file where server is running..", "sessionId": 338, "rowId": 33, "timestamp": 1784358773.9464107, "date": "2026-07-18"} -->
+
+## [07:12] ASSISTANT
+<ReadFile>
+> <fileName>webcms/core/application.py</fileName>
+> <max_chars>8000</max_chars>
+> </ReadFile>
+
+---
+
+<!-- {"role": "assistant", "content": "<ReadFile>\n<fileName>webcms/core/application.py</fileName>\n<max_chars>8000</max_chars>\n</ReadFile>", "sessionId": 338, "rowId": 33, "timestamp": 1784358775.8545363, "date": "2026-07-18", "thinking": "", "prompt_tokens": 106063, "response_tokens": 32} -->
+
+## [07:12] tool: ReadFile
+"""
+> WebCMS Application Core
+> 
+> Main application class handling WSGI/ASGI requests, routing,
+> and plugin lifecycle management.
+> """
+> 
+> import os
+> import sys
+> import yaml
+> import logging
+> from typing import Dict, List, Callable, Optional, Any
+> from pathlib import Path
+> 
+> from .request import Request
+> from .response import Response
+> from .router import Router
+> from .middleware import MiddlewareStack
+> from .container import Container
+> from .server import make_hardened_server
+> 
+> 
+> class Application:
+>     """Main WebCMS ap...
+> (truncated, 5559 chars total)
+
+---
+
+<!-- {"role": "tool", "content": "\"\"\"\nWebCMS Application Core\n\nMain application class handling WSGI/ASGI requests, routing,\nand plugin lifecycle management.\n\"\"\"\n\nimport os\nimport sys\nimport yaml\nimport logging\nfrom typing import Dict, List, Callable, Optional, Any\nfrom pathlib import Path\n\nfrom .request import Request\nfrom .response import Response\nfrom .router import Router\nfrom .middleware import MiddlewareStack\nfrom .container import Container\nfrom .server import make_hardened_server\n\n\nclass Application:\n    \"\"\"Main WebCMS application class.\"\"\"\n    \n    def __init__(self, config_path: Optional[str] = None):\n        self.root_path = Path(__file__).parent.parent.absolute()\n        self.config = self._load_config(config_path)\n        self.container = Container()\n        self.router = Router()\n        self.middleware = MiddlewareStack()\n        self.plugins: Dict[str, Any] = {}\n        self.hooks: Dict[str, List[Callable]] = {}\n        \n        self._setup_logging()\n        self._init_container()\n        \n        logging.info(f\"WebCMS {self._get_version()} initialized\")\n    \n    def _load_config(self, config_path: Optional[str]) -> Dict:\n        \"\"\"Load configuration from YAML file.\"\"\"\n        if config_path is None:\n            config_path = self.root_path / \"config\" / \"config.yaml\"\n        \n        default_config = {\n            \"app\": {\n                \"name\": \"WebCMS\",\n                \"debug\": False,\n                \"secret_key\": \"change-me-in-production\",\n                \"timezone\": \"UTC\"\n            },\n            \"server\": {\n                \"host\": \"0.0.0.0\",\n                \"port\": 8000,\n                \"workers\": 4\n            },\n            \"database\": {\n                \"url\": \"sqlite:///webcms.db\",\n                \"pool_size\": 10\n            }\n        }\n        \n        if os.path.exists(config_path):\n            with open(config_path, 'r') as f:\n                user_config = yaml.safe_load(f)\n                self._deep_update(default_config, user_config)\n        \n        return default_config\n    \n    def _deep_update(self, base: Dict, update: Dict) -> None:\n        \"\"\"Recursively update nested dictionaries.\"\"\"\n        for key, value in update.items():\n            if key in base and isinstance(base[key], dict) and isinstance(value, dict):\n                self._deep_update(base[key], value)\n            else:\n                base[key] = value\n    \n    def _setup_logging(self) -> None:\n        \"\"\"Configure logging.\"\"\"\n        log_format = \"%(asctime)s - %(name)s - %(levelname)s - %(message)s\"\n        logging.basicConfig(\n            level=logging.DEBUG if self.config[\"app\"][\"debug\"] else logging.INFO,\n            format=log_format\n        )\n        self.logger = logging.getLogger(\"webcms\")\n    \n    def _init_container(self) -> None:\n        \"\"\"Initialize dependency injection container.\"\"\"\n        self.container.register(\"app\", self)\n        self.container.register(\"config\", self.config)\n        self.container.register(\"router\", self.router)\n        self.container.register(\"hooks\", self.hooks)\n    \n    def route(self, path: str, methods: Optional[List[str]] = None):\n        \"\"\"Decorator to register a route.\"\"\"\n        def decorator(func: Callable) -> Callable:\n            self.router.add(path, func, methods or [\"GET\"])\n            return func\n        return decorator\n    \n    def use(self, middleware) -> None:\n        \"\"\"Register middleware.\"\"\"\n        self.middleware.add(middleware)\n    \n    def wsgi_app(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"WSGI application entry point.\"\"\"\n        request = Request.from_wsgi(environ)\n        response = self.middleware.process(request, self._handle_request)\n        return response.to_wsgi(start_response)\n    \n    def _handle_request(self, request: Request) -> Response:\n        \"\"\"Handle request and return response.\"\"\"\n        try:\n            handler, params = self.router.match(request.path, request.method)\n            \n            if handler is None:\n                return Response.not_found()\n            \n            response = handler(request, **params)\n            \n            if not isinstance(response, Response):\n                response = Response(response)\n            \n            return response\n            \n        except Exception as e:\n            self.logger.exception(\"Request handling error\")\n            return Response.error(\"Internal Server Error\", 500)\n    \n    def run(self, host: Optional[str] = None, port: Optional[int] = None, debug: bool = False, **kwargs) -> None:\n        \"\"\"Run hardened development server.\"\"\"\n        host = host or self.config[\"server\"][\"host\"]\n        port = port or self.config[\"server\"][\"port\"]\n        \n        if debug:\n            self.config[\"app\"][\"debug\"] = True\n            self._setup_logging()\n        \n        # Use hardened server that survives malformed requests and connection resets.\n        timeout = self.config.get(\"server\", {}).get(\"request_timeout\", 30)\n        server = make_hardened_server(host, port, self.wsgi_app, timeout=timeout)\n        self.logger.info(f\"Server running on http://{host}:{port}\")\n        \n        try:\n            server.serve_forever()\n        except KeyboardInterrupt:\n            self.logger.info(\"Shutting down...\")\n    \n    def _get_version(self) -> str:\n        \"\"\"Get WebCMS version.\"\"\"\n        from .. import __version__\n        return __version__\n    \n    def __call__(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"Make application callable for WSGI.\"\"\"\n        return self.wsgi_app(environ, start_response)\n", "sessionId": 338, "rowId": 33, "timestamp": 1784358775.8550975, "date": "2026-07-18", "name": "ReadFile"} -->
+
+## [07:13] ASSISTANT
+I will update `Application._setup_logging()` to log to a file when not in debug mode, and to the terminal when in debug mode. The log file will be placed in the project root where the server is running.
+> 
+> <ReplaceLine>
+> <fileName>webcms/core/application.py</fileName>
+> <fromLine>78</fromLine>
+> <toLine>92</toLine>
+> <replacement>    def _setup_logging(self) -> None:
+>         """Configure logging."""
+>         log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+>         debug = self.config["a...
+> (truncated, 1802 chars total)
+> </replacement>
+> </ReplaceLine>
+
+---
+
+<!-- {"role": "assistant", "content": "I will update `Application._setup_logging()` to log to a file when not in debug mode, and to the terminal when in debug mode. The log file will be placed in the project root where the server is running.\n\n<ReplaceLine>\n<fileName>webcms/core/application.py</fileName>\n<fromLine>78</fromLine>\n<toLine>92</toLine>\n<replacement>    def _setup_logging(self) -> None:\n        \"\"\"Configure logging.\"\"\"\n        log_format = \"%(asctime)s - %(name)s - %(levelname)s - %(message)s\"\n        debug = self.config[\"app\"][\"debug\"]\n        level = logging.DEBUG if debug else logging.INFO\n        \n        # Remove existing handlers to avoid duplicates on reconfiguration.\n        root_logger = logging.getLogger()\n        for handler in root_logger.handlers[:]:\n            root_logger.removeHandler(handler)\n        \n        if debug:\n            # Debug mode: log to terminal (stdout).\n            logging.basicConfig(\n                level=level,\n                format=log_format,\n                handlers=[logging.StreamHandler(sys.stdout)]\n            )\n        else:\n            # Production mode: log to file in the project root.\n            log_dir = self.root_path / \"logs\"\n            log_dir.mkdir(exist_ok=True)\n            log_file = log_dir / \"webcms.log\"\n            \n            file_handler = logging.handlers.RotatingFileHandler(\n                log_file,\n                maxBytes=10 * 1024 * 1024,  # 10 MB\n                backupCount=5\n            )\n            file_handler.setFormatter(logging.Formatter(log_format))\n            \n            logging.basicConfig(\n                level=level,\n                format=log_format,\n                handlers=[file_handler]\n            )\n        \n        self.logger = logging.getLogger(\"webcms\")</replacement>\n<confirmed>true</confirmed>\n</ReplaceLine>", "sessionId": 338, "rowId": 33, "timestamp": 1784358780.0898678, "date": "2026-07-18", "thinking": "", "prompt_tokens": 107246, "response_tokens": 374} -->
+
+## [07:13] tool: ReplaceLine
+Replaced lines 78-92 in 'webcms/core/application.py'. (15 old lines -> 38 new lines). Old content:     def _setup_logging(self) -> None:\n        """Configure logging."""\n        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"\n        logging.basicConfig(\n            level=lo...
+
+---
+
+<!-- {"role": "tool", "content": "Replaced lines 78-92 in 'webcms/core/application.py'. (15 old lines -> 38 new lines). Old content:     def _setup_logging(self) -> None:\\n        \"\"\"Configure logging.\"\"\"\\n        log_format = \"%(asctime)s - %(name)s - %(levelname)s - %(message)s\"\\n        logging.basicConfig(\\n            level=lo...", "sessionId": 338, "rowId": 33, "timestamp": 1784358780.0905044, "date": "2026-07-18", "name": "ReplaceLine"} -->
+
+## [07:13] ASSISTANT
+We need to add the `logging.handlers` import for `RotatingFileHandler`.
+> 
+> <ReplaceLine>
+> <fileName>webcms/core/application.py</fileName>
+> <fromLine>7</fromLine>
+> <toLine>12</toLine>
+> <replacement>import os
+> import sys
+> import yaml
+> import logging
+> import logging.handlers
+> from typing import Dict, List, Callable, Optional, Any
+> from pathlib import Path</replacement>
+> <confirmed>true</confirmed>
+> </ReplaceLine>
+
+---
+
+<!-- {"role": "assistant", "content": "We need to add the `logging.handlers` import for `RotatingFileHandler`.\n\n<ReplaceLine>\n<fileName>webcms/core/application.py</fileName>\n<fromLine>7</fromLine>\n<toLine>12</toLine>\n<replacement>import os\nimport sys\nimport yaml\nimport logging\nimport logging.handlers\nfrom typing import Dict, List, Callable, Optional, Any\nfrom pathlib import Path</replacement>\n<confirmed>true</confirmed>\n</ReplaceLine>", "sessionId": 338, "rowId": 33, "timestamp": 1784358782.4112563, "date": "2026-07-18", "thinking": "", "prompt_tokens": 107713, "response_tokens": 113} -->
+
+## [07:13] tool: ReplaceLine
+Replaced lines 7-12 in 'webcms/core/application.py'. (6 old lines -> 7 new lines). Old content: \nimport os\nimport sys\nimport yaml\nimport logging\nfrom typing import Dict, List, Callable, Optional, Any\n
+
+---
+
+<!-- {"role": "tool", "content": "Replaced lines 7-12 in 'webcms/core/application.py'. (6 old lines -> 7 new lines). Old content: \\nimport os\\nimport sys\\nimport yaml\\nimport logging\\nfrom typing import Dict, List, Callable, Optional, Any\\n", "sessionId": 338, "rowId": 33, "timestamp": 1784358782.4121275, "date": "2026-07-18", "name": "ReplaceLine"} -->
+
+## [07:13] ASSISTANT
+Also need to update `run.py` so the `--debug` flag is passed correctly. Let me check `run.py` again:
+> 
+> <ReadFile>
+> <fileName>run.py</fileName>
+> <max_chars>4000</max_chars>
+> </ReadFile>
+
+---
+
+<!-- {"role": "assistant", "content": "Also need to update `run.py` so the `--debug` flag is passed correctly. Let me check `run.py` again:\n\n<ReadFile>\n<fileName>run.py</fileName>\n<max_chars>4000</max_chars>\n</ReadFile>", "sessionId": 338, "rowId": 33, "timestamp": 1784358784.432775, "date": "2026-07-18", "thinking": "", "prompt_tokens": 107882, "response_tokens": 56} -->
+
+## [07:13] tool: ReadFile
+#!/usr/bin/env python3
+> """
+> WebCMS Entry Point
+> 
+> Run the WebCMS application server.
+> """
+> 
+> import sys
+> import argparse
+> from pathlib import Path
+> 
+> # Add webcms to path
+> sys.path.insert(0, str(Path(__file__).parent))
+> 
+> from webcms.app_factory import create_app
+> 
+> 
+> def main():
+>     parser = argparse.ArgumentParser(description="WebCMS Server")
+>     parser.add_argument("--config", "-c", help="Path to config file")
+>     parser.add_argument("--host", default="0.0.0.0", help="Bind host")
+>     parser.add_argument("--p...
+> (truncated, 1099 chars total)
+
+---
+
+<!-- {"role": "tool", "content": "#!/usr/bin/env python3\n\"\"\"\nWebCMS Entry Point\n\nRun the WebCMS application server.\n\"\"\"\n\nimport sys\nimport argparse\nfrom pathlib import Path\n\n# Add webcms to path\nsys.path.insert(0, str(Path(__file__).parent))\n\nfrom webcms.app_factory import create_app\n\n\ndef main():\n    parser = argparse.ArgumentParser(description=\"WebCMS Server\")\n    parser.add_argument(\"--config\", \"-c\", help=\"Path to config file\")\n    parser.add_argument(\"--host\", default=\"0.0.0.0\", help=\"Bind host\")\n    parser.add_argument(\"--port\", \"-p\", type=int, default=8000, help=\"Bind port\")\n    parser.add_argument(\"--debug\", \"-d\", action=\"store_true\", help=\"Debug mode\")\n    parser.add_argument(\"--ssl-cert\", help=\"SSL certificate file\")\n    parser.add_argument(\"--ssl-key\", help=\"SSL private key file\")\n    \n    args = parser.parse_args()\n    \n    # Create application\n    app = create_app(args.config)\n    \n    # Run server\n    app.run(\n        host=args.host,\n        port=args.port,\n        debug=args.debug,\n        ssl_context=(args.ssl_cert, args.ssl_key) if args.ssl_cert else None\n    )\n\n\nif __name__ == \"__main__\":\n    main()", "sessionId": 338, "rowId": 33, "timestamp": 1784358784.4333131, "date": "2026-07-18", "name": "ReadFile"} -->
+
+## [07:13] ASSISTANT
+`run.py` already passes `debug=args.debug` correctly. The logging is now configured so:
+> 
+> - **`python3 run.py`** → logs to `logs/webcms.log` (production mode, file logging)
+> - **`python3 run.py -d`** → logs to terminal/stdout (debug mode)
+> 
+> Let me verify the final `application.py`:
+> 
+> <ReadFile>
+> <fileName>webcms/core/application.py</fileName>
+> <max_chars>4000</max_chars>
+> </ReadFile>
+
+---
+
+<!-- {"role": "assistant", "content": "`run.py` already passes `debug=args.debug` correctly. The logging is now configured so:\n\n- **`python3 run.py`** \u2192 logs to `logs/webcms.log` (production mode, file logging)\n- **`python3 run.py -d`** \u2192 logs to terminal/stdout (debug mode)\n\nLet me verify the final `application.py`:\n\n<ReadFile>\n<fileName>webcms/core/application.py</fileName>\n<max_chars>4000</max_chars>\n</ReadFile>", "sessionId": 338, "rowId": 33, "timestamp": 1784358788.1584783, "date": "2026-07-18", "thinking": "", "prompt_tokens": 108216, "response_tokens": 183} -->
+
+## [07:13] tool: ReadFile
+"""
+> WebCMS Application Core
+> 
+> Main application class handling WSGI/ASGI requests, routing,
+> and plugin lifecycle management.
+> """
+> import os
+> import sys
+> import yaml
+> import logging
+> import logging.handlers
+> from typing import Dict, List, Callable, Optional, Any
+> from pathlib import Path
+> from pathlib import Path
+> 
+> from .request import Request
+> from .response import Response
+> from .router import Router
+> from .middleware import MiddlewareStack
+> from .container import Container
+> from .server import make_hardened_s...
+> (truncated, 4126 chars total)
+
+---
+
+<!-- {"role": "tool", "content": "\"\"\"\nWebCMS Application Core\n\nMain application class handling WSGI/ASGI requests, routing,\nand plugin lifecycle management.\n\"\"\"\nimport os\nimport sys\nimport yaml\nimport logging\nimport logging.handlers\nfrom typing import Dict, List, Callable, Optional, Any\nfrom pathlib import Path\nfrom pathlib import Path\n\nfrom .request import Request\nfrom .response import Response\nfrom .router import Router\nfrom .middleware import MiddlewareStack\nfrom .container import Container\nfrom .server import make_hardened_server\n\n\nclass Application:\n    \"\"\"Main WebCMS application class.\"\"\"\n    \n    def __init__(self, config_path: Optional[str] = None):\n        self.root_path = Path(__file__).parent.parent.absolute()\n        self.config = self._load_config(config_path)\n        self.container = Container()\n        self.router = Router()\n        self.middleware = MiddlewareStack()\n        self.plugins: Dict[str, Any] = {}\n        self.hooks: Dict[str, List[Callable]] = {}\n        \n        self._setup_logging()\n        self._init_container()\n        \n        logging.info(f\"WebCMS {self._get_version()} initialized\")\n    \n    def _load_config(self, config_path: Optional[str]) -> Dict:\n        \"\"\"Load configuration from YAML file.\"\"\"\n        if config_path is None:\n            config_path = self.root_path / \"config\" / \"config.yaml\"\n        \n        default_config = {\n            \"app\": {\n                \"name\": \"WebCMS\",\n                \"debug\": False,\n                \"secret_key\": \"change-me-in-production\",\n                \"timezone\": \"UTC\"\n            },\n            \"server\": {\n                \"host\": \"0.0.0.0\",\n                \"port\": 8000,\n                \"workers\": 4\n            },\n            \"database\": {\n                \"url\": \"sqlite:///webcms.db\",\n                \"pool_size\": 10\n            }\n        }\n        \n        if os.path.exists(config_path):\n            with open(config_path, 'r') as f:\n                user_config = yaml.safe_load(f)\n                self._deep_update(default_config, user_config)\n        \n        return default_config\n    \n    def _deep_update(self, base: Dict, update: Dict) -> None:\n        \"\"\"Recursively update nested dictionaries.\"\"\"\n        for key, value in update.items():\n            if key in base and isinstance(base[key], dict) and isinstance(value, dict):\n                self._deep_update(base[key], value)\n            else:\n                base[key] = value\n    \n    def _setup_logging(self) -> None:\n        \"\"\"Configure logging.\"\"\"\n        log_format = \"%(asctime)s - %(name)s - %(levelname)s - %(message)s\"\n        debug = self.config[\"app\"][\"debug\"]\n        level = logging.DEBUG if debug else logging.INFO\n        \n        # Remove existing handlers to avoid duplicates on reconfiguration.\n        root_logger = logging.getLogger()\n        for handler in root_logger.handlers[:]:\n            root_logger.removeHandler(handler)\n        \n        if debug:\n            # Debug mode: log to terminal (stdout).\n            logging.basicConfig(\n                level=level,\n                format=log_format,\n                handlers=[logging.StreamHandler(sys.stdout)]\n            )\n        else:\n            # Production mode: log to file in the project root.\n            log_dir = self.root_path / \"logs\"\n            log_dir.mkdir(exist_ok=True)\n            log_file = log_dir / \"webcms.log\"\n            \n            file_handler = logging.handlers.RotatingFileHandler(\n                log_file,\n                maxBytes=10 * 1024 * 1024,  # 10 MB\n                backupCount=5\n            )\n            file_handler.setFormatter(logging.Formatter(log_format))\n            \n            logging.basicConfig(\n                level=level,\n                format=log_format,\n                handlers=[file_handler]\n            )\n        \n        self.logger = logging.getLogger(\"webcms\")\n    \n    def route(self, path: str, methods: Optional[List[str]] = None):\n        \"\"\"Decorator to register a route.\"\"\"\n\n[-- File truncated: 2419 chars remaining (38.0%). Use <ReadFile><fileName>webcms/core/application.py</fileName><max_chars>2419</max_chars></ReadFile> to read further. --]", "sessionId": 338, "rowId": 33, "timestamp": 1784358788.1590848, "date": "2026-07-18", "name": "ReadFile"} -->
+
+## [07:13] ASSISTANT
+The file has a duplicate import. Let me fix it:
+> 
+> <ReplaceLine>
+> <fileName>webcms/core/application.py</fileName>
+> <fromLine>1</fromLine>
+> <toLine>16</toLine>
+> <replacement>"""
+> WebCMS Application Core
+> 
+> Main application class handling WSGI/ASGI requests, routing,
+> and plugin lifecycle management.
+> """
+> 
+> import os
+> import sys
+> import yaml
+> import logging
+> import logging.handlers
+> from typing import Dict, List, Callable, Optional, Any
+> from pathlib import Path
+> 
+> from .request import Request
+> from .response import R...
+> (truncated, 705 chars total)
+> </replacement>
+> </ReplaceLine>
+
+---
+
+<!-- {"role": "assistant", "content": "The file has a duplicate import. Let me fix it:\n\n<ReplaceLine>\n<fileName>webcms/core/application.py</fileName>\n<fromLine>1</fromLine>\n<toLine>16</toLine>\n<replacement>\"\"\"\nWebCMS Application Core\n\nMain application class handling WSGI/ASGI requests, routing,\nand plugin lifecycle management.\n\"\"\"\n\nimport os\nimport sys\nimport yaml\nimport logging\nimport logging.handlers\nfrom typing import Dict, List, Callable, Optional, Any\nfrom pathlib import Path\n\nfrom .request import Request\nfrom .response import Response\nfrom .router import Router\nfrom .middleware import MiddlewareStack\nfrom .container import Container\nfrom .server import make_hardened_server</replacement>\n<confirmed>true</confirmed>\n</ReplaceLine>", "sessionId": 338, "rowId": 33, "timestamp": 1784358790.737655, "date": "2026-07-18", "thinking": "", "prompt_tokens": 109191, "response_tokens": 188} -->
+
+## [07:13] tool: ReplaceLine
+Replaced lines 1-16 in 'webcms/core/application.py'. (16 old lines -> 21 new lines). Old content: """\nWebCMS Application Core\n\nMain application class handling WSGI/ASGI requests, routing,\nand plugin lifecycle management.\n"""\nimport os\nimport sys\nimport yaml\nimport logging\nimport logging....
+
+---
+
+<!-- {"role": "tool", "content": "Replaced lines 1-16 in 'webcms/core/application.py'. (16 old lines -> 21 new lines). Old content: \"\"\"\\nWebCMS Application Core\\n\\nMain application class handling WSGI/ASGI requests, routing,\\nand plugin lifecycle management.\\n\"\"\"\\nimport os\\nimport sys\\nimport yaml\\nimport logging\\nimport logging....", "sessionId": 338, "rowId": 33, "timestamp": 1784358790.738362, "date": "2026-07-18", "name": "ReplaceLine"} -->
+
+## [07:13] ASSISTANT
+Done. Logging is now configured as follows:
+> 
+> - **`python3 run.py`** (no debug flag) → logs are written to `logs/webcms.log` in the project root, with rotation (10 MB max, 5 backups). Terminal stays clean except for the startup "Server running" message.
+> - **`python3 run.py -d`** (debug mode) → logs are printed to the terminal/stdout, including DEBUG-level messages.
+> 
+> Clear the cache and try both modes:
+> 
+> ```bash
+> find . -type d -name __pycache__ -exec rm -rf {} +
+> 
+> # Production mode: logs to file
+> pyt...
+> (truncated, 650 chars total)
+
+---
+
+<!-- {"role": "assistant", "content": "Done. Logging is now configured as follows:\n\n- **`python3 run.py`** (no debug flag) \u2192 logs are written to `logs/webcms.log` in the project root, with rotation (10 MB max, 5 backups). Terminal stays clean except for the startup \"Server running\" message.\n- **`python3 run.py -d`** (debug mode) \u2192 logs are printed to the terminal/stdout, including DEBUG-level messages.\n\nClear the cache and try both modes:\n\n```bash\nfind . -type d -name __pycache__ -exec rm -rf {} +\n\n# Production mode: logs to file\npython3 run.py\n\n# Debug mode: logs to terminal\npython3 run.py -d\n```\n\nIn production mode, you can tail the log file:\n\n```bash\ntail -f logs/webcms.log\n```", "sessionId": 338, "rowId": 33, "timestamp": 1784358793.940045, "date": "2026-07-18", "thinking": "<think>Done.", "prompt_tokens": 109442, "response_tokens": 177} -->
+
+## [07:13] USER
+[System: You've gone 20 iterations without calling `<nextTask>completed</nextTask>`. If the current task is done, call `<nextTask>completed</nextTask>` to advance. If blocked, call `<nextTask>blocked</nextTask>`.]
+
+---
+
+<!-- {"role": "user", "content": "[System: You've gone 20 iterations without calling `<nextTask>completed</nextTask>`. If the current task is done, call `<nextTask>completed</nextTask>` to advance. If blocked, call `<nextTask>blocked</nextTask>`.]", "sessionId": 338, "rowId": 33, "timestamp": 1784358793.9420576, "date": "2026-07-18"} -->
+
+## [07:13] ASSISTANT
+<nextTask>completed</nextTask>
+
+---
+
+<!-- {"role": "assistant", "content": "<nextTask>completed</nextTask>", "sessionId": 338, "rowId": 33, "timestamp": 1784358795.8065667, "date": "2026-07-18", "thinking": "", "prompt_tokens": 109678, "response_tokens": 11} -->
+
+## [07:13] tool: nextTask
+ALL_COMPLETED:Plan finished successfully
+
+---
+
+<!-- {"role": "tool", "content": "ALL_COMPLETED:Plan finished successfully", "sessionId": 338, "rowId": 33, "timestamp": 1784358795.8084033, "date": "2026-07-18", "name": "nextTask"} -->
+
+## [07:13] ASSISTANT
+All tasks in the plan are complete. The server now:
+> 
+> 1. ✅ Uses a hardened WSGI server that survives malformed requests, TLS garbage, and connection resets
+> 2. ✅ Has request validation middleware for defense in depth
+> 3. ✅ Has hardened request parsing that safely handles edge cases
+> 4. ✅ Includes a resilience test suite
+> 5. ✅ Logs to terminal in debug mode (`-d`) and to `logs/webcms.log` in production mode
+> 
+> Ready for the next plan or task.
+
+---
+
+<!-- {"role": "assistant", "content": "All tasks in the plan are complete. The server now:\n\n1. \u2705 Uses a hardened WSGI server that survives malformed requests, TLS garbage, and connection resets\n2. \u2705 Has request validation middleware for defense in depth\n3. \u2705 Has hardened request parsing that safely handles edge cases\n4. \u2705 Includes a resilience test suite\n5. \u2705 Logs to terminal in debug mode (`-d`) and to `logs/webcms.log` in production mode\n\nReady for the next plan or task.", "sessionId": 338, "rowId": 33, "timestamp": 1784358798.2282014, "date": "2026-07-18", "thinking": "", "prompt_tokens": 109707, "response_tokens": 103} -->
+

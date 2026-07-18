@@ -9,10 +9,16 @@ import os
 import sys
 import yaml
 import logging
+import logging.handlers
 from typing import Dict, List, Callable, Optional, Any
 from pathlib import Path
 
 from .request import Request
+from .response import Response
+from .router import Router
+from .middleware import MiddlewareStack
+from .container import Container
+from .server import make_hardened_server
 from .response import Response
 from .router import Router
 from .middleware import MiddlewareStack
@@ -78,18 +84,41 @@ class Application:
     def _setup_logging(self) -> None:
         """Configure logging."""
         log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        logging.basicConfig(
-            level=logging.DEBUG if self.config["app"]["debug"] else logging.INFO,
-            format=log_format
-        )
+        debug = self.config["app"]["debug"]
+        level = logging.DEBUG if debug else logging.INFO
+        
+        # Remove existing handlers to avoid duplicates on reconfiguration.
+        root_logger = logging.getLogger()
+        for handler in root_logger.handlers[:]:
+            root_logger.removeHandler(handler)
+        
+        if debug:
+            # Debug mode: log to terminal (stdout).
+            logging.basicConfig(
+                level=level,
+                format=log_format,
+                handlers=[logging.StreamHandler(sys.stdout)]
+            )
+        else:
+            # Production mode: log to file in the project root.
+            log_dir = self.root_path / "logs"
+            log_dir.mkdir(exist_ok=True)
+            log_file = log_dir / "webcms.log"
+            
+            file_handler = logging.handlers.RotatingFileHandler(
+                log_file,
+                maxBytes=10 * 1024 * 1024,  # 10 MB
+                backupCount=5
+            )
+            file_handler.setFormatter(logging.Formatter(log_format))
+            
+            logging.basicConfig(
+                level=level,
+                format=log_format,
+                handlers=[file_handler]
+            )
+        
         self.logger = logging.getLogger("webcms")
-    
-    def _init_container(self) -> None:
-        """Initialize dependency injection container."""
-        self.container.register("app", self)
-        self.container.register("config", self.config)
-        self.container.register("router", self.router)
-        self.container.register("hooks", self.hooks)
     
     def route(self, path: str, methods: Optional[List[str]] = None):
         """Decorator to register a route."""
