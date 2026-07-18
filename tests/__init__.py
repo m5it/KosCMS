@@ -1,1 +1,3 @@
-"""WebCMS Tests"""
+"""
+WebCMS Admin Panel Tests
+"""

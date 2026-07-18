@@ -1,89 +1,29 @@
-# WebCMS Dependencies
+# WebCMS Admin Panel - Python Dependencies
 
 # Web Framework
-Flask>=2.3.0
-Werkzeug>=2.3.0
-Jinja2>=3.1.0
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+Flask-JWT-Extended==4.5.2
+Flask-CORS==4.0.0
 
 # Database
-SQLAlchemy>=2.0.0
-alembic>=1.11.0
-psycopg2-binary>=2.9.0
+SQLAlchemy==2.0.20
+psycopg2-binary==2.9.7
 
-# KosDB Support (optional)
-plyvel>=1.5.0
-
-# Security
-bcrypt>=4.0.0
-PyJWT>=2.7.0
-cryptography>=41.0.0
-
-# Image Processing
-Pillow>=10.0.0  # Built-in WebP support
-
-# Caching & Sessions
-redis>=4.5.0
+# Caching
+redis==4.6.0
 
 # Utilities
-PyYAML>=6.0
-markdown>=3.4.0
-python-dateutil>=2.8.0
-packaging>=23.0  # Version comparison for plugins
-
-# Production Server
-gunicorn>=21.0.0
-# WebCMS Dependencies
-
-# Web Framework
-Flask>=2.3.0
-Werkzeug>=2.3.0
-Jinja2>=3.1.0
-
-# Database
-SQLAlchemy>=2.0.0
-alembic>=1.11.0
-psycopg2-binary>=2.9.0
-
-# KosDB Support (optional)
-plyvel>=1.5.0
+python-dotenv==1.0.0
+Werkzeug==2.3.7
+gunicorn==21.2.0
 
 # Security
-bcrypt>=4.0.0
-PyJWT>=2.7.0
-cryptography>=41.0.0
+bcrypt==4.0.1
+cryptography==41.0.3
 
-# Image Processing
-Pillow>=10.0.0  # Built-in WebP support
-
-# Caching & Sessions
-redis>=4.5.0
-
-# Utilities
-PyYAML>=6.0
-markdown>=3.4.0
-python-dateutil>=2.8.0
-packaging>=23.0  # Version comparison for plugins
-
-# Production Server
-gunicorn>=21.0.0
-
-
-# v1.2.0 New Dependencies
-
-# Real-time Collaboration
-websockets>=11.0.0
-
-# GraphQL API
-graphene>=3.3.0
-
-# Background Tasks
-celery>=5.3.0
-
-# Elasticsearch (optional)
-elasticsearch>=8.0.0
-
-# Email
-sendgrid>=6.10.0
-
-# Testing
-locust>=2.15.0
+# Development (optional)
+pytest==7.4.2
+pytest-cov==4.1.0
+black==23.7.0
+flake8==6.1.0
