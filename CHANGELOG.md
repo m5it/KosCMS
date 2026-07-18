@@ -1,3 +1,12 @@
+## 2026-07-18 — v1.3.26
+
+### Auto: Version v1.3.26
+
+- Version auto-incremented from v1.3.25
+- Files changed: HISTORY.md, background.log, state.aiia, webcms/cache/manager.py
+
+---
+
 ## 2026-07-18 — v1.3.25
 
 ### Auto: Version v1.3.25

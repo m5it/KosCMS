@@ -376,6 +376,44 @@ class CacheManager:
         return count
 
 
+class CacheWarmer:
+    """Cache warming utility for pre-populating cache."""
+    
+    def __init__(self, cache_manager: CacheManager = None):
+        self.cache = cache_manager or CacheManager()
+        self._warmers: Dict[str, Callable] = {}
+    
+    def register(self, tag: str, data_loader: Callable[[], Dict[str, Any]]):
+        """Register a cache warming function."""
+        self._warmers[tag] = data_loader
+    
+    def warm(self, tag: str = None, timeout: int = 300) -> Dict[str, int]:
+        """
+        Warm cache for registered tags.
+        
+        Args:
+            tag: Specific tag to warm, or None for all
+            timeout: TTL for warmed entries
+        
+        Returns:
+            Dict of tag -> count warmed
+        """
+        results = {}
+        
+        tags_to_warm = [tag] if tag else list(self._warmers.keys())
+        
+        for t in tags_to_warm:
+            if t in self._warmers:
+                count = self.cache.tag_warm(t, self._warmers[t], timeout)
+                results[t] = count
+        
+        return results
+    
+    def warm_all(self, timeout: int = 300) -> Dict[str, int]:
+        """Warm all registered cache tags."""
+        return self.warm(timeout=timeout)
+
+
 # Global cache instances
 _cache_instances: Dict[str, CacheManager] = {}
 
