@@ -97,11 +97,11 @@ class HardenedWSGIServer(WSGIServer):
     request_timeout = 30
     allow_reuse_address = True
 
-    def __init__(self, server_address, app, handler_class=None):
+    def __init__(self, server_address, handler_class=None):
         # Default to hardened handler if not provided.
         if handler_class is None:
             handler_class = HardenedWSGIRequestHandler
-        super().__init__(server_address, app, handler_class)
+        super().__init__(server_address, handler_class)
 
     def handle_error(self, request, client_address):
         """
@@ -142,6 +142,7 @@ def make_hardened_server(host, port, app, handler_class=None, timeout=30):
         HardenedWSGIServer instance.
     """
     handler_class = handler_class or HardenedWSGIRequestHandler
-    server = HardenedWSGIServer((host, port), app, handler_class)
+    server = HardenedWSGIServer((host, port), handler_class)
+    server.set_app(app)
     server.request_timeout = timeout
     return server
