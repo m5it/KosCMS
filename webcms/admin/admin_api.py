@@ -12,7 +12,6 @@ from datetime import datetime
 
 from webcms.core.request import Request
 from webcms.core.response import Response
-from webcms.admin.widgets import get_widget_registry, WidgetConfig
 
 
 class AdminAPI:
@@ -177,11 +176,23 @@ class AdminAPI:
                     "posts": self._get_model_count(Post, {"is_deleted": False}),
                     "pages": self._get_model_count(Page, {"is_deleted": False})
                 },
+                "media": {
+                    "total": self._get_model_count(Media, {"is_deleted": False})
+                }
+            }
+
+        # Widget registry render_all() is async and takes only services dict,
+        # so build fallback widgets directly with computed stats.
         widgets = [
             {"id": "stats", "title": "Content Statistics", "icon": "📊", "data": stats},
             {"id": "activity", "title": "Recent Activity", "icon": "📅", "data": {"recent_posts": stats.get("content", {}).get("posts", 0)}},
             {"id": "health", "title": "System Health", "icon": "❤️", "data": {"status": "ok"}}
         ]
+
+        # Ensure every widget has the keys Dashboard.jsx expects
+        for widget in widgets:
+            widget.setdefault("icon", "")
+            widget.setdefault("data", "")
 
         return Response.json({"widgets": widgets})
 
