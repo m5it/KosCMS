@@ -6,12 +6,18 @@ Wraps WSGI environ with convenient access to request data.
 
 import json
 import urllib.parse
+import logging
 from typing import Dict, Any, Optional, List
-from io import BytesIO
+
+logger = logging.getLogger("webcms.request")
 
 
 class Request:
     """HTTP Request wrapper."""
+    
+    # Maximum allowed body size (50 MB by default). Requests with a larger
+    # Content-Length are rejected, and body reads are capped to this size.
+    MAX_BODY_SIZE = 50 * 1024 * 1024
     
     def __init__(self, environ: Dict[str, Any]):
         self.environ = environ
@@ -19,7 +25,7 @@ class Request:
         self.path = environ.get("PATH_INFO", "/")
         self.query_string = environ.get("QUERY_STRING", "")
         self.content_type = environ.get("CONTENT_TYPE", "")
-        self.content_length = int(environ.get("CONTENT_LENGTH", 0) or 0)
+        self.content_length = self._parse_content_length(environ.get("CONTENT_LENGTH"))
         
         self._headers: Optional[Dict[str, str]] = None
         self._query_params: Optional[Dict[str, List[str]]] = None
@@ -31,6 +37,29 @@ class Request:
     def from_wsgi(cls, environ: Dict[str, Any]) -> "Request":
         """Create Request from WSGI environ."""
         return cls(environ)
+    
+    @staticmethod
+    def _parse_content_length(value: Any) -> int:
+        """
+        Safely parse CONTENT_LENGTH from the WSGI environ.
+
+        Returns 0 for missing/invalid/negative values, and caps the value
+        at MAX_BODY_SIZE to prevent memory exhaustion.
+        """
+        if value is None or value == "":
+            return 0
+        try:
+            length = int(value)
+        except (ValueError, TypeError):
+            logger.debug("Invalid Content-Length value: %r", value)
+            return 0
+        if length < 0:
+            logger.debug("Negative Content-Length: %s", length)
+            return 0
+        if length > Request.MAX_BODY_SIZE:
+            logger.warning("Content-Length %s exceeds max body size; capping", length)
+            return Request.MAX_BODY_SIZE
+        return length
     
     @property
     def headers(self) -> Dict[str, str]:
@@ -47,7 +76,14 @@ class Request:
     def query_params(self) -> Dict[str, List[str]]:
         """Get query string parameters."""
         if self._query_params is None:
-            self._query_params = urllib.parse.parse_qs(self.query_string)
+            try:
+                self._query_params = urllib.parse.parse_qs(
+                    self.query_string,
+                    keep_blank_values=True
+                )
+            except Exception as exc:
+                logger.debug("Failed to parse query string: %s", exc)
+                self._query_params = {}
         return self._query_params
     
     def get_param(self, name: str, default: Any = None) -> Any:
@@ -57,32 +93,53 @@ class Request:
     
     @property
     def body(self) -> bytes:
-        """Get request body."""
+        """Get request body safely."""
         if self._body is None:
-            if self.content_length > 0:
-                self._body = self.environ["wsgi.input"].read(self.content_length)
-            else:
+            try:
+                if self.content_length > 0:
+                    self._body = self.environ["wsgi.input"].read(self.content_length)
+                else:
+                    self._body = b""
+            except (OSError, ValueError) as exc:
+                logger.debug("Error reading request body: %s", exc)
+                self._body = b""
+            except Exception as exc:
+                logger.warning("Unexpected error reading request body: %s", exc)
                 self._body = b""
         return self._body
     
     @property
     def json(self) -> Optional[Any]:
-        """Parse JSON body."""
+        """Parse JSON body safely."""
         if self._json is None and self.body:
             if self.content_type.startswith("application/json"):
                 try:
                     self._json = json.loads(self.body.decode("utf-8"))
-                except (json.JSONDecodeError, UnicodeDecodeError):
+                except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                    logger.debug("Failed to parse JSON body: %s", exc)
+                    self._json = None
+                except Exception as exc:
+                    logger.warning("Unexpected error parsing JSON body: %s", exc)
                     self._json = None
         return self._json
     
     @property
     def form(self) -> Dict[str, Any]:
-        """Parse form data."""
+        """Parse form data safely."""
         if self._form is None:
             self._form = {}
             if self.content_type.startswith("application/x-www-form-urlencoded"):
-                self._form = urllib.parse.parse_qs(self.body.decode("utf-8"))
+                try:
+                    self._form = urllib.parse.parse_qs(
+                        self.body.decode("utf-8"),
+                        keep_blank_values=True
+                    )
+                except UnicodeDecodeError as exc:
+                    logger.debug("Invalid UTF-8 in form body: %s", exc)
+                    self._form = {}
+                except Exception as exc:
+                    logger.warning("Unexpected error parsing form body: %s", exc)
+                    self._form = {}
             elif self.content_type.startswith("multipart/form-data"):
                 # Simplified - full implementation would use cgi.FieldStorage
                 self._form = {}

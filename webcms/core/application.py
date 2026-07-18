@@ -17,6 +17,7 @@ from .response import Response
 from .router import Router
 from .middleware import MiddlewareStack
 from .container import Container
+from .server import make_hardened_server
 
 
 class Application:
@@ -127,9 +128,7 @@ class Application:
             return Response.error("Internal Server Error", 500)
     
     def run(self, host: Optional[str] = None, port: Optional[int] = None, debug: bool = False, **kwargs) -> None:
-        """Run development server."""
-        from wsgiref.simple_server import make_server
-        
+        """Run hardened development server."""
         host = host or self.config["server"]["host"]
         port = port or self.config["server"]["port"]
         
@@ -137,7 +136,9 @@ class Application:
             self.config["app"]["debug"] = True
             self._setup_logging()
         
-        server = make_server(host, port, self.wsgi_app)
+        # Use hardened server that survives malformed requests and connection resets.
+        timeout = self.config.get("server", {}).get("request_timeout", 30)
+        server = make_hardened_server(host, port, self.wsgi_app, timeout=timeout)
         self.logger.info(f"Server running on http://{host}:{port}")
         
         try:

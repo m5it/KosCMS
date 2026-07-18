@@ -1,3 +1,12 @@
+## 2026-07-18 — v1.3.10
+
+### Auto: Version v1.3.10
+
+- Version auto-incremented from v1.3.9
+- Files changed: HISTORY.md, PLAN.md, background.log, current_task.txt, plans/1784355121.151412.json, state.aiia, tests/test_server_resilience.py, webcms/core/application.py, webcms/core/middleware.py, webcms/core/request.py, webcms/core/server.py
+
+---
+
 ## 2026-07-17 — v1.3.9
 
 ### Auto: Version v1.3.9

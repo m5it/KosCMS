@@ -1,0 +1,62 @@
+{
+  "id": "1784355121.151412",
+  "title": "Fix WSGI Server Crash on Malformed/TLS Requests",
+  "instructions": "",
+  "startTimestamp": 1784355121.1514146,
+  "endTimestamp": 1784355246.1354444,
+  "tasks": {
+    "1784355123.4023643": {
+      "id": "1784355123.4023643",
+      "status": "completed",
+      "instruction": "Read webcms/core/application.py, webcms/core/request.py, and any server entry points to understand how the WSGI server is started and how requests are processed. Identify where connection handling occurs and where we can add resilience.",
+      "startTimestamp": 1784355139.5012662,
+      "endTimestamp": 1784355163.0016966,
+      "log": [
+        {
+          "timestamp": 1784355139.5013795,
+          "text": "Build started"
+        }
+      ]
+    },
+    "1784355125.5977619": {
+      "id": "1784355125.5977619",
+      "status": "completed",
+      "instruction": "Create a custom WSGIRequestHandler subclass that wraps request handling in try/except to catch ConnectionResetError, OSError, and other socket errors silently. Override handle(), parse_request(), and handle_one_request() to prevent crashes from malformed requests and connection resets. Log at debug level instead of printing full tracebacks.",
+      "startTimestamp": 1784355163.0016992,
+      "endTimestamp": 1784355178.6635818,
+      "log": []
+    },
+    "1784355128.0588076": {
+      "id": "1784355128.0588076",
+      "status": "completed",
+      "instruction": "Modify Application.run() in webcms/core/application.py to use the custom WSGIRequestHandler and a custom WSGIServer class that handles connection resets gracefully. Ensure the development server remains compatible with the existing API but resilient to malformed requests.",
+      "startTimestamp": 1784355178.663583,
+      "endTimestamp": 1784355197.8098905,
+      "log": []
+    },
+    "1784355130.8077407": {
+      "id": "1784355130.8077407",
+      "status": "completed",
+      "instruction": "Create middleware that validates incoming requests early in the pipeline: reject null bytes, control characters, invalid HTTP versions, and HTTP/2 PRI requests. Return 400 Bad Request for malformed requests before they reach application logic. This provides defense in depth even when the WSGI server accepts the connection.",
+      "startTimestamp": 1784355197.8098917,
+      "endTimestamp": 1784355220.670771,
+      "log": []
+    },
+    "1784355133.27105": {
+      "id": "1784355133.27105",
+      "status": "completed",
+      "instruction": "Review webcms/core/request.py to ensure it handles edge cases safely: empty bodies, oversized content-length, invalid content-length values, malformed JSON, and invalid UTF-8. Add input validation to prevent exceptions from propagating and crashing the server.",
+      "startTimestamp": 1784355220.670772,
+      "endTimestamp": 1784355233.9315271,
+      "log": []
+    },
+    "1784355136.3121703": {
+      "id": "1784355136.3121703",
+      "status": "completed",
+      "instruction": "Create a simple test script that sends malformed requests (TLS bytes, connection reset, oversized request line, HTTP/2 PRI, null bytes) to the running server and verify it does not crash. Document the expected behavior: server should return 400 or silently close connection, and continue accepting new requests.",
+      "startTimestamp": 1784355233.9315279,
+      "endTimestamp": 1784355246.135175,
+      "log": []
+    }
+  }
+}

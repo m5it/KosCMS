@@ -1874,3 +1874,1008 @@ Plan is ready! Starting first task.
 
 <!-- {"role": "user", "content": "Plan is ready! Starting first task.\n\nTask 1/13 - ", "sessionId": 335, "rowId": 24, "timestamp": 1784277251.3984935, "date": "2026-07-17"} -->
 
+## [06:11] USER
+lets make a plan for fixing errors.. to create plan use createPlan and createTask xml tool calls. when is ready use planDone. then i switch to build,
+> 
+> 
+> error:
+> 
+> 185.242.226.87 - - [18/Jul/2026 00:07:44] "\x16\x03\x01\x00\x8c\x01\x00\x00\x88\x03\x03rê «Å¹\x135\x8aä49#Ä]\
+> x0b\x13wx\x85G\x94Üÿ½3\x9df,\x95\x88f\x00\x00\x1aÀ/À+À\x11À\x07À\x13À\x09À\x14À" 400 -                       
+> ----------------------------------------                                                                     
+> Exception ...
+> (truncated, 1768 chars total)
+
+---
+
+<!-- {"role": "user", "content": "lets make a plan for fixing errors.. to create plan use createPlan and createTask xml tool calls. when is ready use planDone. then i switch to build,\n\n\nerror:\n\n185.242.226.87 - - [18/Jul/2026 00:07:44] \"\\x16\\x03\\x01\\x00\\x8c\\x01\\x00\\x00\\x88\\x03\\x03r\u00ea\u00a0\u00ab\u00c5\u00b9\\x135\\x8a\u00e449#\u00c4]\\\nx0b\\x13wx\\x85G\\x94\u00dc\u00ff\u00bd3\\x9df,\\x95\\x88f\\x00\\x00\\x1a\u00c0/\u00c0+\u00c0\\x11\u00c0\\x07\u00c0\\x13\u00c0\\x09\u00c0\\x14\u00c0\" 400 -                       \n----------------------------------------                                                                     \nException occurred during processing of request from ('66.132.195.112', 54342)                               \nTraceback (most recent call last):                                                                           \n  File \"/usr/lib/python3.12/socketserver.py\", line 318, in _handle_request_noblock                           \n    self.process_request(request, client_address)                                                            \n  File \"/usr/lib/python3.12/socketserver.py\", line 349, in process_request                                   \n    self.finish_request(request, client_address)                                                             \n  File \"/usr/lib/python3.12/socketserver.py\", line 362, in finish_request\n    self.RequestHandlerClass(request, client_address, self)\n  File \"/usr/lib/python3.12/socketserver.py\", line 761, in __init__\n    self.handle()\n  File \"/usr/lib/python3.12/wsgiref/simple_server.py\", line 118, in handle\n    self.raw_requestline = self.rfile.readline(65537)\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/socket.py\", line 707, in readinto\n    return self._sock.recv_into(b)\n           ^^^^^^^^^^^^^^^^^^^^^^^\nConnectionResetError: [Errno 104] Connection reset by peer\n\nand review project good", "sessionId": 336, "rowId": 25, "timestamp": 1784355116.1091576, "date": "2026-07-18"} -->
+
+## [06:12] ASSISTANT
+<createPlan>
+> <title>Fix WSGI Server Crash on Malformed/TLS Requests</title>
+> <description>The server crashes with ConnectionResetError when clients send TLS/binary garbage to the HTTP port and then reset the connection. The traceback shows the error originates in wsgiref.simple_server reading the request line. Need to harden the request handling to gracefully handle connection resets, malformed requests, and TLS garbage without crashing the server. Also review the project for related vulnerabilit...
+> (truncated, 532 chars total)
+> </description>
+> </createPlan>
+
+---
+
+<!-- {"role": "assistant", "content": "<createPlan>\n<title>Fix WSGI Server Crash on Malformed/TLS Requests</title>\n<description>The server crashes with ConnectionResetError when clients send TLS/binary garbage to the HTTP port and then reset the connection. The traceback shows the error originates in wsgiref.simple_server reading the request line. Need to harden the request handling to gracefully handle connection resets, malformed requests, and TLS garbage without crashing the server. Also review the project for related vulnerabilities.</description>\n</createPlan>", "sessionId": 336, "rowId": 25, "timestamp": 1784355121.1124012, "date": "2026-07-18", "thinking": "", "prompt_tokens": 67448, "response_tokens": 211} -->
+
+## [06:12] tool: createPlan
+Plan created. Plan ID: 1784355121.151412
+
+---
+
+<!-- {"role": "tool", "content": "Plan created. Plan ID: 1784355121.151412", "sessionId": 336, "rowId": 25, "timestamp": 1784355121.1515584, "date": "2026-07-18", "name": "createPlan"} -->
+
+## [06:12] ASSISTANT
+<createTask>
+> <plan_id>1784355121.151412</plan_id>
+> <title>Review Current Server Implementation</title>
+> <description>Read webcms/core/application.py, webcms/core/request.py, and any server entry points to understand how the WSGI server is started and how requests are processed. Identify where connection handling occurs and where we can add resilience.</description>
+> </createTask>
+
+---
+
+<!-- {"role": "assistant", "content": "<createTask>\n<plan_id>1784355121.151412</plan_id>\n<title>Review Current Server Implementation</title>\n<description>Read webcms/core/application.py, webcms/core/request.py, and any server entry points to understand how the WSGI server is started and how requests are processed. Identify where connection handling occurs and where we can add resilience.</description>\n</createTask>", "sessionId": 336, "rowId": 25, "timestamp": 1784355123.4017894, "date": "2026-07-18", "thinking": "", "prompt_tokens": 67578, "response_tokens": 85} -->
+
+## [06:12] tool: createTask
+Task created: Review Current Server Implementation | ID: 1784355123.4023643
+
+---
+
+<!-- {"role": "tool", "content": "Task created: Review Current Server Implementation | ID: 1784355123.4023643", "sessionId": 336, "rowId": 25, "timestamp": 1784355123.4025018, "date": "2026-07-18", "name": "createTask"} -->
+
+## [06:12] ASSISTANT
+<createTask>
+> <plan_id>1784355121.151412</plan_id>
+> <title>Implement Custom WSGI Server Request Handler</title>
+> <description>Create a custom WSGIRequestHandler subclass that wraps request handling in try/except to catch ConnectionResetError, OSError, and other socket errors silently. Override handle(), parse_request(), and handle_one_request() to prevent crashes from malformed requests and connection resets. Log at debug level instead of printing full tracebacks.</description>
+> </createTask>
+
+---
+
+<!-- {"role": "assistant", "content": "<createTask>\n<plan_id>1784355121.151412</plan_id>\n<title>Implement Custom WSGI Server Request Handler</title>\n<description>Create a custom WSGIRequestHandler subclass that wraps request handling in try/except to catch ConnectionResetError, OSError, and other socket errors silently. Override handle(), parse_request(), and handle_one_request() to prevent crashes from malformed requests and connection resets. Log at debug level instead of printing full tracebacks.</description>\n</createTask>", "sessionId": 336, "rowId": 25, "timestamp": 1784355125.5973146, "date": "2026-07-18", "thinking": "", "prompt_tokens": 67694, "response_tokens": 106} -->
+
+## [06:12] tool: createTask
+Task created: Implement Custom WSGI Server Request Handler | ID: 1784355125.5977619
+
+---
+
+<!-- {"role": "tool", "content": "Task created: Implement Custom WSGI Server Request Handler | ID: 1784355125.5977619", "sessionId": 336, "rowId": 25, "timestamp": 1784355125.5978763, "date": "2026-07-18", "name": "createTask"} -->
+
+## [06:12] ASSISTANT
+<createTask>
+> <plan_id>1784355121.151412</plan_id>
+> <title>Update Application.run() to Use Custom Server</title>
+> <description>Modify Application.run() in webcms/core/application.py to use the custom WSGIRequestHandler and a custom WSGIServer class that handles connection resets gracefully. Ensure the development server remains compatible with the existing API but resilient to malformed requests.</description>
+> </createTask>
+
+---
+
+<!-- {"role": "assistant", "content": "<createTask>\n<plan_id>1784355121.151412</plan_id>\n<title>Update Application.run() to Use Custom Server</title>\n<description>Modify Application.run() in webcms/core/application.py to use the custom WSGIRequestHandler and a custom WSGIServer class that handles connection resets gracefully. Ensure the development server remains compatible with the existing API but resilient to malformed requests.</description>\n</createTask>", "sessionId": 336, "rowId": 25, "timestamp": 1784355128.058174, "date": "2026-07-18", "thinking": "", "prompt_tokens": 67835, "response_tokens": 92} -->
+
+## [06:12] tool: createTask
+Task created: Update Application.run() to Use Custom Server | ID: 1784355128.0588076
+
+---
+
+<!-- {"role": "tool", "content": "Task created: Update Application.run() to Use Custom Server | ID: 1784355128.0588076", "sessionId": 336, "rowId": 25, "timestamp": 1784355128.0590444, "date": "2026-07-18", "name": "createTask"} -->
+
+## [06:12] ASSISTANT
+<createTask>
+> <plan_id>1784355121.151412</plan_id>
+> <title>Add Request Validation Middleware</title>
+> <description>Create middleware that validates incoming requests early in the pipeline: reject null bytes, control characters, invalid HTTP versions, and HTTP/2 PRI requests. Return 400 Bad Request for malformed requests before they reach application logic. This provides defense in depth even when the WSGI server accepts the connection.</description>
+> </createTask>
+
+---
+
+<!-- {"role": "assistant", "content": "<createTask>\n<plan_id>1784355121.151412</plan_id>\n<title>Add Request Validation Middleware</title>\n<description>Create middleware that validates incoming requests early in the pipeline: reject null bytes, control characters, invalid HTTP versions, and HTTP/2 PRI requests. Return 400 Bad Request for malformed requests before they reach application logic. This provides defense in depth even when the WSGI server accepts the connection.</description>\n</createTask>", "sessionId": 336, "rowId": 25, "timestamp": 1784355130.8073137, "date": "2026-07-18", "thinking": "", "prompt_tokens": 67962, "response_tokens": 96} -->
+
+## [06:12] tool: createTask
+Task created: Add Request Validation Middleware | ID: 1784355130.8077407
+
+---
+
+<!-- {"role": "tool", "content": "Task created: Add Request Validation Middleware | ID: 1784355130.8077407", "sessionId": 336, "rowId": 25, "timestamp": 1784355130.8078701, "date": "2026-07-18", "name": "createTask"} -->
+
+## [06:12] ASSISTANT
+<createTask>
+> <plan_id>1784355121.151412</plan_id>
+> <title>Review and Harden Request Parsing</title>
+> <description>Review webcms/core/request.py to ensure it handles edge cases safely: empty bodies, oversized content-length, invalid content-length values, malformed JSON, and invalid UTF-8. Add input validation to prevent exceptions from propagating and crashing the server.</description>
+> </createTask>
+
+---
+
+<!-- {"role": "assistant", "content": "<createTask>\n<plan_id>1784355121.151412</plan_id>\n<title>Review and Harden Request Parsing</title>\n<description>Review webcms/core/request.py to ensure it handles edge cases safely: empty bodies, oversized content-length, invalid content-length values, malformed JSON, and invalid UTF-8. Add input validation to prevent exceptions from propagating and crashing the server.</description>\n</createTask>", "sessionId": 336, "rowId": 25, "timestamp": 1784355133.2690394, "date": "2026-07-18", "thinking": "", "prompt_tokens": 68089, "response_tokens": 90} -->
+
+## [06:12] tool: createTask
+Task created: Review and Harden Request Parsing | ID: 1784355133.27105
+
+---
+
+<!-- {"role": "tool", "content": "Task created: Review and Harden Request Parsing | ID: 1784355133.27105", "sessionId": 336, "rowId": 25, "timestamp": 1784355133.2711833, "date": "2026-07-18", "name": "createTask"} -->
+
+## [06:12] ASSISTANT
+<createTask>
+> <plan_id>1784355121.151412</plan_id>
+> <title>Test Server Resilience</title>
+> <description>Create a simple test script that sends malformed requests (TLS bytes, connection reset, oversized request line, HTTP/2 PRI, null bytes) to the running server and verify it does not crash. Document the expected behavior: server should return 400 or silently close connection, and continue accepting new requests.</description>
+> </createTask>
+
+---
+
+<!-- {"role": "assistant", "content": "<createTask>\n<plan_id>1784355121.151412</plan_id>\n<title>Test Server Resilience</title>\n<description>Create a simple test script that sends malformed requests (TLS bytes, connection reset, oversized request line, HTTP/2 PRI, null bytes) to the running server and verify it does not crash. Document the expected behavior: server should return 400 or silently close connection, and continue accepting new requests.</description>\n</createTask>", "sessionId": 336, "rowId": 25, "timestamp": 1784355136.3116913, "date": "2026-07-18", "thinking": "", "prompt_tokens": 68211, "response_tokens": 98} -->
+
+## [06:12] tool: createTask
+Task created: Test Server Resilience | ID: 1784355136.3121703
+
+---
+
+<!-- {"role": "tool", "content": "Task created: Test Server Resilience | ID: 1784355136.3121703", "sessionId": 336, "rowId": 25, "timestamp": 1784355136.3123136, "date": "2026-07-18", "name": "createTask"} -->
+
+## [06:12] ASSISTANT
+<planDone>
+> <plan_id>1784355121.151412</plan_id>
+> <confirmation>Plan complete with 6 tasks: (1) Review current server implementation, (2) Implement custom WSGI server request handler to catch ConnectionResetError and malformed requests, (3) Update Application.run() to use the custom server, (4) Add request validation middleware for defense in depth, (5) Review and harden Request parsing, (6) Test server resilience with malformed requests. Ready to switch to BUILD mode.</confirmation>
+> </planDone>
+
+---
+
+<!-- {"role": "assistant", "content": "<planDone>\n<plan_id>1784355121.151412</plan_id>\n<confirmation>Plan complete with 6 tasks: (1) Review current server implementation, (2) Implement custom WSGI server request handler to catch ConnectionResetError and malformed requests, (3) Update Application.run() to use the custom server, (4) Add request validation middleware for defense in depth, (5) Review and harden Request parsing, (6) Test server resilience with malformed requests. Ready to switch to BUILD mode.</confirmation>\n</planDone>", "sessionId": 336, "rowId": 25, "timestamp": 1784355139.500797, "date": "2026-07-18", "thinking": "", "prompt_tokens": 68340, "response_tokens": 117} -->
+
+## [06:12] tool: planDone
+PLAN_DONE|Task 1/6|Read webcms/core/application.py, webcms/core/request.py, and any server entry points to understand how the WSGI server is started and how requests are processed. Identify where connection handling occurs and where we can add resilience.
+
+---
+
+<!-- {"role": "tool", "content": "PLAN_DONE|Task 1/6|Read webcms/core/application.py, webcms/core/request.py, and any server entry points to understand how the WSGI server is started and how requests are processed. Identify where connection handling occurs and where we can add resilience.", "sessionId": 336, "rowId": 25, "timestamp": 1784355139.5017693, "date": "2026-07-18", "name": "planDone"} -->
+
+## [06:12] USER
+Plan is ready! Starting first task.
+> 
+> Task 1/6 - Read webcms/core/application.py, webcms/core/request.py, and any server entry points to understand how the WSGI server is started and how requests are processed. Identify where connection handling occurs and where we can add resilience.
+
+---
+
+<!-- {"role": "user", "content": "Plan is ready! Starting first task.\n\nTask 1/6 - Read webcms/core/application.py, webcms/core/request.py, and any server entry points to understand how the WSGI server is started and how requests are processed. Identify where connection handling occurs and where we can add resilience.", "sessionId": 336, "rowId": 25, "timestamp": 1784355139.501832, "date": "2026-07-18"} -->
+
+## [06:12] ASSISTANT
+<ReadFile>
+> <fileName>webcms/core/application.py</fileName>
+> <max_chars>8000</max_chars>
+> </ReadFile>
+
+---
+
+<!-- {"role": "assistant", "content": "<ReadFile>\n<fileName>webcms/core/application.py</fileName>\n<max_chars>8000</max_chars>\n</ReadFile>", "sessionId": 336, "rowId": 26, "timestamp": 1784355151.7651947, "date": "2026-07-18", "thinking": "", "prompt_tokens": 68588, "response_tokens": 32} -->
+
+## [06:12] tool: ReadFile
+"""
+> WebCMS Application Core
+> 
+> Main application class handling WSGI/ASGI requests, routing,
+> and plugin lifecycle management.
+> """
+> 
+> import os
+> import sys
+> import yaml
+> import logging
+> from typing import Dict, List, Callable, Optional, Any
+> from pathlib import Path
+> 
+> from .request import Request
+> from .response import Response
+> from .router import Router
+> from .middleware import MiddlewareStack
+> from .container import Container
+> 
+> 
+> class Application:
+>     """Main WebCMS application class."""
+>     
+>     def __init__...
+> (truncated, 5384 chars total)
+
+---
+
+<!-- {"role": "tool", "content": "\"\"\"\nWebCMS Application Core\n\nMain application class handling WSGI/ASGI requests, routing,\nand plugin lifecycle management.\n\"\"\"\n\nimport os\nimport sys\nimport yaml\nimport logging\nfrom typing import Dict, List, Callable, Optional, Any\nfrom pathlib import Path\n\nfrom .request import Request\nfrom .response import Response\nfrom .router import Router\nfrom .middleware import MiddlewareStack\nfrom .container import Container\n\n\nclass Application:\n    \"\"\"Main WebCMS application class.\"\"\"\n    \n    def __init__(self, config_path: Optional[str] = None):\n        self.root_path = Path(__file__).parent.parent.absolute()\n        self.config = self._load_config(config_path)\n        self.container = Container()\n        self.router = Router()\n        self.middleware = MiddlewareStack()\n        self.plugins: Dict[str, Any] = {}\n        self.hooks: Dict[str, List[Callable]] = {}\n        \n        self._setup_logging()\n        self._init_container()\n        \n        logging.info(f\"WebCMS {self._get_version()} initialized\")\n    \n    def _load_config(self, config_path: Optional[str]) -> Dict:\n        \"\"\"Load configuration from YAML file.\"\"\"\n        if config_path is None:\n            config_path = self.root_path / \"config\" / \"config.yaml\"\n        \n        default_config = {\n            \"app\": {\n                \"name\": \"WebCMS\",\n                \"debug\": False,\n                \"secret_key\": \"change-me-in-production\",\n                \"timezone\": \"UTC\"\n            },\n            \"server\": {\n                \"host\": \"0.0.0.0\",\n                \"port\": 8000,\n                \"workers\": 4\n            },\n            \"database\": {\n                \"url\": \"sqlite:///webcms.db\",\n                \"pool_size\": 10\n            }\n        }\n        \n        if os.path.exists(config_path):\n            with open(config_path, 'r') as f:\n                user_config = yaml.safe_load(f)\n                self._deep_update(default_config, user_config)\n        \n        return default_config\n    \n    def _deep_update(self, base: Dict, update: Dict) -> None:\n        \"\"\"Recursively update nested dictionaries.\"\"\"\n        for key, value in update.items():\n            if key in base and isinstance(base[key], dict) and isinstance(value, dict):\n                self._deep_update(base[key], value)\n            else:\n                base[key] = value\n    \n    def _setup_logging(self) -> None:\n        \"\"\"Configure logging.\"\"\"\n        log_format = \"%(asctime)s - %(name)s - %(levelname)s - %(message)s\"\n        logging.basicConfig(\n            level=logging.DEBUG if self.config[\"app\"][\"debug\"] else logging.INFO,\n            format=log_format\n        )\n        self.logger = logging.getLogger(\"webcms\")\n    \n    def _init_container(self) -> None:\n        \"\"\"Initialize dependency injection container.\"\"\"\n        self.container.register(\"app\", self)\n        self.container.register(\"config\", self.config)\n        self.container.register(\"router\", self.router)\n        self.container.register(\"hooks\", self.hooks)\n    \n    def route(self, path: str, methods: Optional[List[str]] = None):\n        \"\"\"Decorator to register a route.\"\"\"\n        def decorator(func: Callable) -> Callable:\n            self.router.add(path, func, methods or [\"GET\"])\n            return func\n        return decorator\n    \n    def use(self, middleware) -> None:\n        \"\"\"Register middleware.\"\"\"\n        self.middleware.add(middleware)\n    \n    def wsgi_app(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"WSGI application entry point.\"\"\"\n        request = Request.from_wsgi(environ)\n        response = self.middleware.process(request, self._handle_request)\n        return response.to_wsgi(start_response)\n    \n    def _handle_request(self, request: Request) -> Response:\n        \"\"\"Handle request and return response.\"\"\"\n        try:\n            handler, params = self.router.match(request.path, request.method)\n            \n            if handler is None:\n                return Response.not_found()\n            \n            response = handler(request, **params)\n            \n            if not isinstance(response, Response):\n                response = Response(response)\n            \n            return response\n            \n        except Exception as e:\n            self.logger.exception(\"Request handling error\")\n            return Response.error(\"Internal Server Error\", 500)\n    \n    def run(self, host: Optional[str] = None, port: Optional[int] = None, debug: bool = False, **kwargs) -> None:\n        \"\"\"Run development server.\"\"\"\n        from wsgiref.simple_server import make_server\n        \n        host = host or self.config[\"server\"][\"host\"]\n        port = port or self.config[\"server\"][\"port\"]\n        \n        if debug:\n            self.config[\"app\"][\"debug\"] = True\n            self._setup_logging()\n        \n        server = make_server(host, port, self.wsgi_app)\n        self.logger.info(f\"Server running on http://{host}:{port}\")\n        \n        try:\n            server.serve_forever()\n        except KeyboardInterrupt:\n            self.logger.info(\"Shutting down...\")\n    \n    def _get_version(self) -> str:\n        \"\"\"Get WebCMS version.\"\"\"\n        from .. import __version__\n        return __version__\n    \n    def __call__(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"Make application callable for WSGI.\"\"\"\n        return self.wsgi_app(environ, start_response)", "sessionId": 336, "rowId": 26, "timestamp": 1784355151.765949, "date": "2026-07-18", "name": "ReadFile"} -->
+
+## [06:12] ASSISTANT
+<ReadFile>
+> <fileName>webcms/core/request.py</fileName>
+> <max_chars>8000</max_chars>
+> </ReadFile>
+
+---
+
+<!-- {"role": "assistant", "content": "<ReadFile>\n<fileName>webcms/core/request.py</fileName>\n<max_chars>8000</max_chars>\n</ReadFile>", "sessionId": 336, "rowId": 26, "timestamp": 1784355153.4284408, "date": "2026-07-18", "thinking": "", "prompt_tokens": 69734, "response_tokens": 32} -->
+
+## [06:12] tool: ReadFile
+"""
+> WebCMS Request wrapper
+> 
+> Wraps WSGI environ with convenient access to request data.
+> """
+> 
+> import json
+> import urllib.parse
+> from typing import Dict, Any, Optional, List
+> from io import BytesIO
+> 
+> 
+> class Request:
+>     """HTTP Request wrapper."""
+>     
+>     def __init__(self, environ: Dict[str, Any]):
+>         self.environ = environ
+>         self.method = environ.get("REQUEST_METHOD", "GET")
+>         self.path = environ.get("PATH_INFO", "/")
+>         self.query_string = environ.get("QUERY_STRING", "")
+>      ...
+> (truncated, 3731 chars total)
+
+---
+
+<!-- {"role": "tool", "content": "\"\"\"\nWebCMS Request wrapper\n\nWraps WSGI environ with convenient access to request data.\n\"\"\"\n\nimport json\nimport urllib.parse\nfrom typing import Dict, Any, Optional, List\nfrom io import BytesIO\n\n\nclass Request:\n    \"\"\"HTTP Request wrapper.\"\"\"\n    \n    def __init__(self, environ: Dict[str, Any]):\n        self.environ = environ\n        self.method = environ.get(\"REQUEST_METHOD\", \"GET\")\n        self.path = environ.get(\"PATH_INFO\", \"/\")\n        self.query_string = environ.get(\"QUERY_STRING\", \"\")\n        self.content_type = environ.get(\"CONTENT_TYPE\", \"\")\n        self.content_length = int(environ.get(\"CONTENT_LENGTH\", 0) or 0)\n        \n        self._headers: Optional[Dict[str, str]] = None\n        self._query_params: Optional[Dict[str, List[str]]] = None\n        self._body: Optional[bytes] = None\n        self._json: Optional[Any] = None\n        self._form: Optional[Dict[str, Any]] = None\n    \n    @classmethod\n    def from_wsgi(cls, environ: Dict[str, Any]) -> \"Request\":\n        \"\"\"Create Request from WSGI environ.\"\"\"\n        return cls(environ)\n    \n    @property\n    def headers(self) -> Dict[str, str]:\n        \"\"\"Get HTTP headers.\"\"\"\n        if self._headers is None:\n            self._headers = {}\n            for key, value in self.environ.items():\n                if key.startswith(\"HTTP_\"):\n                    header_name = key[5:].replace(\"_\", \"-\").title()\n                    self._headers[header_name] = value\n        return self._headers\n    \n    @property\n    def query_params(self) -> Dict[str, List[str]]:\n        \"\"\"Get query string parameters.\"\"\"\n        if self._query_params is None:\n            self._query_params = urllib.parse.parse_qs(self.query_string)\n        return self._query_params\n    \n    def get_param(self, name: str, default: Any = None) -> Any:\n        \"\"\"Get single query parameter.\"\"\"\n        params = self.query_params.get(name, [])\n        return params[0] if params else default\n    \n    @property\n    def body(self) -> bytes:\n        \"\"\"Get request body.\"\"\"\n        if self._body is None:\n            if self.content_length > 0:\n                self._body = self.environ[\"wsgi.input\"].read(self.content_length)\n            else:\n                self._body = b\"\"\n        return self._body\n    \n    @property\n    def json(self) -> Optional[Any]:\n        \"\"\"Parse JSON body.\"\"\"\n        if self._json is None and self.body:\n            if self.content_type.startswith(\"application/json\"):\n                try:\n                    self._json = json.loads(self.body.decode(\"utf-8\"))\n                except (json.JSONDecodeError, UnicodeDecodeError):\n                    self._json = None\n        return self._json\n    \n    @property\n    def form(self) -> Dict[str, Any]:\n        \"\"\"Parse form data.\"\"\"\n        if self._form is None:\n            self._form = {}\n            if self.content_type.startswith(\"application/x-www-form-urlencoded\"):\n                self._form = urllib.parse.parse_qs(self.body.decode(\"utf-8\"))\n            elif self.content_type.startswith(\"multipart/form-data\"):\n                # Simplified - full implementation would use cgi.FieldStorage\n                self._form = {}\n        return self._form\n    \n    def get_header(self, name: str, default: Optional[str] = None) -> Optional[str]:\n        \"\"\"Get specific header.\"\"\"\n        return self.headers.get(name.title(), default)\n    \n    @property\n    def remote_addr(self) -> Optional[str]:\n        \"\"\"Get client IP address.\"\"\"\n        return self.environ.get(\"REMOTE_ADDR\")\n    \n    @property\n    def user_agent(self) -> Optional[str]:\n        \"\"\"Get User-Agent header.\"\"\"\n        return self.get_header(\"User-Agent\")\n    \n    def __repr__(self) -> str:\n        return f\"<Request {self.method} {self.path}>\"", "sessionId": 336, "rowId": 26, "timestamp": 1784355153.4290519, "date": "2026-07-18", "name": "ReadFile"} -->
+
+## [06:12] ASSISTANT
+<ReadFile>
+> <fileName>webcms/app_factory.py</fileName>
+> <max_chars>8000</max_chars>
+> </ReadFile>
+
+---
+
+<!-- {"role": "assistant", "content": "<ReadFile>\n<fileName>webcms/app_factory.py</fileName>\n<max_chars>8000</max_chars>\n</ReadFile>", "sessionId": 336, "rowId": 26, "timestamp": 1784355155.9182403, "date": "2026-07-18", "thinking": "", "prompt_tokens": 70600, "response_tokens": 95} -->
+
+## [06:12] tool: ReadFile
+"""
+> Application Factory
+> 
+> Create and configure WebCMS application instance with KosDB support.
+> """
+> 
+> from webcms import Application, __version__
+> from webcms.database import init_db, KosDBClient, KosDBConfig
+> from webcms.database.kosdb_replication import KosDBReplicationManager, ReplicationConfig, ReplicationRole
+> from webcms.security import SecurityMiddleware, HTTPSRedirectMiddleware
+> from webcms.security.middleware import CSPConfig
+> from webcms.core.response import Response
+> from webcms.admin.api impo...
+> (truncated, 8148 chars total)
+
+---
+
+<!-- {"role": "tool", "content": "\"\"\"\nApplication Factory\n\nCreate and configure WebCMS application instance with KosDB support.\n\"\"\"\n\nfrom webcms import Application, __version__\nfrom webcms.database import init_db, KosDBClient, KosDBConfig\nfrom webcms.database.kosdb_replication import KosDBReplicationManager, ReplicationConfig, ReplicationRole\nfrom webcms.security import SecurityMiddleware, HTTPSRedirectMiddleware\nfrom webcms.security.middleware import CSPConfig\nfrom webcms.core.response import Response\nfrom webcms.admin.api import create_api\nfrom webcms.admin.routes import admin_routes\nfrom webcms.admin.kosdb_admin import register_kosdb_admin\n\ndef create_app(config_path: str = None) -> Application:\n    \"\"\"\n    Create configured WebCMS application.\n    \n    Args:\n        config_path: Path to configuration file\n    \n    Returns:\n        Configured Application instance\n    \"\"\"\n    # Create application\n    app = Application(config_path)\n    \n    # Initialize database based on type\n    db_config = app.config.get(\"database\", {})\n    db_url = db_config.get(\"url\", \"sqlite:///webcms.db\")\n    \n    if db_url.startswith(\"kosdb://\"):\n        # Use KosDB\n        kosdb_config = db_config.get(\"kosdb\", {})\n        config = KosDBConfig(\n            host=kosdb_config.get(\"host\", \"localhost\"),\n            port=kosdb_config.get(\"port\", 5555),\n            username=kosdb_config.get(\"username\", \"admin\"),\n            password=kosdb_config.get(\"password\", \"admin\"),\n            database=kosdb_config.get(\"database\", \"webcms\"),\n            pool_size=kosdb_config.get(\"pool_size\", 10)\n        )\n        \n        # Create KosDB client\n        kosdb = KosDBClient(config)\n        app.container.register(\"kosdb\", kosdb)\n        \n        # Setup replication if enabled\n        repl_config = kosdb_config.get(\"replication\", {})\n        if repl_config.get(\"enabled\", False):\n            role_map = {\n                \"standalone\": ReplicationRole.STANDALONE,\n                \"master\": ReplicationRole.MASTER,\n                \"slave\": ReplicationRole.SLAVE,\n                \"master_master\": ReplicationRole.MASTER_MASTER\n            }\n            \n            repl = KosDBReplicationManager(\n                kosdb,\n                ReplicationConfig(\n                    server_id=repl_config.get(\"server_id\", 1),\n                    role=role_map.get(repl_config.get(\"role\", \"standalone\")),\n                    master_host=repl_config.get(\"master_host\"),\n                    master_port=repl_config.get(\"master_port\"),\n                    peer_host=repl_config.get(\"peer_host\"),\n                    peer_port=repl_config.get(\"peer_port\")\n                )\n            )\n            repl.start()\n            app.container.register(\"replication\", repl)\n        \n        # Register KosDB admin\n        register_kosdb_admin(app, kosdb)\n        \n        # Flag to track if counters table is initialized\n        app._kosdb_counters_ready = False\n        \n        def _init_counters():\n            \"\"\"Initialize counters table on first use.\"\"\"\n            if app._kosdb_counters_ready:\n                return\n            try:\n                kosdb.execute(\"CREATE DATABASE webcms\")\n            except Exception:\n                pass\n            try:\n                kosdb.execute(\"CREATE TABLE counters (id INTEGER, name TEXT, count INTEGER)\")\n                result = kosdb.query(\"SELECT * FROM counters WHERE name = 'visitors'\")\n                if not result.get(\"rows\"):\n                    kosdb.execute(\"INSERT INTO counters VALUES (1, 'visitors', 0)\")\n                app._kosdb_counters_ready = True\n            except Exception as e:\n                if \"already exists\" in str(e).lower():\n                    app._kosdb_counters_ready = True\n                else:\n                    import logging\n                    logging.getLogger(\"webcms\").warning(f\"Counter init deferred: {e}\")\n        \n    else:\n        # Use standard SQLAlchemy\n        db = init_db(\n            db_url,\n            pool_size=db_config.get(\"pool_size\", 10),\n            max_overflow=db_config.get(\"max_overflow\", 20),\n            echo=db_config.get(\"echo\", False)\n        )\n        app.container.register(\"db\", db)\n    \n    # Add security middleware\n    security_config = app.config.get(\"security\", {})\n    \n    # HTTPS redirect\n    if app.config.get(\"server\", {}).get(\"ssl_cert\"):\n        app.use(HTTPSRedirectMiddleware(enabled=True))\n    \n    # Security headers\n    csp_dict = security_config.get(\"csp\")\n    if csp_dict is None or csp_dict == {}:\n        csp_config = CSPConfig()\n    elif isinstance(csp_dict, dict):\n        # Filter only valid CSPConfig fields\n        valid_fields = {'default_src', 'script_src', 'style_src', 'img_src', \n                       'font_src', 'connect_src', 'media_src', 'object_src',\n                       'frame_src', 'frame_ancestors', 'form_action', 'base_uri',\n                       'report_uri', 'report_only', 'upgrade_insecure'}\n        filtered = {k: v for k, v in csp_dict.items() if k in valid_fields}\n        csp_config = CSPConfig(**filtered)\n    else:\n        csp_config = csp_dict\n    \n    app.use(SecurityMiddleware(\n        csp_config=csp_config,\n        hsts_enabled=security_config.get(\"hsts\", True)\n    ))\n    \n    # Register admin routes\n    admin_routes(app)\n    \n    # Register API (for both SQLAlchemy 'db' and KosDB)\n    db_service = app.container._services.get(\"db\") or app.container._services.get(\"kosdb\")\n    if db_service:\n        create_api(app, db_service, None)\n    \n    # Public routes\n    @app.route(\"/\", methods=[\"GET\"])\n    def home(request):\n        \"\"\"Homepage.\"\"\"\n        kosdb_connected = \"kosdb\" in app.container._services\n        cls = \"connected\" if kosdb_connected else \"disconnected\"\n        status = \"Connected\" if kosdb_connected else \"Disconnected\"\n        visitor_count = 0\n        \n        if kosdb_connected:\n            _init_counters()\n            kosdb = app.container.get(\"kosdb\")\n            try:\n                result = kosdb.query(\"SELECT count FROM counters WHERE name = 'visitors'\")\n                if result.get(\"rows\"):\n                    visitor_count = int(result[\"rows\"][0][\"count\"]) + 1\n                    kosdb.execute(f\"UPDATE counters SET count = {visitor_count} WHERE name = 'visitors'\")\n                else:\n                    kosdb.execute(\"INSERT INTO counters VALUES (1, 'visitors', 1)\")\n                    visitor_count = 1\n            except Exception:\n                pass\n        \n        html = f'''<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Hello World - WebCMS</title>\n    <style>\n        * {{ margin: 0; padding: 0; box-sizing: border-box; }}\n        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; \n               display: flex; justify-content: center; align-items: center; min-height: 100vh;\n               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #333; }}\n        .card {{ background: white; border-radius: 16px; padding: 48px; text-align: center;\n                box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 500px; width: 90%; }}\n        h1 {{ font-size: 2.5em; margin-bottom: 12px; color: #667eea; }}\n        p {{ font-size: 1.1em; color: #666; margin-bottom: 24px; }}\n        .visitor-count {{ font-size: 3em; font-weight: 700; color: #764ba2; margin: 20px 0; }}\n        .visitor-label {{ font-size: 0.9em; color: #999; text-transform: uppercase; letter-spacing: 2px; }}\n        .status {{ display: inline-block; padding: 8px 20px; border-radius: 24px; font-size: 0.9em; font-weight: 600; margin-bottom: 20px; }}\n        .connected {{ background: #d4edda; color: #155724; }}\n        .disconnected {{ background: #f8d7da; color: #721c24; }}\n        .links {{ margin-top: 24px; }}\n        .links a {{ color: #667eea; text-decoration: none; margin: 0 12px; font-weight: 500; }}\n        .links a:hover {{ text-decoration: underline; }}\n\n[-- File truncated: 2057 chars remaining (20.5%). Use <ReadFile><fileName>webcms/app_factory.py</fileName><max_chars>2057</max_chars></ReadFile> to read further. --]", "sessionId": 336, "rowId": 26, "timestamp": 1784355155.9565601, "date": "2026-07-18", "name": "ReadFile"} -->
+
+## [06:12] ASSISTANT
+**Task 1 Review Summary:**
+> 
+> - **`webcms/core/application.py`**: `Application.run()` uses `wsgiref.simple_server.make_server()` with default request handler. The default handler prints full tracebacks for socket errors like `ConnectionResetError`, which can clutter logs and, in some cases, propagate exceptions.
+> - **`webcms/core/request.py`**: `Request` assumes well-formed WSGI environ. `content_length` is parsed with `int()` without validation; `body`, `json`, and `form` properties can raise on m...
+> (truncated, 1093 chars total)
+
+---
+
+<!-- {"role": "assistant", "content": "**Task 1 Review Summary:**\n\n- **`webcms/core/application.py`**: `Application.run()` uses `wsgiref.simple_server.make_server()` with default request handler. The default handler prints full tracebacks for socket errors like `ConnectionResetError`, which can clutter logs and, in some cases, propagate exceptions.\n- **`webcms/core/request.py`**: `Request` assumes well-formed WSGI environ. `content_length` is parsed with `int()` without validation; `body`, `json`, and `form` properties can raise on malformed input (invalid UTF-8, bad JSON, oversized bodies).\n- **`webcms/app_factory.py`**: Some security middleware (`SecurityMiddleware`, `HTTPSRedirectMiddleware`) is already registered, but there is no early request validation for binary/TLS garbage, HTTP/2 PRI, or connection resets.\n\n**Key gaps:**\n1. WSGI server request handler is not hardened against connection resets and malformed request lines.\n2. Request parsing lacks defensive validation for edge-case/malicious input.\n3. No early rejection of HTTP/2 PRI or binary garbage at the application level.\n\n<nextTask>completed</nextTask>", "sessionId": 336, "rowId": 26, "timestamp": 1784355163.0011458, "date": "2026-07-18", "thinking": "", "prompt_tokens": 72546, "response_tokens": 514} -->
+
+## [06:12] tool: nextTask
+NEXT_TASK:Create a custom WSGIRequestHandler subclass that wraps request handling in try/except to catch ConnectionResetError, OSError, and other socket errors silently. Override handle(), parse_request(), and handle_one_request() to prevent crashes from malformed requests and connection resets. Log at debug level instead of printing full tracebacks.
+
+---
+
+<!-- {"role": "tool", "content": "NEXT_TASK:Create a custom WSGIRequestHandler subclass that wraps request handling in try/except to catch ConnectionResetError, OSError, and other socket errors silently. Override handle(), parse_request(), and handle_one_request() to prevent crashes from malformed requests and connection resets. Log at debug level instead of printing full tracebacks.", "sessionId": 336, "rowId": 26, "timestamp": 1784355163.0018675, "date": "2026-07-18", "name": "nextTask"} -->
+
+## [06:12] USER
+<nextTask>
+> 
+> Your task:
+> Create a custom WSGIRequestHandler subclass that wraps request handling in try/except to catch ConnectionResetError, OSError, and other socket errors silently. Override handle(), parse_request(), and handle_one_request() to prevent crashes from malformed requests and connection resets. Log at debug level instead of printing full tracebacks.
+
+---
+
+<!-- {"role": "user", "content": "<nextTask>\n\nYour task:\nCreate a custom WSGIRequestHandler subclass that wraps request handling in try/except to catch ConnectionResetError, OSError, and other socket errors silently. Override handle(), parse_request(), and handle_one_request() to prevent crashes from malformed requests and connection resets. Log at debug level instead of printing full tracebacks.", "sessionId": 336, "rowId": 26, "timestamp": 1784355163.0019155, "date": "2026-07-18"} -->
+
+## [06:12] ASSISTANT
+<ReadFile>
+> <fileName>webcms/core/application.py</fileName>
+> <max_chars>8000</max_chars>
+> </ReadFile>
+
+---
+
+<!-- {"role": "assistant", "content": "<ReadFile>\n<fileName>webcms/core/application.py</fileName>\n<max_chars>8000</max_chars>\n</ReadFile>", "sessionId": 336, "rowId": 26, "timestamp": 1784355164.8734589, "date": "2026-07-18", "thinking": "", "prompt_tokens": 72940, "response_tokens": 32} -->
+
+## [06:12] tool: ReadFile
+"""
+> WebCMS Application Core
+> 
+> Main application class handling WSGI/ASGI requests, routing,
+> and plugin lifecycle management.
+> """
+> 
+> import os
+> import sys
+> import yaml
+> import logging
+> from typing import Dict, List, Callable, Optional, Any
+> from pathlib import Path
+> 
+> from .request import Request
+> from .response import Response
+> from .router import Router
+> from .middleware import MiddlewareStack
+> from .container import Container
+> 
+> 
+> class Application:
+>     """Main WebCMS application class."""
+>     
+>     def __init__...
+> (truncated, 5384 chars total)
+
+---
+
+<!-- {"role": "tool", "content": "\"\"\"\nWebCMS Application Core\n\nMain application class handling WSGI/ASGI requests, routing,\nand plugin lifecycle management.\n\"\"\"\n\nimport os\nimport sys\nimport yaml\nimport logging\nfrom typing import Dict, List, Callable, Optional, Any\nfrom pathlib import Path\n\nfrom .request import Request\nfrom .response import Response\nfrom .router import Router\nfrom .middleware import MiddlewareStack\nfrom .container import Container\n\n\nclass Application:\n    \"\"\"Main WebCMS application class.\"\"\"\n    \n    def __init__(self, config_path: Optional[str] = None):\n        self.root_path = Path(__file__).parent.parent.absolute()\n        self.config = self._load_config(config_path)\n        self.container = Container()\n        self.router = Router()\n        self.middleware = MiddlewareStack()\n        self.plugins: Dict[str, Any] = {}\n        self.hooks: Dict[str, List[Callable]] = {}\n        \n        self._setup_logging()\n        self._init_container()\n        \n        logging.info(f\"WebCMS {self._get_version()} initialized\")\n    \n    def _load_config(self, config_path: Optional[str]) -> Dict:\n        \"\"\"Load configuration from YAML file.\"\"\"\n        if config_path is None:\n            config_path = self.root_path / \"config\" / \"config.yaml\"\n        \n        default_config = {\n            \"app\": {\n                \"name\": \"WebCMS\",\n                \"debug\": False,\n                \"secret_key\": \"change-me-in-production\",\n                \"timezone\": \"UTC\"\n            },\n            \"server\": {\n                \"host\": \"0.0.0.0\",\n                \"port\": 8000,\n                \"workers\": 4\n            },\n            \"database\": {\n                \"url\": \"sqlite:///webcms.db\",\n                \"pool_size\": 10\n            }\n        }\n        \n        if os.path.exists(config_path):\n            with open(config_path, 'r') as f:\n                user_config = yaml.safe_load(f)\n                self._deep_update(default_config, user_config)\n        \n        return default_config\n    \n    def _deep_update(self, base: Dict, update: Dict) -> None:\n        \"\"\"Recursively update nested dictionaries.\"\"\"\n        for key, value in update.items():\n            if key in base and isinstance(base[key], dict) and isinstance(value, dict):\n                self._deep_update(base[key], value)\n            else:\n                base[key] = value\n    \n    def _setup_logging(self) -> None:\n        \"\"\"Configure logging.\"\"\"\n        log_format = \"%(asctime)s - %(name)s - %(levelname)s - %(message)s\"\n        logging.basicConfig(\n            level=logging.DEBUG if self.config[\"app\"][\"debug\"] else logging.INFO,\n            format=log_format\n        )\n        self.logger = logging.getLogger(\"webcms\")\n    \n    def _init_container(self) -> None:\n        \"\"\"Initialize dependency injection container.\"\"\"\n        self.container.register(\"app\", self)\n        self.container.register(\"config\", self.config)\n        self.container.register(\"router\", self.router)\n        self.container.register(\"hooks\", self.hooks)\n    \n    def route(self, path: str, methods: Optional[List[str]] = None):\n        \"\"\"Decorator to register a route.\"\"\"\n        def decorator(func: Callable) -> Callable:\n            self.router.add(path, func, methods or [\"GET\"])\n            return func\n        return decorator\n    \n    def use(self, middleware) -> None:\n        \"\"\"Register middleware.\"\"\"\n        self.middleware.add(middleware)\n    \n    def wsgi_app(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"WSGI application entry point.\"\"\"\n        request = Request.from_wsgi(environ)\n        response = self.middleware.process(request, self._handle_request)\n        return response.to_wsgi(start_response)\n    \n    def _handle_request(self, request: Request) -> Response:\n        \"\"\"Handle request and return response.\"\"\"\n        try:\n            handler, params = self.router.match(request.path, request.method)\n            \n            if handler is None:\n                return Response.not_found()\n            \n            response = handler(request, **params)\n            \n            if not isinstance(response, Response):\n                response = Response(response)\n            \n            return response\n            \n        except Exception as e:\n            self.logger.exception(\"Request handling error\")\n            return Response.error(\"Internal Server Error\", 500)\n    \n    def run(self, host: Optional[str] = None, port: Optional[int] = None, debug: bool = False, **kwargs) -> None:\n        \"\"\"Run development server.\"\"\"\n        from wsgiref.simple_server import make_server\n        \n        host = host or self.config[\"server\"][\"host\"]\n        port = port or self.config[\"server\"][\"port\"]\n        \n        if debug:\n            self.config[\"app\"][\"debug\"] = True\n            self._setup_logging()\n        \n        server = make_server(host, port, self.wsgi_app)\n        self.logger.info(f\"Server running on http://{host}:{port}\")\n        \n        try:\n            server.serve_forever()\n        except KeyboardInterrupt:\n            self.logger.info(\"Shutting down...\")\n    \n    def _get_version(self) -> str:\n        \"\"\"Get WebCMS version.\"\"\"\n        from .. import __version__\n        return __version__\n    \n    def __call__(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"Make application callable for WSGI.\"\"\"\n        return self.wsgi_app(environ, start_response)", "sessionId": 336, "rowId": 26, "timestamp": 1784355164.8739898, "date": "2026-07-18", "name": "ReadFile"} -->
+
+## [06:12] ASSISTANT
+I will create a new `webcms/core/server.py` module with a hardened WSGI server and request handler, then update `application.py` to use it.
+> 
+> <WriteFile>
+> <fileName>webcms/core/server.py</fileName>
+> <contentOfFile>"""
+> Hardened WSGI server components.
+> 
+> Provides request handler and server classes that gracefully handle
+> malformed requests, TLS garbage sent to HTTP ports, connection resets,
+> and other low-level socket errors without crashing the server.
+> """
+> 
+> import logging
+> import sys
+> import socket
+> from ...
+> (truncated, 5797 chars total)
+> </contentOfFile>
+> </WriteFile>
+
+---
+
+<!-- {"role": "assistant", "content": "I will create a new `webcms/core/server.py` module with a hardened WSGI server and request handler, then update `application.py` to use it.\n\n<WriteFile>\n<fileName>webcms/core/server.py</fileName>\n<contentOfFile>\"\"\"\nHardened WSGI server components.\n\nProvides request handler and server classes that gracefully handle\nmalformed requests, TLS garbage sent to HTTP ports, connection resets,\nand other low-level socket errors without crashing the server.\n\"\"\"\n\nimport logging\nimport sys\nimport socket\nfrom http.server import BaseHTTPRequestHandler\nfrom wsgiref.simple_server import WSGIRequestHandler, WSGIServer\n\n\nlogger = logging.getLogger(\"webcms.server\")\n\n\nclass HardenedWSGIRequestHandler(WSGIRequestHandler):\n    \"\"\"\n    WSGI request handler that silently survives malformed requests and\n    connection resets instead of printing full tracebacks to stderr.\n    \"\"\"\n\n    # Do not emit default GET /path log lines for every request.\n    # Security-relevant events are logged explicitly below.\n    def log_message(self, format, *args):\n        logger.debug(\"%s - %s\", self.address_string(), format % args)\n\n    def log_error(self, format, *args):\n        logger.debug(\"Request error from %s: %s\", self.address_string(), format % args)\n\n    def handle(self):\n        \"\"\"Handle a single connection, swallowing expected socket errors.\"\"\"\n        try:\n            super().handle()\n        except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError) as exc:\n            logger.debug(\"Connection reset/closed by %s: %s\", self.address_string(), exc)\n        except OSError as exc:\n            logger.debug(\"OS error handling request from %s: %s\", self.address_string(), exc)\n        except Exception as exc:\n            logger.warning(\"Unexpected error handling request from %s: %s\", self.address_string(), exc)\n\n    def handle_one_request(self):\n        \"\"\"Process one HTTP request, returning 400 for malformed input.\"\"\"\n        try:\n            return super().handle_one_request()\n        except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):\n            return False\n        except OSError:\n            return False\n        except ValueError as exc:\n            # wsgiref raises ValueError for malformed request lines/versions.\n            logger.debug(\"Malformed request from %s: %s\", self.address_string(), exc)\n            self.send_error(400, \"Bad Request\")\n            self.close_connection = True\n            return False\n        except Exception as exc:\n            logger.warning(\"Error processing request from %s: %s\", self.address_string(), exc)\n            self.send_error(400, \"Bad Request\")\n            self.close_connection = True\n            return False\n\n    def parse_request(self):\n        \"\"\"Parse request line, returning False on malformed input.\"\"\"\n        try:\n            return super().parse_request()\n        except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):\n            return False\n        except OSError:\n            return False\n        except ValueError as exc:\n            logger.debug(\"Bad request syntax from %s: %s\", self.address_string(), exc)\n            self.send_error(400, \"Bad Request\")\n            self.close_connection = True\n            return False\n        except Exception as exc:\n            logger.debug(\"Could not parse request from %s: %s\", self.address_string(), exc)\n            self.send_error(400, \"Bad Request\")\n            self.close_connection = True\n            return False\n\n    def _read_request_line(self):\n        \"\"\"Read the request line, tolerating short/closed connections.\"\"\"\n        try:\n            return self.rfile.readline(65537)\n        except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):\n            return b\"\"\n        except OSError:\n            return b\"\"\n\n\nclass HardenedWSGIServer(WSGIServer):\n    \"\"\"\n    WSGI server that uses HardenedWSGIRequestHandler by default and\n    handles connection-level errors gracefully.\n    \"\"\"\n\n    request_timeout = 30\n    allow_reuse_address = True\n\n    def __init__(self, *args, **kwargs):\n        # Allow callers to override the request handler class.\n        kwargs.setdefault(\"handler_class\", HardenedWSGIRequestHandler)\n        super().__init__(*args, **kwargs)\n\n    def handle_error(self, request, client_address):\n        \"\"\"\n        Override BaseServer.handle_error to suppress noisy tracebacks for\n        routine socket errors.\n        \"\"\"\n        exc_type, exc_value = sys.exc_info()[:2]\n        if exc_type and issubclass(\n            exc_type,\n            (ConnectionResetError, ConnectionAbortedError, BrokenPipeError, OSError, TimeoutError),\n        ):\n            logger.debug(\"Suppressed socket error from %s: %s\", client_address, exc_value)\n            return\n        logger.warning(\"Server error processing request from %s\", client_address, exc_info=True)\n\n    def get_request(self):\n        \"\"\"Accept a connection with a socket timeout to defend slowloris.\"\"\"\n        conn, client_address = super().get_request()\n        try:\n            conn.settimeout(self.request_timeout)\n        except OSError:\n            pass\n        return conn, client_address\n\n\ndef make_hardened_server(host, port, app, handler_class=None, timeout=30):\n    \"\"\"\n    Factory for a hardened WSGI development server.\n\n    Args:\n        host: Interface to bind to.\n        port: Port to listen on.\n        app: WSGI application callable.\n        handler_class: Optional custom request handler class.\n        timeout: Socket timeout in seconds.\n\n    Returns:\n        HardenedWSGIServer instance.\n    \"\"\"\n    handler_class = handler_class or HardenedWSGIRequestHandler\n    server = HardenedWSGIServer((host, port), app, handler_class=handler_class)\n    server.request_timeout = timeout\n    return server\n</contentOfFile>\n</WriteFile>", "sessionId": 336, "rowId": 26, "timestamp": 1784355177.0647411, "date": "2026-07-18", "thinking": "", "prompt_tokens": 74086, "response_tokens": 1234} -->
+
+## [06:12] tool: WriteFile
+webcms/core/server.py was created with length 5557
+
+---
+
+<!-- {"role": "tool", "content": "webcms/core/server.py was created with length 5557", "sessionId": 336, "rowId": 26, "timestamp": 1784355177.0658758, "date": "2026-07-18", "name": "WriteFile"} -->
+
+## [06:12] ASSISTANT
+<nextTask>completed</nextTask>
+
+---
+
+<!-- {"role": "assistant", "content": "<nextTask>completed</nextTask>", "sessionId": 336, "rowId": 26, "timestamp": 1784355178.6631184, "date": "2026-07-18", "thinking": "", "prompt_tokens": 75344, "response_tokens": 11} -->
+
+## [06:12] tool: nextTask
+NEXT_TASK:Modify Application.run() in webcms/core/application.py to use the custom WSGIRequestHandler and a custom WSGIServer class that handles connection resets gracefully. Ensure the development server remains compatible with the existing API but resilient to malformed requests.
+
+---
+
+<!-- {"role": "tool", "content": "NEXT_TASK:Modify Application.run() in webcms/core/application.py to use the custom WSGIRequestHandler and a custom WSGIServer class that handles connection resets gracefully. Ensure the development server remains compatible with the existing API but resilient to malformed requests.", "sessionId": 336, "rowId": 26, "timestamp": 1784355178.6637294, "date": "2026-07-18", "name": "nextTask"} -->
+
+## [06:12] USER
+<nextTask>
+> 
+> Your task:
+> Modify Application.run() in webcms/core/application.py to use the custom WSGIRequestHandler and a custom WSGIServer class that handles connection resets gracefully. Ensure the development server remains compatible with the existing API but resilient to malformed requests.
+
+---
+
+<!-- {"role": "user", "content": "<nextTask>\n\nYour task:\nModify Application.run() in webcms/core/application.py to use the custom WSGIRequestHandler and a custom WSGIServer class that handles connection resets gracefully. Ensure the development server remains compatible with the existing API but resilient to malformed requests.", "sessionId": 336, "rowId": 26, "timestamp": 1784355178.6637747, "date": "2026-07-18"} -->
+
+## [06:13] ASSISTANT
+<ReadFile>
+> <fileName>webcms/core/application.py</fileName>
+> <max_chars>8000</max_chars>
+> </ReadFile>
+
+---
+
+<!-- {"role": "assistant", "content": "<ReadFile>\n<fileName>webcms/core/application.py</fileName>\n<max_chars>8000</max_chars>\n</ReadFile>", "sessionId": 336, "rowId": 26, "timestamp": 1784355180.407364, "date": "2026-07-18", "thinking": "", "prompt_tokens": 75479, "response_tokens": 32} -->
+
+## [06:13] tool: ReadFile
+"""
+> WebCMS Application Core
+> 
+> Main application class handling WSGI/ASGI requests, routing,
+> and plugin lifecycle management.
+> """
+> 
+> import os
+> import sys
+> import yaml
+> import logging
+> from typing import Dict, List, Callable, Optional, Any
+> from pathlib import Path
+> 
+> from .request import Request
+> from .response import Response
+> from .router import Router
+> from .middleware import MiddlewareStack
+> from .container import Container
+> 
+> 
+> class Application:
+>     """Main WebCMS application class."""
+>     
+>     def __init__...
+> (truncated, 5384 chars total)
+
+---
+
+<!-- {"role": "tool", "content": "\"\"\"\nWebCMS Application Core\n\nMain application class handling WSGI/ASGI requests, routing,\nand plugin lifecycle management.\n\"\"\"\n\nimport os\nimport sys\nimport yaml\nimport logging\nfrom typing import Dict, List, Callable, Optional, Any\nfrom pathlib import Path\n\nfrom .request import Request\nfrom .response import Response\nfrom .router import Router\nfrom .middleware import MiddlewareStack\nfrom .container import Container\n\n\nclass Application:\n    \"\"\"Main WebCMS application class.\"\"\"\n    \n    def __init__(self, config_path: Optional[str] = None):\n        self.root_path = Path(__file__).parent.parent.absolute()\n        self.config = self._load_config(config_path)\n        self.container = Container()\n        self.router = Router()\n        self.middleware = MiddlewareStack()\n        self.plugins: Dict[str, Any] = {}\n        self.hooks: Dict[str, List[Callable]] = {}\n        \n        self._setup_logging()\n        self._init_container()\n        \n        logging.info(f\"WebCMS {self._get_version()} initialized\")\n    \n    def _load_config(self, config_path: Optional[str]) -> Dict:\n        \"\"\"Load configuration from YAML file.\"\"\"\n        if config_path is None:\n            config_path = self.root_path / \"config\" / \"config.yaml\"\n        \n        default_config = {\n            \"app\": {\n                \"name\": \"WebCMS\",\n                \"debug\": False,\n                \"secret_key\": \"change-me-in-production\",\n                \"timezone\": \"UTC\"\n            },\n            \"server\": {\n                \"host\": \"0.0.0.0\",\n                \"port\": 8000,\n                \"workers\": 4\n            },\n            \"database\": {\n                \"url\": \"sqlite:///webcms.db\",\n                \"pool_size\": 10\n            }\n        }\n        \n        if os.path.exists(config_path):\n            with open(config_path, 'r') as f:\n                user_config = yaml.safe_load(f)\n                self._deep_update(default_config, user_config)\n        \n        return default_config\n    \n    def _deep_update(self, base: Dict, update: Dict) -> None:\n        \"\"\"Recursively update nested dictionaries.\"\"\"\n        for key, value in update.items():\n            if key in base and isinstance(base[key], dict) and isinstance(value, dict):\n                self._deep_update(base[key], value)\n            else:\n                base[key] = value\n    \n    def _setup_logging(self) -> None:\n        \"\"\"Configure logging.\"\"\"\n        log_format = \"%(asctime)s - %(name)s - %(levelname)s - %(message)s\"\n        logging.basicConfig(\n            level=logging.DEBUG if self.config[\"app\"][\"debug\"] else logging.INFO,\n            format=log_format\n        )\n        self.logger = logging.getLogger(\"webcms\")\n    \n    def _init_container(self) -> None:\n        \"\"\"Initialize dependency injection container.\"\"\"\n        self.container.register(\"app\", self)\n        self.container.register(\"config\", self.config)\n        self.container.register(\"router\", self.router)\n        self.container.register(\"hooks\", self.hooks)\n    \n    def route(self, path: str, methods: Optional[List[str]] = None):\n        \"\"\"Decorator to register a route.\"\"\"\n        def decorator(func: Callable) -> Callable:\n            self.router.add(path, func, methods or [\"GET\"])\n            return func\n        return decorator\n    \n    def use(self, middleware) -> None:\n        \"\"\"Register middleware.\"\"\"\n        self.middleware.add(middleware)\n    \n    def wsgi_app(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"WSGI application entry point.\"\"\"\n        request = Request.from_wsgi(environ)\n        response = self.middleware.process(request, self._handle_request)\n        return response.to_wsgi(start_response)\n    \n    def _handle_request(self, request: Request) -> Response:\n        \"\"\"Handle request and return response.\"\"\"\n        try:\n            handler, params = self.router.match(request.path, request.method)\n            \n            if handler is None:\n                return Response.not_found()\n            \n            response = handler(request, **params)\n            \n            if not isinstance(response, Response):\n                response = Response(response)\n            \n            return response\n            \n        except Exception as e:\n            self.logger.exception(\"Request handling error\")\n            return Response.error(\"Internal Server Error\", 500)\n    \n    def run(self, host: Optional[str] = None, port: Optional[int] = None, debug: bool = False, **kwargs) -> None:\n        \"\"\"Run development server.\"\"\"\n        from wsgiref.simple_server import make_server\n        \n        host = host or self.config[\"server\"][\"host\"]\n        port = port or self.config[\"server\"][\"port\"]\n        \n        if debug:\n            self.config[\"app\"][\"debug\"] = True\n            self._setup_logging()\n        \n        server = make_server(host, port, self.wsgi_app)\n        self.logger.info(f\"Server running on http://{host}:{port}\")\n        \n        try:\n            server.serve_forever()\n        except KeyboardInterrupt:\n            self.logger.info(\"Shutting down...\")\n    \n    def _get_version(self) -> str:\n        \"\"\"Get WebCMS version.\"\"\"\n        from .. import __version__\n        return __version__\n    \n    def __call__(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"Make application callable for WSGI.\"\"\"\n        return self.wsgi_app(environ, start_response)", "sessionId": 336, "rowId": 26, "timestamp": 1784355180.4079623, "date": "2026-07-18", "name": "ReadFile"} -->
+
+## [06:13] ASSISTANT
+<ReplaceLine>
+> <fileName>webcms/core/application.py</fileName>
+> <fromLine>1</fromLine>
+> <toLine>15</toLine>
+> <replacement>"""
+> WebCMS Application Core
+> 
+> Main application class handling WSGI/ASGI requests, routing,
+> and plugin lifecycle management.
+> """
+> 
+> import os
+> import sys
+> import yaml
+> import logging
+> from typing import Dict, List, Callable, Optional, Any
+> from pathlib import Path
+> 
+> from .request import Request
+> from .response import Response
+> from .router import Router
+> from .middleware import MiddlewareStac...
+> (truncated, 632 chars total)
+> </replacement>
+> </ReplaceLine>
+
+---
+
+<!-- {"role": "assistant", "content": "<ReplaceLine>\n<fileName>webcms/core/application.py</fileName>\n<fromLine>1</fromLine>\n<toLine>15</toLine>\n<replacement>\"\"\"\nWebCMS Application Core\n\nMain application class handling WSGI/ASGI requests, routing,\nand plugin lifecycle management.\n\"\"\"\n\nimport os\nimport sys\nimport yaml\nimport logging\nfrom typing import Dict, List, Callable, Optional, Any\nfrom pathlib import Path\n\nfrom .request import Request\nfrom .response import Response\nfrom .router import Router\nfrom .middleware import MiddlewareStack\nfrom .container import Container\nfrom .server import make_hardened_server</replacement>\n<confirmed>true</confirmed>\n</ReplaceLine>", "sessionId": 336, "rowId": 26, "timestamp": 1784355182.8445313, "date": "2026-07-18", "thinking": "", "prompt_tokens": 76625, "response_tokens": 149} -->
+
+## [06:13] tool: ReplaceLine
+Replaced lines 1-15 in 'webcms/core/application.py'. (15 old lines -> 20 new lines). Old content: """\nWebCMS Application Core\n\nMain application class handling WSGI/ASGI requests, routing,\nand plugin lifecycle management.\n"""\n\nimport os\nimport sys\nimport yaml\nimport logging\nfrom typing i...
+
+---
+
+<!-- {"role": "tool", "content": "Replaced lines 1-15 in 'webcms/core/application.py'. (15 old lines -> 20 new lines). Old content: \"\"\"\\nWebCMS Application Core\\n\\nMain application class handling WSGI/ASGI requests, routing,\\nand plugin lifecycle management.\\n\"\"\"\\n\\nimport os\\nimport sys\\nimport yaml\\nimport logging\\nfrom typing i...", "sessionId": 336, "rowId": 26, "timestamp": 1784355182.8457618, "date": "2026-07-18", "name": "ReplaceLine"} -->
+
+## [06:13] ASSISTANT
+<ReplaceLine>
+> <fileName>webcms/core/application.py</fileName>
+> <fromLine>124</fromLine>
+> <toLine>143</toLine>
+> <replacement>    def run(self, host: Optional[str] = None, port: Optional[int] = None, debug: bool = False, **kwargs) -> None:
+>         """Run hardened development server."""
+>         host = host or self.config["server"]["host"]
+>         port = port or self.config["server"]["port"]
+>         
+>         if debug:
+>             self.config["app"]["debug"] = True
+>             self._setup_logging()
+>     ...
+> (truncated, 1025 chars total)
+> </replacement>
+> </ReplaceLine>
+
+---
+
+<!-- {"role": "assistant", "content": "<ReplaceLine>\n<fileName>webcms/core/application.py</fileName>\n<fromLine>124</fromLine>\n<toLine>143</toLine>\n<replacement>    def run(self, host: Optional[str] = None, port: Optional[int] = None, debug: bool = False, **kwargs) -> None:\n        \"\"\"Run hardened development server.\"\"\"\n        host = host or self.config[\"server\"][\"host\"]\n        port = port or self.config[\"server\"][\"port\"]\n        \n        if debug:\n            self.config[\"app\"][\"debug\"] = True\n            self._setup_logging()\n        \n        # Use hardened server that survives malformed requests and connection resets.\n        timeout = self.config.get(\"server\", {}).get(\"request_timeout\", 30)\n        server = make_hardened_server(host, port, self.wsgi_app, timeout=timeout)\n        self.logger.info(f\"Server running on http://{host}:{port}\")\n        \n        try:\n            server.serve_forever()\n        except KeyboardInterrupt:\n            self.logger.info(\"Shutting down...\")</replacement>\n<confirmed>true</confirmed>\n</AddToFile>\n</ReplaceLine>", "sessionId": 336, "rowId": 26, "timestamp": 1784355186.0139115, "date": "2026-07-18", "thinking": "", "prompt_tokens": 76862, "response_tokens": 238} -->
+
+## [06:13] tool: ReplaceLine
+Replaced lines 124-143 in 'webcms/core/application.py'. (20 old lines -> 18 new lines). Old content:             \n            if not isinstance(response, Response):\n                response = Response(response)\n            \n            return response\n            \n        except Exception as e:...
+
+---
+
+<!-- {"role": "tool", "content": "Replaced lines 124-143 in 'webcms/core/application.py'. (20 old lines -> 18 new lines). Old content:             \\n            if not isinstance(response, Response):\\n                response = Response(response)\\n            \\n            return response\\n            \\n        except Exception as e:...", "sessionId": 336, "rowId": 26, "timestamp": 1784355186.014591, "date": "2026-07-18", "name": "ReplaceLine"} -->
+
+## [06:13] USER
+Continue task 3/6...
+> Modify Application.run() in webcms/core/application.py to use the custom WSGIRequestHandler and a custom WSGIServer class that handles connection resets gracefully. Ensure the development server remains compatible with the existing API but resilient to malformed requests.
+
+---
+
+<!-- {"role": "user", "content": "Continue task 3/6...\nModify Application.run() in webcms/core/application.py to use the custom WSGIRequestHandler and a custom WSGIServer class that handles connection resets gracefully. Ensure the development server remains compatible with the existing API but resilient to malformed requests.", "sessionId": 336, "rowId": 27, "timestamp": 1784355186.0147994, "date": "2026-07-18"} -->
+
+## [06:13] ASSISTANT
+<ReadFile>
+> <fileName>webcms/core/application.py</fileName>
+> <max_chars>8000</max_chars>
+> </ReadFile>
+
+---
+
+<!-- {"role": "assistant", "content": "<ReadFile>\n<fileName>webcms/core/application.py</fileName>\n<max_chars>8000</max_chars>\n</ReadFile>", "sessionId": 336, "rowId": 27, "timestamp": 1784355187.7596238, "date": "2026-07-18", "thinking": "", "prompt_tokens": 77236, "response_tokens": 32} -->
+
+## [06:13] tool: ReadFile
+"""
+> WebCMS Application Core
+> 
+> Main application class handling WSGI/ASGI requests, routing,
+> and plugin lifecycle management.
+> """
+> 
+> import os
+> import sys
+> import yaml
+> import logging
+> from typing import Dict, List, Callable, Optional, Any
+> from pathlib import Path
+> 
+> from .request import Request
+> from .response import Response
+> from .router import Router
+> from .middleware import MiddlewareStack
+> from .container import Container
+> from .server import make_hardened_server
+> from .response import Response
+> from .route...
+> (truncated, 5638 chars total)
+
+---
+
+<!-- {"role": "tool", "content": "\"\"\"\nWebCMS Application Core\n\nMain application class handling WSGI/ASGI requests, routing,\nand plugin lifecycle management.\n\"\"\"\n\nimport os\nimport sys\nimport yaml\nimport logging\nfrom typing import Dict, List, Callable, Optional, Any\nfrom pathlib import Path\n\nfrom .request import Request\nfrom .response import Response\nfrom .router import Router\nfrom .middleware import MiddlewareStack\nfrom .container import Container\nfrom .server import make_hardened_server\nfrom .response import Response\nfrom .router import Router\nfrom .middleware import MiddlewareStack\nfrom .container import Container\n\n\nclass Application:\n    \"\"\"Main WebCMS application class.\"\"\"\n    \n    def __init__(self, config_path: Optional[str] = None):\n        self.root_path = Path(__file__).parent.parent.absolute()\n        self.config = self._load_config(config_path)\n        self.container = Container()\n        self.router = Router()\n        self.middleware = MiddlewareStack()\n        self.plugins: Dict[str, Any] = {}\n        self.hooks: Dict[str, List[Callable]] = {}\n        \n        self._setup_logging()\n        self._init_container()\n        \n        logging.info(f\"WebCMS {self._get_version()} initialized\")\n    \n    def _load_config(self, config_path: Optional[str]) -> Dict:\n        \"\"\"Load configuration from YAML file.\"\"\"\n        if config_path is None:\n            config_path = self.root_path / \"config\" / \"config.yaml\"\n        \n        default_config = {\n            \"app\": {\n                \"name\": \"WebCMS\",\n                \"debug\": False,\n                \"secret_key\": \"change-me-in-production\",\n                \"timezone\": \"UTC\"\n            },\n            \"server\": {\n                \"host\": \"0.0.0.0\",\n                \"port\": 8000,\n                \"workers\": 4\n            },\n            \"database\": {\n                \"url\": \"sqlite:///webcms.db\",\n                \"pool_size\": 10\n            }\n        }\n        \n        if os.path.exists(config_path):\n            with open(config_path, 'r') as f:\n                user_config = yaml.safe_load(f)\n                self._deep_update(default_config, user_config)\n        \n        return default_config\n    \n    def _deep_update(self, base: Dict, update: Dict) -> None:\n        \"\"\"Recursively update nested dictionaries.\"\"\"\n        for key, value in update.items():\n            if key in base and isinstance(base[key], dict) and isinstance(value, dict):\n                self._deep_update(base[key], value)\n            else:\n                base[key] = value\n    \n    def _setup_logging(self) -> None:\n        \"\"\"Configure logging.\"\"\"\n        log_format = \"%(asctime)s - %(name)s - %(levelname)s - %(message)s\"\n        logging.basicConfig(\n            level=logging.DEBUG if self.config[\"app\"][\"debug\"] else logging.INFO,\n            format=log_format\n        )\n        self.logger = logging.getLogger(\"webcms\")\n    \n    def _init_container(self) -> None:\n        \"\"\"Initialize dependency injection container.\"\"\"\n        self.container.register(\"app\", self)\n        self.container.register(\"config\", self.config)\n        self.container.register(\"router\", self.router)\n        self.container.register(\"hooks\", self.hooks)\n    \n    def route(self, path: str, methods: Optional[List[str]] = None):\n        \"\"\"Decorator to register a route.\"\"\"\n        def decorator(func: Callable) -> Callable:\n            self.router.add(path, func, methods or [\"GET\"])\n            return func\n        return decorator\n    \n    def use(self, middleware) -> None:\n        \"\"\"Register middleware.\"\"\"\n        self.middleware.add(middleware)\n    \n    def wsgi_app(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"WSGI application entry point.\"\"\"\n        request = Request.from_wsgi(environ)\n        response = self.middleware.process(request, self._handle_request)\n        return response.to_wsgi(start_response)\n    \n    def _handle_request(self, request: Request) -> Response:\n        \"\"\"Handle request and return response.\"\"\"\n        try:\n            handler, params = self.router.match(request.path, request.method)\n            \n            if handler is None:\n                return Response.not_found()\n            \n            response = handler(request, **params)\n    def run(self, host: Optional[str] = None, port: Optional[int] = None, debug: bool = False, **kwargs) -> None:\n        \"\"\"Run hardened development server.\"\"\"\n        host = host or self.config[\"server\"][\"host\"]\n        port = port or self.config[\"server\"][\"port\"]\n        \n        if debug:\n            self.config[\"app\"][\"debug\"] = True\n            self._setup_logging()\n        \n        # Use hardened server that survives malformed requests and connection resets.\n        timeout = self.config.get(\"server\", {}).get(\"request_timeout\", 30)\n        server = make_hardened_server(host, port, self.wsgi_app, timeout=timeout)\n        self.logger.info(f\"Server running on http://{host}:{port}\")\n        \n        try:\n            server.serve_forever()\n        except KeyboardInterrupt:\n            self.logger.info(\"Shutting down...\")\n        \n        server = make_server(host, port, self.wsgi_app)\n        self.logger.info(f\"Server running on http://{host}:{port}\")\n        \n        try:\n            server.serve_forever()\n        except KeyboardInterrupt:\n            self.logger.info(\"Shutting down...\")\n    \n    def _get_version(self) -> str:\n        \"\"\"Get WebCMS version.\"\"\"\n        from .. import __version__\n        return __version__\n    \n    def __call__(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"Make application callable for WSGI.\"\"\"\n        return self.wsgi_app(environ, start_response)", "sessionId": 336, "rowId": 27, "timestamp": 1784355187.7617729, "date": "2026-07-18", "name": "ReadFile"} -->
+
+## [06:13] ASSISTANT
+The file has been corrupted with duplicate lines. Let me rewrite it cleanly:
+> 
+> <WriteFile>
+> <fileName>webcms/core/application.py</fileName>
+> <contentOfFile>"""
+> WebCMS Application Core
+> 
+> Main application class handling WSGI/ASGI requests, routing,
+> and plugin lifecycle management.
+> """
+> 
+> import os
+> import sys
+> import yaml
+> import logging
+> from typing import Dict, List, Callable, Optional, Any
+> from pathlib import Path
+> 
+> from .request import Request
+> from .response import Response
+> from .router import Router
+> fro...
+> (truncated, 5741 chars total)
+> </contentOfFile>
+> </WriteFile>
+
+---
+
+<!-- {"role": "assistant", "content": "The file has been corrupted with duplicate lines. Let me rewrite it cleanly:\n\n<WriteFile>\n<fileName>webcms/core/application.py</fileName>\n<contentOfFile>\"\"\"\nWebCMS Application Core\n\nMain application class handling WSGI/ASGI requests, routing,\nand plugin lifecycle management.\n\"\"\"\n\nimport os\nimport sys\nimport yaml\nimport logging\nfrom typing import Dict, List, Callable, Optional, Any\nfrom pathlib import Path\n\nfrom .request import Request\nfrom .response import Response\nfrom .router import Router\nfrom .middleware import MiddlewareStack\nfrom .container import Container\nfrom .server import make_hardened_server\n\n\nclass Application:\n    \"\"\"Main WebCMS application class.\"\"\"\n    \n    def __init__(self, config_path: Optional[str] = None):\n        self.root_path = Path(__file__).parent.parent.absolute()\n        self.config = self._load_config(config_path)\n        self.container = Container()\n        self.router = Router()\n        self.middleware = MiddlewareStack()\n        self.plugins: Dict[str, Any] = {}\n        self.hooks: Dict[str, List[Callable]] = {}\n        \n        self._setup_logging()\n        self._init_container()\n        \n        logging.info(f\"WebCMS {self._get_version()} initialized\")\n    \n    def _load_config(self, config_path: Optional[str]) -> Dict:\n        \"\"\"Load configuration from YAML file.\"\"\"\n        if config_path is None:\n            config_path = self.root_path / \"config\" / \"config.yaml\"\n        \n        default_config = {\n            \"app\": {\n                \"name\": \"WebCMS\",\n                \"debug\": False,\n                \"secret_key\": \"change-me-in-production\",\n                \"timezone\": \"UTC\"\n            },\n            \"server\": {\n                \"host\": \"0.0.0.0\",\n                \"port\": 8000,\n                \"workers\": 4\n            },\n            \"database\": {\n                \"url\": \"sqlite:///webcms.db\",\n                \"pool_size\": 10\n            }\n        }\n        \n        if os.path.exists(config_path):\n            with open(config_path, 'r') as f:\n                user_config = yaml.safe_load(f)\n                self._deep_update(default_config, user_config)\n        \n        return default_config\n    \n    def _deep_update(self, base: Dict, update: Dict) -> None:\n        \"\"\"Recursively update nested dictionaries.\"\"\"\n        for key, value in update.items():\n            if key in base and isinstance(base[key], dict) and isinstance(value, dict):\n                self._deep_update(base[key], value)\n            else:\n                base[key] = value\n    \n    def _setup_logging(self) -> None:\n        \"\"\"Configure logging.\"\"\"\n        log_format = \"%(asctime)s - %(name)s - %(levelname)s - %(message)s\"\n        logging.basicConfig(\n            level=logging.DEBUG if self.config[\"app\"][\"debug\"] else logging.INFO,\n            format=log_format\n        )\n        self.logger = logging.getLogger(\"webcms\")\n    \n    def _init_container(self) -> None:\n        \"\"\"Initialize dependency injection container.\"\"\"\n        self.container.register(\"app\", self)\n        self.container.register(\"config\", self.config)\n        self.container.register(\"router\", self.router)\n        self.container.register(\"hooks\", self.hooks)\n    \n    def route(self, path: str, methods: Optional[List[str]] = None):\n        \"\"\"Decorator to register a route.\"\"\"\n        def decorator(func: Callable) -> Callable:\n            self.router.add(path, func, methods or [\"GET\"])\n            return func\n        return decorator\n    \n    def use(self, middleware) -> None:\n        \"\"\"Register middleware.\"\"\"\n        self.middleware.add(middleware)\n    \n    def wsgi_app(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"WSGI application entry point.\"\"\"\n        request = Request.from_wsgi(environ)\n        response = self.middleware.process(request, self._handle_request)\n        return response.to_wsgi(start_response)\n    \n    def _handle_request(self, request: Request) -> Response:\n        \"\"\"Handle request and return response.\"\"\"\n        try:\n            handler, params = self.router.match(request.path, request.method)\n            \n            if handler is None:\n                return Response.not_found()\n            \n            response = handler(request, **params)\n            \n            if not isinstance(response, Response):\n                response = Response(response)\n            \n            return response\n            \n        except Exception as e:\n            self.logger.exception(\"Request handling error\")\n            return Response.error(\"Internal Server Error\", 500)\n    \n    def run(self, host: Optional[str] = None, port: Optional[int] = None, debug: bool = False, **kwargs) -> None:\n        \"\"\"Run hardened development server.\"\"\"\n        host = host or self.config[\"server\"][\"host\"]\n        port = port or self.config[\"server\"][\"port\"]\n        \n        if debug:\n            self.config[\"app\"][\"debug\"] = True\n            self._setup_logging()\n        \n        # Use hardened server that survives malformed requests and connection resets.\n        timeout = self.config.get(\"server\", {}).get(\"request_timeout\", 30)\n        server = make_hardened_server(host, port, self.wsgi_app, timeout=timeout)\n        self.logger.info(f\"Server running on http://{host}:{port}\")\n        \n        try:\n            server.serve_forever()\n        except KeyboardInterrupt:\n            self.logger.info(\"Shutting down...\")\n    \n    def _get_version(self) -> str:\n        \"\"\"Get WebCMS version.\"\"\"\n        from .. import __version__\n        return __version__\n    \n    def __call__(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"Make application callable for WSGI.\"\"\"\n        return self.wsgi_app(environ, start_response)\n</contentOfFile>\n</WriteFile>", "sessionId": 336, "rowId": 27, "timestamp": 1784355196.4748309, "date": "2026-07-18", "thinking": "", "prompt_tokens": 78452, "response_tokens": 1201} -->
+
+## [06:13] tool: WriteFile
+webcms/core/application.py was created with length 5559
+
+---
+
+<!-- {"role": "tool", "content": "webcms/core/application.py was created with length 5559", "sessionId": 336, "rowId": 27, "timestamp": 1784355196.4756227, "date": "2026-07-18", "name": "WriteFile"} -->
+
+## [06:13] ASSISTANT
+<nextTask>completed</nextTask>
+
+---
+
+<!-- {"role": "assistant", "content": "<nextTask>completed</nextTask>", "sessionId": 336, "rowId": 27, "timestamp": 1784355197.8094232, "date": "2026-07-18", "thinking": "", "prompt_tokens": 79662, "response_tokens": 11} -->
+
+## [06:13] tool: nextTask
+NEXT_TASK:Create middleware that validates incoming requests early in the pipeline: reject null bytes, control characters, invalid HTTP versions, and HTTP/2 PRI requests. Return 400 Bad Request for malformed requests before they reach application logic. This provides defense in depth even when the WSGI server accepts the connection.
+
+---
+
+<!-- {"role": "tool", "content": "NEXT_TASK:Create middleware that validates incoming requests early in the pipeline: reject null bytes, control characters, invalid HTTP versions, and HTTP/2 PRI requests. Return 400 Bad Request for malformed requests before they reach application logic. This provides defense in depth even when the WSGI server accepts the connection.", "sessionId": 336, "rowId": 27, "timestamp": 1784355197.810062, "date": "2026-07-18", "name": "nextTask"} -->
+
+## [06:13] USER
+<nextTask>
+> 
+> Your task:
+> Create middleware that validates incoming requests early in the pipeline: reject null bytes, control characters, invalid HTTP versions, and HTTP/2 PRI requests. Return 400 Bad Request for malformed requests before they reach application logic. This provides defense in depth even when the WSGI server accepts the connection.
+
+---
+
+<!-- {"role": "user", "content": "<nextTask>\n\nYour task:\nCreate middleware that validates incoming requests early in the pipeline: reject null bytes, control characters, invalid HTTP versions, and HTTP/2 PRI requests. Return 400 Bad Request for malformed requests before they reach application logic. This provides defense in depth even when the WSGI server accepts the connection.", "sessionId": 336, "rowId": 27, "timestamp": 1784355197.8101063, "date": "2026-07-18"} -->
+
+## [06:13] ASSISTANT
+<ReadFile>
+> <fileName>webcms/core/middleware.py</fileName>
+> <max_chars>8000</max_chars>
+> </ReadFile>
+
+---
+
+<!-- {"role": "assistant", "content": "<ReadFile>\n<fileName>webcms/core/middleware.py</fileName>\n<max_chars>8000</max_chars>\n</ReadFile>", "sessionId": 336, "rowId": 27, "timestamp": 1784355199.3502946, "date": "2026-07-18", "thinking": "", "prompt_tokens": 79817, "response_tokens": 33} -->
+
+## [06:13] tool: ReadFile
+"""
+> WebCMS Middleware System
+> 
+> Request/response processing pipeline.
+> """
+> 
+> from typing import Callable, List, Optional
+> from .request import Request
+> from .response import Response
+> 
+> 
+> class MiddlewareStack:
+>     """Middleware execution stack."""
+>     
+>     def __init__(self):
+>         self.middlewares: List[Callable] = []
+>     
+>     def add(self, middleware: Callable) -> None:
+>         """Add middleware to stack."""
+>         self.middlewares.append(middleware)
+>     
+>     def process(
+>         self,
+>         requ...
+> (truncated, 3137 chars total)
+
+---
+
+<!-- {"role": "tool", "content": "\"\"\"\nWebCMS Middleware System\n\nRequest/response processing pipeline.\n\"\"\"\n\nfrom typing import Callable, List, Optional\nfrom .request import Request\nfrom .response import Response\n\n\nclass MiddlewareStack:\n    \"\"\"Middleware execution stack.\"\"\"\n    \n    def __init__(self):\n        self.middlewares: List[Callable] = []\n    \n    def add(self, middleware: Callable) -> None:\n        \"\"\"Add middleware to stack.\"\"\"\n        self.middlewares.append(middleware)\n    \n    def process(\n        self,\n        request: Request,\n        handler: Callable[[Request], Response]\n    ) -> Response:\n        \"\"\"\n        Process request through middleware chain.\n        \n        Args:\n            request: HTTP request\n            handler: Final request handler\n        \n        Returns:\n            HTTP response\n        \"\"\"\n        # Build chain from inside out\n        wrapped = handler\n        for middleware in reversed(self.middlewares):\n            wrapped = self._wrap(middleware, wrapped)\n        \n        return wrapped(request)\n    \n    def _wrap(\n        self,\n        middleware: Callable,\n        next_handler: Callable[[Request], Response]\n    ) -> Callable[[Request], Response]:\n        \"\"\"Wrap handler with middleware.\"\"\"\n        def wrapper(request: Request) -> Response:\n            return middleware(request, next_handler)\n        return wrapper\n\n\nclass CommonMiddleware:\n    \"\"\"Common middleware for all requests.\"\"\"\n    \n    def __init__(self, app=None):\n        self.app = app\n    \n    def __call__(\n        self,\n        request: Request,\n        handler: Callable[[Request], Response]\n    ) -> Response:\n        \"\"\"Process request.\"\"\"\n        # Add common headers\n        response = handler(request)\n        response.headers.setdefault(\"X-Content-Type-Options\", \"nosniff\")\n        response.headers.setdefault(\"X-Frame-Options\", \"DENY\")\n        response.headers.setdefault(\"X-XSS-Protection\", \"1; mode=block\")\n        return response\n\n\nclass CORSMiddleware:\n    \"\"\"CORS handling middleware.\"\"\"\n    \n    def __init__(\n        self,\n        allow_origins: List[str] = None,\n        allow_methods: List[str] = None,\n        allow_headers: List[str] = None\n    ):\n        self.allow_origins = allow_origins or [\"*\"]\n        self.allow_methods = allow_methods or [\"GET\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\"]\n        self.allow_headers = allow_headers or [\"Content-Type\", \"Authorization\"]\n    \n    def __call__(\n        self,\n        request: Request,\n        handler: Callable[[Request], Response]\n    ) -> Response:\n        \"\"\"Handle CORS.\"\"\"\n        if request.method == \"OPTIONS\":\n            # Preflight request\n            return Response(\n                \"\",\n                200,\n                headers={\n                    \"Access-Control-Allow-Origin\": \", \".join(self.allow_origins),\n                    \"Access-Control-Allow-Methods\": \", \".join(self.allow_methods),\n                    \"Access-Control-Allow-Headers\": \", \".join(self.allow_headers)\n                }\n            )\n        \n        response = handler(request)\n        response.headers[\"Access-Control-Allow-Origin\"] = self.allow_origins[0]\n        return response", "sessionId": 336, "rowId": 27, "timestamp": 1784355199.3508947, "date": "2026-07-18", "name": "ReadFile"} -->
+
+## [06:13] ASSISTANT
+I will add a `RequestValidationMiddleware` class to `webcms/core/middleware.py`.
+> 
+> <ReplaceLine>
+> <fileName>webcms/core/middleware.py</fileName>
+> <fromLine>1</fromLine>
+> <toLine>8</toLine>
+> <replacement>"""
+> WebCMS Middleware System
+> 
+> Request/response processing pipeline.
+> """
+> 
+> import re
+> from typing import Callable, List, Optional
+> from .request import Request
+> from .response import Response</replacement>
+> <confirmed>true</confirmed>
+> </ReplaceLine>
+
+---
+
+<!-- {"role": "assistant", "content": "I will add a `RequestValidationMiddleware` class to `webcms/core/middleware.py`.\n\n<ReplaceLine>\n<fileName>webcms/core/middleware.py</fileName>\n<fromLine>1</fromLine>\n<toLine>8</toLine>\n<replacement>\"\"\"\nWebCMS Middleware System\n\nRequest/response processing pipeline.\n\"\"\"\n\nimport re\nfrom typing import Callable, List, Optional\nfrom .request import Request\nfrom .response import Response</replacement>\n<confirmed>true</confirmed>\n</ReplaceLine>", "sessionId": 336, "rowId": 27, "timestamp": 1784355201.356992, "date": "2026-07-18", "thinking": "", "prompt_tokens": 80487, "response_tokens": 108} -->
+
+## [06:13] tool: ReplaceLine
+Replaced lines 1-8 in 'webcms/core/middleware.py'. (8 old lines -> 10 new lines). Old content: """\nWebCMS Middleware System\n\nRequest/response processing pipeline.\n"""\n\nfrom typing import Callable, List, Optional\nfrom .request import Request\n
+
+---
+
+<!-- {"role": "tool", "content": "Replaced lines 1-8 in 'webcms/core/middleware.py'. (8 old lines -> 10 new lines). Old content: \"\"\"\\nWebCMS Middleware System\\n\\nRequest/response processing pipeline.\\n\"\"\"\\n\\nfrom typing import Callable, List, Optional\\nfrom .request import Request\\n", "sessionId": 336, "rowId": 27, "timestamp": 1784355201.3578088, "date": "2026-07-18", "name": "ReplaceLine"} -->
+
+## [06:13] ASSISTANT
+<ReplaceLine>
+> <fileName>webcms/core/middleware.py</fileName>
+> <fromLine>90</fromLine>
+> <toLine>119</toLine>
+> <replacement>class RequestValidationMiddleware:
+>     """
+>     Early request validation middleware.
+> 
+>     Rejects malformed requests, null bytes, control characters, invalid
+>     HTTP versions, and HTTP/2 PRI requests before they reach application
+>     logic. This provides defense in depth even when the WSGI server
+>     accepts the connection.
+>     """
+> 
+>     # Valid HTTP methods per RFC 7231 and comm...
+> (truncated, 3285 chars total)
+> </replacement>
+> </ReplaceLine>
+
+---
+
+<!-- {"role": "assistant", "content": "<ReplaceLine>\n<fileName>webcms/core/middleware.py</fileName>\n<fromLine>90</fromLine>\n<toLine>119</toLine>\n<replacement>class RequestValidationMiddleware:\n    \"\"\"\n    Early request validation middleware.\n\n    Rejects malformed requests, null bytes, control characters, invalid\n    HTTP versions, and HTTP/2 PRI requests before they reach application\n    logic. This provides defense in depth even when the WSGI server\n    accepts the connection.\n    \"\"\"\n\n    # Valid HTTP methods per RFC 7231 and common extensions.\n    VALID_METHODS = {\n        \"GET\", \"HEAD\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\", \"PATCH\",\n        \"TRACE\", \"CONNECT\",\n    }\n\n    # Reject paths containing null bytes or most control characters.\n    _invalid_path_re = re.compile(r\"[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]\")\n\n    def __init__(self, max_request_line: int = 8192, max_path_length: int = 4096):\n        self.max_request_line = max_request_line\n        self.max_path_length = max_path_length\n\n    def __call__(\n        self,\n        request: Request,\n        handler: Callable[[Request], Response]\n    ) -> Response:\n        \"\"\"Validate request and either reject it or pass it on.\"\"\"\n        reason = self._validate(request)\n        if reason:\n            return Response.json({\"error\": reason}, 400)\n        return handler(request)\n\n    def _validate(self, request: Request) -> Optional[str]:\n        \"\"\"Return an error string if the request should be rejected.\"\"\"\n        method = request.method\n        path = request.path\n        query = request.query_string\n\n        # Validate HTTP method\n        if not method or not method.isupper() or method not in self.VALID_METHODS:\n            return \"Invalid HTTP method\"\n\n        # Reject HTTP/2 PRI requests\n        if method == \"PRI\":\n            return \"HTTP/2 not supported\"\n\n        # Validate path\n        if not path.startswith(\"/\"):\n            return \"Invalid request path\"\n        if len(path) > self.max_path_length:\n            return \"Request path too long\"\n        if self._invalid_path_re.search(path):\n            return \"Invalid characters in request path\"\n\n        # Validate query string\n        if self._invalid_path_re.search(query):\n            return \"Invalid characters in query string\"\n\n        # Validate SERVER_PROTOCOL / HTTP version if available\n        server_protocol = request.environ.get(\"SERVER_PROTOCOL\", \"\")\n        if server_protocol and not self._valid_http_version(server_protocol):\n            return \"Invalid HTTP version\"\n\n        # Validate content length header\n        content_length = request.environ.get(\"CONTENT_LENGTH\", \"\")\n        if content_length:\n            try:\n                length = int(content_length)\n            except ValueError:\n                return \"Invalid Content-Length header\"\n            if length < 0:\n                return \"Invalid Content-Length header\"\n            if length > 50 * 1024 * 1024:  # 50 MB default cap\n                return \"Request body too large\"\n\n        return None\n\n    @staticmethod\n    def _valid_http_version(version: str) -> bool:\n        \"\"\"Check that SERVER_PROTOCOL is a supported HTTP version.\"\"\"\n        return version in (\"HTTP/1.0\", \"HTTP/1.1\")\n\n\nclass CORSMiddleware:\n    \"\"\"CORS handling middleware.\"\"\"</replacement>\n<confirmed>true</confirmed>\n</ReplaceLine>", "sessionId": 336, "rowId": 27, "timestamp": 1784355207.3384442, "date": "2026-07-18", "thinking": "", "prompt_tokens": 80671, "response_tokens": 720} -->
+
+## [06:13] tool: ReplaceLine
+Error: toLine 119 exceeds file length (110 lines).
+
+---
+
+<!-- {"role": "tool", "content": "Error: toLine 119 exceeds file length (110 lines).", "sessionId": 336, "rowId": 27, "timestamp": 1784355207.3392406, "date": "2026-07-18", "name": "ReplaceLine"} -->
+
+## [06:13] ASSISTANT
+<ReadFile>
+> <fileName>webcms/core/middleware.py</fileName>
+> <max_chars>8000</max_chars>
+> </ReadFile>
+
+---
+
+<!-- {"role": "assistant", "content": "<ReadFile>\n<fileName>webcms/core/middleware.py</fileName>\n<max_chars>8000</max_chars>\n</ReadFile>", "sessionId": 336, "rowId": 27, "timestamp": 1784355209.8618624, "date": "2026-07-18", "thinking": "", "prompt_tokens": 81416, "response_tokens": 52} -->
+
+## [06:13] tool: ReadFile
+"""
+> WebCMS Middleware System
+> 
+> Request/response processing pipeline.
+> """
+> 
+> import re
+> from typing import Callable, List, Optional
+> from .request import Request
+> from .response import Response
+> from .response import Response
+> 
+> 
+> class MiddlewareStack:
+>     """Middleware execution stack."""
+>     
+>     def __init__(self):
+>         self.middlewares: List[Callable] = []
+>     
+>     def add(self, middleware: Callable) -> None:
+>         """Add middleware to stack."""
+>         self.middlewares.append(middleware)
+>     
+>   ...
+> (truncated, 3178 chars total)
+
+---
+
+<!-- {"role": "tool", "content": "\"\"\"\nWebCMS Middleware System\n\nRequest/response processing pipeline.\n\"\"\"\n\nimport re\nfrom typing import Callable, List, Optional\nfrom .request import Request\nfrom .response import Response\nfrom .response import Response\n\n\nclass MiddlewareStack:\n    \"\"\"Middleware execution stack.\"\"\"\n    \n    def __init__(self):\n        self.middlewares: List[Callable] = []\n    \n    def add(self, middleware: Callable) -> None:\n        \"\"\"Add middleware to stack.\"\"\"\n        self.middlewares.append(middleware)\n    \n    def process(\n        self,\n        request: Request,\n        handler: Callable[[Request], Response]\n    ) -> Response:\n        \"\"\"\n        Process request through middleware chain.\n        \n        Args:\n            request: HTTP request\n            handler: Final request handler\n        \n        Returns:\n            HTTP response\n        \"\"\"\n        # Build chain from inside out\n        wrapped = handler\n        for middleware in reversed(self.middlewares):\n            wrapped = self._wrap(middleware, wrapped)\n        \n        return wrapped(request)\n    \n    def _wrap(\n        self,\n        middleware: Callable,\n        next_handler: Callable[[Request], Response]\n    ) -> Callable[[Request], Response]:\n        \"\"\"Wrap handler with middleware.\"\"\"\n        def wrapper(request: Request) -> Response:\n            return middleware(request, next_handler)\n        return wrapper\n\n\nclass CommonMiddleware:\n    \"\"\"Common middleware for all requests.\"\"\"\n    \n    def __init__(self, app=None):\n        self.app = app\n    \n    def __call__(\n        self,\n        request: Request,\n        handler: Callable[[Request], Response]\n    ) -> Response:\n        \"\"\"Process request.\"\"\"\n        # Add common headers\n        response = handler(request)\n        response.headers.setdefault(\"X-Content-Type-Options\", \"nosniff\")\n        response.headers.setdefault(\"X-Frame-Options\", \"DENY\")\n        response.headers.setdefault(\"X-XSS-Protection\", \"1; mode=block\")\n        return response\n\n\nclass CORSMiddleware:\n    \"\"\"CORS handling middleware.\"\"\"\n    \n    def __init__(\n        self,\n        allow_origins: List[str] = None,\n        allow_methods: List[str] = None,\n        allow_headers: List[str] = None\n    ):\n        self.allow_origins = allow_origins or [\"*\"]\n        self.allow_methods = allow_methods or [\"GET\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\"]\n        self.allow_headers = allow_headers or [\"Content-Type\", \"Authorization\"]\n    \n    def __call__(\n        self,\n        request: Request,\n        handler: Callable[[Request], Response]\n    ) -> Response:\n        \"\"\"Handle CORS.\"\"\"\n        if request.method == \"OPTIONS\":\n            # Preflight request\n            return Response(\n                \"\",\n                200,\n                headers={\n                    \"Access-Control-Allow-Origin\": \", \".join(self.allow_origins),\n                    \"Access-Control-Allow-Methods\": \", \".join(self.allow_methods),\n                    \"Access-Control-Allow-Headers\": \", \".join(self.allow_headers)\n                }\n            )\n        \n        response = handler(request)\n        response.headers[\"Access-Control-Allow-Origin\"] = self.allow_origins[0]\n        return response", "sessionId": 336, "rowId": 27, "timestamp": 1784355209.8624227, "date": "2026-07-18", "name": "ReadFile"} -->
+
+## [06:13] ASSISTANT
+The file has duplicate import. Let me rewrite it cleanly:
+> 
+> <WriteFile>
+> <fileName>webcms/core/middleware.py</fileName>
+> <contentOfFile>"""
+> WebCMS Middleware System
+> 
+> Request/response processing pipeline.
+> """
+> 
+> import re
+> from typing import Callable, List, Optional
+> from .request import Request
+> from .response import Response
+> 
+> 
+> class MiddlewareStack:
+>     """Middleware execution stack."""
+>     
+>     def __init__(self):
+>         self.middlewares: List[Callable] = []
+>     
+>     def add(self, middleware: Callabl...
+> (truncated, 6362 chars total)
+> </contentOfFile>
+> </WriteFile>
+
+---
+
+<!-- {"role": "assistant", "content": "The file has duplicate import. Let me rewrite it cleanly:\n\n<WriteFile>\n<fileName>webcms/core/middleware.py</fileName>\n<contentOfFile>\"\"\"\nWebCMS Middleware System\n\nRequest/response processing pipeline.\n\"\"\"\n\nimport re\nfrom typing import Callable, List, Optional\nfrom .request import Request\nfrom .response import Response\n\n\nclass MiddlewareStack:\n    \"\"\"Middleware execution stack.\"\"\"\n    \n    def __init__(self):\n        self.middlewares: List[Callable] = []\n    \n    def add(self, middleware: Callable) -> None:\n        \"\"\"Add middleware to stack.\"\"\"\n        self.middlewares.append(middleware)\n    \n    def process(\n        self,\n        request: Request,\n        handler: Callable[[Request], Response]\n    ) -> Response:\n        \"\"\"\n        Process request through middleware chain.\n        \n        Args:\n            request: HTTP request\n            handler: Final request handler\n        \n        Returns:\n            HTTP response\n        \"\"\"\n        # Build chain from inside out\n        wrapped = handler\n        for middleware in reversed(self.middlewares):\n            wrapped = self._wrap(middleware, wrapped)\n        \n        return wrapped(request)\n    \n    def _wrap(\n        self,\n        middleware: Callable,\n        next_handler: Callable[[Request], Response]\n    ) -> Callable[[Request], Response]:\n        \"\"\"Wrap handler with middleware.\"\"\"\n        def wrapper(request: Request) -> Response:\n            return middleware(request, next_handler)\n        return wrapper\n\n\nclass CommonMiddleware:\n    \"\"\"Common middleware for all requests.\"\"\"\n    \n    def __init__(self, app=None):\n        self.app = app\n    \n    def __call__(\n        self,\n        request: Request,\n        handler: Callable[[Request], Response]\n    ) -> Response:\n        \"\"\"Process request.\"\"\"\n        # Add common headers\n        response = handler(request)\n        response.headers.setdefault(\"X-Content-Type-Options\", \"nosniff\")\n        response.headers.setdefault(\"X-Frame-Options\", \"DENY\")\n        response.headers.setdefault(\"X-XSS-Protection\", \"1; mode=block\")\n        return response\n\n\nclass RequestValidationMiddleware:\n    \"\"\"\n    Early request validation middleware.\n\n    Rejects malformed requests, null bytes, control characters, invalid\n    HTTP versions, and HTTP/2 PRI requests before they reach application\n    logic. This provides defense in depth even when the WSGI server\n    accepts the connection.\n    \"\"\"\n\n    # Valid HTTP methods per RFC 7231 and common extensions.\n    VALID_METHODS = {\n        \"GET\", \"HEAD\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\", \"PATCH\",\n        \"TRACE\", \"CONNECT\",\n    }\n\n    # Reject paths containing null bytes or most control characters.\n    _invalid_path_re = re.compile(r\"[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]\")\n\n    def __init__(self, max_request_line: int = 8192, max_path_length: int = 4096):\n        self.max_request_line = max_request_line\n        self.max_path_length = max_path_length\n\n    def __call__(\n        self,\n        request: Request,\n        handler: Callable[[Request], Response]\n    ) -> Response:\n        \"\"\"Validate request and either reject it or pass it on.\"\"\"\n        reason = self._validate(request)\n        if reason:\n            return Response.json({\"error\": reason}, 400)\n        return handler(request)\n\n    def _validate(self, request: Request) -> Optional[str]:\n        \"\"\"Return an error string if the request should be rejected.\"\"\"\n        method = request.method\n        path = request.path\n        query = request.query_string\n\n        # Validate HTTP method\n        if not method or not method.isupper() or method not in self.VALID_METHODS:\n            return \"Invalid HTTP method\"\n\n        # Reject HTTP/2 PRI requests\n        if method == \"PRI\":\n            return \"HTTP/2 not supported\"\n\n        # Validate path\n        if not path.startswith(\"/\"):\n            return \"Invalid request path\"\n        if len(path) > self.max_path_length:\n            return \"Request path too long\"\n        if self._invalid_path_re.search(path):\n            return \"Invalid characters in request path\"\n\n        # Validate query string\n        if self._invalid_path_re.search(query):\n            return \"Invalid characters in query string\"\n\n        # Validate SERVER_PROTOCOL / HTTP version if available\n        server_protocol = request.environ.get(\"SERVER_PROTOCOL\", \"\")\n        if server_protocol and not self._valid_http_version(server_protocol):\n            return \"Invalid HTTP version\"\n\n        # Validate content length header\n        content_length = request.environ.get(\"CONTENT_LENGTH\", \"\")\n        if content_length:\n            try:\n                length = int(content_length)\n            except ValueError:\n                return \"Invalid Content-Length header\"\n            if length < 0:\n                return \"Invalid Content-Length header\"\n            if length > 50 * 1024 * 1024:  # 50 MB default cap\n                return \"Request body too large\"\n\n        return None\n\n    @staticmethod\n    def _valid_http_version(version: str) -> bool:\n        \"\"\"Check that SERVER_PROTOCOL is a supported HTTP version.\"\"\"\n        return version in (\"HTTP/1.0\", \"HTTP/1.1\")\n\n\nclass CORSMiddleware:\n    \"\"\"CORS handling middleware.\"\"\"\n    \n    def __init__(\n        self,\n        allow_origins: List[str] = None,\n        allow_methods: List[str] = None,\n        allow_headers: List[str] = None\n    ):\n        self.allow_origins = allow_origins or [\"*\"]\n        self.allow_methods = allow_methods or [\"GET\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\"]\n        self.allow_headers = allow_headers or [\"Content-Type\", \"Authorization\"]\n    \n    def __call__(\n        self,\n        request: Request,\n        handler: Callable[[Request], Response]\n    ) -> Response:\n        \"\"\"Handle CORS.\"\"\"\n        if request.method == \"OPTIONS\":\n            # Preflight request\n            return Response(\n                \"\",\n                200,\n                headers={\n                    \"Access-Control-Allow-Origin\": \", \".join(self.allow_origins),\n                    \"Access-Control-Allow-Methods\": \", \".join(self.allow_methods),\n                    \"Access-Control-Allow-Headers\": \", \".join(self.allow_headers)\n                }\n            )\n        \n        response = handler(request)\n        response.headers[\"Access-Control-Allow-Origin\"] = self.allow_origins[0]\n        return response\n</contentOfFile>\n</WriteFile>", "sessionId": 336, "rowId": 27, "timestamp": 1784355218.779739, "date": "2026-07-18", "thinking": "", "prompt_tokens": 82095, "response_tokens": 1329} -->
+
+## [06:13] tool: WriteFile
+webcms/core/middleware.py was created with length 6200
+
+---
+
+<!-- {"role": "tool", "content": "webcms/core/middleware.py was created with length 6200", "sessionId": 336, "rowId": 27, "timestamp": 1784355218.7819128, "date": "2026-07-18", "name": "WriteFile"} -->
+
+## [06:13] ASSISTANT
+<nextTask>completed</nextTask>
+
+---
+
+<!-- {"role": "assistant", "content": "<nextTask>completed</nextTask>", "sessionId": 336, "rowId": 27, "timestamp": 1784355220.6703126, "date": "2026-07-18", "thinking": "", "prompt_tokens": 83448, "response_tokens": 11} -->
+
+## [06:13] tool: nextTask
+NEXT_TASK:Review webcms/core/request.py to ensure it handles edge cases safely: empty bodies, oversized content-length, invalid content-length values, malformed JSON, and invalid UTF-8. Add input validation to prevent exceptions from propagating and crashing the server.
+
+---
+
+<!-- {"role": "tool", "content": "NEXT_TASK:Review webcms/core/request.py to ensure it handles edge cases safely: empty bodies, oversized content-length, invalid content-length values, malformed JSON, and invalid UTF-8. Add input validation to prevent exceptions from propagating and crashing the server.", "sessionId": 336, "rowId": 27, "timestamp": 1784355220.6709394, "date": "2026-07-18", "name": "nextTask"} -->
+
+## [06:13] USER
+<nextTask>
+> 
+> Your task:
+> Review webcms/core/request.py to ensure it handles edge cases safely: empty bodies, oversized content-length, invalid content-length values, malformed JSON, and invalid UTF-8. Add input validation to prevent exceptions from propagating and crashing the server.
+
+---
+
+<!-- {"role": "user", "content": "<nextTask>\n\nYour task:\nReview webcms/core/request.py to ensure it handles edge cases safely: empty bodies, oversized content-length, invalid content-length values, malformed JSON, and invalid UTF-8. Add input validation to prevent exceptions from propagating and crashing the server.", "sessionId": 336, "rowId": 27, "timestamp": 1784355220.6709883, "date": "2026-07-18"} -->
+
+## [06:13] ASSISTANT
+<ReadFile>
+> <fileName>webcms/core/request.py</fileName>
+> <max_chars>8000</max_chars>
+> </ReadFile>
+
+---
+
+<!-- {"role": "assistant", "content": "<ReadFile>\n<fileName>webcms/core/request.py</fileName>\n<max_chars>8000</max_chars>\n</ReadFile>", "sessionId": 336, "rowId": 27, "timestamp": 1784355222.5713735, "date": "2026-07-18", "thinking": "", "prompt_tokens": 83583, "response_tokens": 32} -->
+
+## [06:13] tool: ReadFile
+"""
+> WebCMS Request wrapper
+> 
+> Wraps WSGI environ with convenient access to request data.
+> """
+> 
+> import json
+> import urllib.parse
+> from typing import Dict, Any, Optional, List
+> from io import BytesIO
+> 
+> 
+> class Request:
+>     """HTTP Request wrapper."""
+>     
+>     def __init__(self, environ: Dict[str, Any]):
+>         self.environ = environ
+>         self.method = environ.get("REQUEST_METHOD", "GET")
+>         self.path = environ.get("PATH_INFO", "/")
+>         self.query_string = environ.get("QUERY_STRING", "")
+>      ...
+> (truncated, 3731 chars total)
+
+---
+
+<!-- {"role": "tool", "content": "\"\"\"\nWebCMS Request wrapper\n\nWraps WSGI environ with convenient access to request data.\n\"\"\"\n\nimport json\nimport urllib.parse\nfrom typing import Dict, Any, Optional, List\nfrom io import BytesIO\n\n\nclass Request:\n    \"\"\"HTTP Request wrapper.\"\"\"\n    \n    def __init__(self, environ: Dict[str, Any]):\n        self.environ = environ\n        self.method = environ.get(\"REQUEST_METHOD\", \"GET\")\n        self.path = environ.get(\"PATH_INFO\", \"/\")\n        self.query_string = environ.get(\"QUERY_STRING\", \"\")\n        self.content_type = environ.get(\"CONTENT_TYPE\", \"\")\n        self.content_length = int(environ.get(\"CONTENT_LENGTH\", 0) or 0)\n        \n        self._headers: Optional[Dict[str, str]] = None\n        self._query_params: Optional[Dict[str, List[str]]] = None\n        self._body: Optional[bytes] = None\n        self._json: Optional[Any] = None\n        self._form: Optional[Dict[str, Any]] = None\n    \n    @classmethod\n    def from_wsgi(cls, environ: Dict[str, Any]) -> \"Request\":\n        \"\"\"Create Request from WSGI environ.\"\"\"\n        return cls(environ)\n    \n    @property\n    def headers(self) -> Dict[str, str]:\n        \"\"\"Get HTTP headers.\"\"\"\n        if self._headers is None:\n            self._headers = {}\n            for key, value in self.environ.items():\n                if key.startswith(\"HTTP_\"):\n                    header_name = key[5:].replace(\"_\", \"-\").title()\n                    self._headers[header_name] = value\n        return self._headers\n    \n    @property\n    def query_params(self) -> Dict[str, List[str]]:\n        \"\"\"Get query string parameters.\"\"\"\n        if self._query_params is None:\n            self._query_params = urllib.parse.parse_qs(self.query_string)\n        return self._query_params\n    \n    def get_param(self, name: str, default: Any = None) -> Any:\n        \"\"\"Get single query parameter.\"\"\"\n        params = self.query_params.get(name, [])\n        return params[0] if params else default\n    \n    @property\n    def body(self) -> bytes:\n        \"\"\"Get request body.\"\"\"\n        if self._body is None:\n            if self.content_length > 0:\n                self._body = self.environ[\"wsgi.input\"].read(self.content_length)\n            else:\n                self._body = b\"\"\n        return self._body\n    \n    @property\n    def json(self) -> Optional[Any]:\n        \"\"\"Parse JSON body.\"\"\"\n        if self._json is None and self.body:\n            if self.content_type.startswith(\"application/json\"):\n                try:\n                    self._json = json.loads(self.body.decode(\"utf-8\"))\n                except (json.JSONDecodeError, UnicodeDecodeError):\n                    self._json = None\n        return self._json\n    \n    @property\n    def form(self) -> Dict[str, Any]:\n        \"\"\"Parse form data.\"\"\"\n        if self._form is None:\n            self._form = {}\n            if self.content_type.startswith(\"application/x-www-form-urlencoded\"):\n                self._form = urllib.parse.parse_qs(self.body.decode(\"utf-8\"))\n            elif self.content_type.startswith(\"multipart/form-data\"):\n                # Simplified - full implementation would use cgi.FieldStorage\n                self._form = {}\n        return self._form\n    \n    def get_header(self, name: str, default: Optional[str] = None) -> Optional[str]:\n        \"\"\"Get specific header.\"\"\"\n        return self.headers.get(name.title(), default)\n    \n    @property\n    def remote_addr(self) -> Optional[str]:\n        \"\"\"Get client IP address.\"\"\"\n        return self.environ.get(\"REMOTE_ADDR\")\n    \n    @property\n    def user_agent(self) -> Optional[str]:\n        \"\"\"Get User-Agent header.\"\"\"\n        return self.get_header(\"User-Agent\")\n    \n    def __repr__(self) -> str:\n        return f\"<Request {self.method} {self.path}>\"", "sessionId": 336, "rowId": 27, "timestamp": 1784355222.5719469, "date": "2026-07-18", "name": "ReadFile"} -->
+
+## [06:13] USER
+Continue task 5/6...
+> Review webcms/core/request.py to ensure it handles edge cases safely: empty bodies, oversized content-length, invalid content-length values, malformed JSON, and invalid UTF-8. Add input validation to prevent exceptions from propagating and crashing the server.
+
+---
+
+<!-- {"role": "user", "content": "Continue task 5/6...\nReview webcms/core/request.py to ensure it handles edge cases safely: empty bodies, oversized content-length, invalid content-length values, malformed JSON, and invalid UTF-8. Add input validation to prevent exceptions from propagating and crashing the server.", "sessionId": 336, "rowId": 28, "timestamp": 1784355222.57222, "date": "2026-07-18"} -->
+
+## [06:13] ASSISTANT
+I will harden `Request` to safely handle malformed input without crashing the server.
+> 
+> <WriteFile>
+> <fileName>webcms/core/request.py</fileName>
+> <contentOfFile>"""
+> WebCMS Request wrapper
+> 
+> Wraps WSGI environ with convenient access to request data.
+> """
+> 
+> import json
+> import urllib.parse
+> import logging
+> from typing import Dict, Any, Optional, List
+> 
+> logger = logging.getLogger("webcms.request")
+> 
+> 
+> class Request:
+>     """HTTP Request wrapper."""
+>     
+>     # Maximum allowed body size (50 MB by default). Reques...
+> (truncated, 6267 chars total)
+> </contentOfFile>
+> </WriteFile>
+
+---
+
+<!-- {"role": "assistant", "content": "I will harden `Request` to safely handle malformed input without crashing the server.\n\n<WriteFile>\n<fileName>webcms/core/request.py</fileName>\n<contentOfFile>\"\"\"\nWebCMS Request wrapper\n\nWraps WSGI environ with convenient access to request data.\n\"\"\"\n\nimport json\nimport urllib.parse\nimport logging\nfrom typing import Dict, Any, Optional, List\n\nlogger = logging.getLogger(\"webcms.request\")\n\n\nclass Request:\n    \"\"\"HTTP Request wrapper.\"\"\"\n    \n    # Maximum allowed body size (50 MB by default). Requests with a larger\n    # Content-Length are rejected, and body reads are capped to this size.\n    MAX_BODY_SIZE = 50 * 1024 * 1024\n    \n    def __init__(self, environ: Dict[str, Any]):\n        self.environ = environ\n        self.method = environ.get(\"REQUEST_METHOD\", \"GET\")\n        self.path = environ.get(\"PATH_INFO\", \"/\")\n        self.query_string = environ.get(\"QUERY_STRING\", \"\")\n        self.content_type = environ.get(\"CONTENT_TYPE\", \"\")\n        self.content_length = self._parse_content_length(environ.get(\"CONTENT_LENGTH\"))\n        \n        self._headers: Optional[Dict[str, str]] = None\n        self._query_params: Optional[Dict[str, List[str]]] = None\n        self._body: Optional[bytes] = None\n        self._json: Optional[Any] = None\n        self._form: Optional[Dict[str, Any]] = None\n    \n    @classmethod\n    def from_wsgi(cls, environ: Dict[str, Any]) -> \"Request\":\n        \"\"\"Create Request from WSGI environ.\"\"\"\n        return cls(environ)\n    \n    @staticmethod\n    def _parse_content_length(value: Any) -> int:\n        \"\"\"\n        Safely parse CONTENT_LENGTH from the WSGI environ.\n\n        Returns 0 for missing/invalid/negative values, and caps the value\n        at MAX_BODY_SIZE to prevent memory exhaustion.\n        \"\"\"\n        if value is None or value == \"\":\n            return 0\n        try:\n            length = int(value)\n        except (ValueError, TypeError):\n            logger.debug(\"Invalid Content-Length value: %r\", value)\n            return 0\n        if length < 0:\n            logger.debug(\"Negative Content-Length: %s\", length)\n            return 0\n        if length > Request.MAX_BODY_SIZE:\n            logger.warning(\"Content-Length %s exceeds max body size; capping\", length)\n            return Request.MAX_BODY_SIZE\n        return length\n    \n    @property\n    def headers(self) -> Dict[str, str]:\n        \"\"\"Get HTTP headers.\"\"\"\n        if self._headers is None:\n            self._headers = {}\n            for key, value in self.environ.items():\n                if key.startswith(\"HTTP_\"):\n                    header_name = key[5:].replace(\"_\", \"-\").title()\n                    self._headers[header_name] = value\n        return self._headers\n    \n    @property\n    def query_params(self) -> Dict[str, List[str]]:\n        \"\"\"Get query string parameters.\"\"\"\n        if self._query_params is None:\n            try:\n                self._query_params = urllib.parse.parse_qs(\n                    self.query_string,\n                    keep_blank_values=True\n                )\n            except Exception as exc:\n                logger.debug(\"Failed to parse query string: %s\", exc)\n                self._query_params = {}\n        return self._query_params\n    \n    def get_param(self, name: str, default: Any = None) -> Any:\n        \"\"\"Get single query parameter.\"\"\"\n        params = self.query_params.get(name, [])\n        return params[0] if params else default\n    \n    @property\n    def body(self) -> bytes:\n        \"\"\"Get request body safely.\"\"\"\n        if self._body is None:\n            try:\n                if self.content_length > 0:\n                    self._body = self.environ[\"wsgi.input\"].read(self.content_length)\n                else:\n                    self._body = b\"\"\n            except (OSError, ValueError) as exc:\n                logger.debug(\"Error reading request body: %s\", exc)\n                self._body = b\"\"\n            except Exception as exc:\n                logger.warning(\"Unexpected error reading request body: %s\", exc)\n                self._body = b\"\"\n        return self._body\n    \n    @property\n    def json(self) -> Optional[Any]:\n        \"\"\"Parse JSON body safely.\"\"\"\n        if self._json is None and self.body:\n            if self.content_type.startswith(\"application/json\"):\n                try:\n                    self._json = json.loads(self.body.decode(\"utf-8\"))\n                except (json.JSONDecodeError, UnicodeDecodeError) as exc:\n                    logger.debug(\"Failed to parse JSON body: %s\", exc)\n                    self._json = None\n                except Exception as exc:\n                    logger.warning(\"Unexpected error parsing JSON body: %s\", exc)\n                    self._json = None\n        return self._json\n    \n    @property\n    def form(self) -> Dict[str, Any]:\n        \"\"\"Parse form data safely.\"\"\"\n        if self._form is None:\n            self._form = {}\n            if self.content_type.startswith(\"application/x-www-form-urlencoded\"):\n                try:\n                    self._form = urllib.parse.parse_qs(\n                        self.body.decode(\"utf-8\"),\n                        keep_blank_values=True\n                    )\n                except UnicodeDecodeError as exc:\n                    logger.debug(\"Invalid UTF-8 in form body: %s\", exc)\n                    self._form = {}\n                except Exception as exc:\n                    logger.warning(\"Unexpected error parsing form body: %s\", exc)\n                    self._form = {}\n            elif self.content_type.startswith(\"multipart/form-data\"):\n                # Simplified - full implementation would use cgi.FieldStorage\n                self._form = {}\n        return self._form\n    \n    def get_header(self, name: str, default: Optional[str] = None) -> Optional[str]:\n        \"\"\"Get specific header.\"\"\"\n        return self.headers.get(name.title(), default)\n    \n    @property\n    def remote_addr(self) -> Optional[str]:\n        \"\"\"Get client IP address.\"\"\"\n        return self.environ.get(\"REMOTE_ADDR\")\n    \n    @property\n    def user_agent(self) -> Optional[str]:\n        \"\"\"Get User-Agent header.\"\"\"\n        return self.get_header(\"User-Agent\")\n    \n    def __repr__(self) -> str:\n        return f\"<Request {self.method} {self.path}>\"\n</contentOfFile>\n</WriteFile>", "sessionId": 336, "rowId": 28, "timestamp": 1784355232.2315018, "date": "2026-07-18", "thinking": "", "prompt_tokens": 84509, "response_tokens": 1327} -->
+
+## [06:13] tool: WriteFile
+webcms/core/request.py was created with length 6080
+
+---
+
+<!-- {"role": "tool", "content": "webcms/core/request.py was created with length 6080", "sessionId": 336, "rowId": 28, "timestamp": 1784355232.2321413, "date": "2026-07-18", "name": "WriteFile"} -->
+
+## [06:13] ASSISTANT
+<nextTask>completed</nextTask>
+
+---
+
+<!-- {"role": "assistant", "content": "<nextTask>completed</nextTask>", "sessionId": 336, "rowId": 28, "timestamp": 1784355233.931048, "date": "2026-07-18", "thinking": "", "prompt_tokens": 85860, "response_tokens": 11} -->
+
+## [06:13] tool: nextTask
+NEXT_TASK:Create a simple test script that sends malformed requests (TLS bytes, connection reset, oversized request line, HTTP/2 PRI, null bytes) to the running server and verify it does not crash. Document the expected behavior: server should return 400 or silently close connection, and continue accepting new requests.
+
+---
+
+<!-- {"role": "tool", "content": "NEXT_TASK:Create a simple test script that sends malformed requests (TLS bytes, connection reset, oversized request line, HTTP/2 PRI, null bytes) to the running server and verify it does not crash. Document the expected behavior: server should return 400 or silently close connection, and continue accepting new requests.", "sessionId": 336, "rowId": 28, "timestamp": 1784355233.9316978, "date": "2026-07-18", "name": "nextTask"} -->
+
+## [06:13] USER
+<nextTask>
+> 
+> Your task:
+> Create a simple test script that sends malformed requests (TLS bytes, connection reset, oversized request line, HTTP/2 PRI, null bytes) to the running server and verify it does not crash. Document the expected behavior: server should return 400 or silently close connection, and continue accepting new requests.
+
+---
+
+<!-- {"role": "user", "content": "<nextTask>\n\nYour task:\nCreate a simple test script that sends malformed requests (TLS bytes, connection reset, oversized request line, HTTP/2 PRI, null bytes) to the running server and verify it does not crash. Document the expected behavior: server should return 400 or silently close connection, and continue accepting new requests.", "sessionId": 336, "rowId": 28, "timestamp": 1784355233.931748, "date": "2026-07-18"} -->
+
+## [06:14] ASSISTANT
+<WriteFile>
+> <fileName>tests/test_server_resilience.py</fileName>
+> <contentOfFile>#!/usr/bin/env python3
+> """
+> Server resilience test suite.
+> 
+> Sends a variety of malformed and malicious-looking requests to a running
+> WebCMS server and verifies that the server remains up and continues to
+> accept normal HTTP requests.
+> 
+> Run the server first, e.g.:
+> 
+>     python -m webcms
+> 
+> Then run this script:
+> 
+>     python tests/test_server_resilience.py
+> 
+> Expected behavior:
+> - TLS/binary garbage sent to the HTTP port should b...
+> (truncated, 5410 chars total)
+> </contentOfFile>
+> </WriteFile>
+
+---
+
+<!-- {"role": "assistant", "content": "<WriteFile>\n<fileName>tests/test_server_resilience.py</fileName>\n<contentOfFile>#!/usr/bin/env python3\n\"\"\"\nServer resilience test suite.\n\nSends a variety of malformed and malicious-looking requests to a running\nWebCMS server and verifies that the server remains up and continues to\naccept normal HTTP requests.\n\nRun the server first, e.g.:\n\n    python -m webcms\n\nThen run this script:\n\n    python tests/test_server_resilience.py\n\nExpected behavior:\n- TLS/binary garbage sent to the HTTP port should be silently ignored or\n  result in a 400 response. The server must not crash.\n- HTTP/2 PRI requests should receive 400 Bad Request.\n- Oversized request lines should receive 400 Bad Request.\n- Null bytes / control characters in the path should receive 400 Bad Request.\n- After each malformed request, a normal GET / must still return 200 OK.\n\"\"\"\n\nimport socket\nimport sys\nimport time\n\n\nHOST = \"127.0.0.1\"\nPORT = 8000\nTIMEOUT = 5\n\n\ndef send_raw(data: bytes) -> bytes:\n    \"\"\"Open a TCP connection, send raw bytes, and return whatever is read.\"\"\"\n    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:\n        sock.settimeout(TIMEOUT)\n        sock.connect((HOST, PORT))\n        sock.sendall(data)\n        try:\n            return sock.recv(4096)\n        except socket.timeout:\n            return b\"\"\n\n\ndef send_then_reset(data: bytes) -> None:\n    \"\"\"Send raw bytes and immediately RST the connection.\"\"\"\n    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\n    sock.settimeout(TIMEOUT)\n    try:\n        sock.connect((HOST, PORT))\n        sock.sendall(data)\n        # Set SO_LINGER to 0 so close() sends a RST.\n        sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, b\"\\x00\\x00\\x00\\x00\")\n    finally:\n        sock.close()\n\n\ndef normal_get() -> bool:\n    \"\"\"Verify the server still serves a normal GET / request.\"\"\"\n    response = send_raw(b\"GET / HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n\")\n    return response.startswith(b\"HTTP/1.1 200\") or response.startswith(b\"HTTP/1.0 200\")\n\n\ndef test_tls_garbage():\n    \"\"\"TLS ClientHello sent to plain HTTP port.\"\"\"\n    tls_hello = bytes([\n        0x16, 0x03, 0x01, 0x00, 0x8c, 0x01, 0x00, 0x00,\n        0x88, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,\n        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\n        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\n        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\n        0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0x2f, 0xc0,\n        0x2b, 0xc0, 0x11, 0xc0, 0x07, 0xc0, 0x13, 0xc0,\n        0x09, 0xc0, 0x14, 0xc0,\n    ])\n    response = send_raw(tls_hello)\n    print(f\"TLS garbage: {response[:60]!r}\")\n    assert normal_get(), \"Server did not recover after TLS garbage\"\n    print(\"  -> server recovered\")\n\n\ndef test_connection_reset():\n    \"\"\"Connection reset immediately after sending some bytes.\"\"\"\n    send_then_reset(b\"GET / HTTP/1.1\\r\\nHost: localhost\\r\\n\")\n    time.sleep(0.1)\n    assert normal_get(), \"Server did not recover after connection reset\"\n    print(\"  -> server recovered\")\n\n\ndef test_oversized_request_line():\n    \"\"\"Request line longer than the server should accept.\"\"\"\n    path = \"/\" + \"A\" * 9000\n    response = send_raw(f\"GET {path} HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n\".encode())\n    print(f\"Oversized request line: {response[:60]!r}\")\n    assert b\"400\" in response or response == b\"\", \"Expected 400 or closed connection\"\n    assert normal_get(), \"Server did not recover after oversized request line\"\n    print(\"  -> server recovered\")\n\n\ndef test_http2_pri():\n    \"\"\"HTTP/2 PRI request.\"\"\"\n    response = send_raw(b\"PRI * HTTP/2.0\\r\\n\\r\\n\")\n    print(f\"HTTP/2 PRI: {response[:60]!r}\")\n    assert b\"400\" in response or response == b\"\", \"Expected 400 or closed connection\"\n    assert normal_get(), \"Server did not recover after HTTP/2 PRI\"\n    print(\"  -> server recovered\")\n\n\ndef test_null_bytes_in_path():\n    \"\"\"Null byte in request path.\"\"\"\n    response = send_raw(b\"GET /foo\\x00bar HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n\")\n    print(f\"Null byte path: {response[:60]!r}\")\n    assert b\"400\" in response or response == b\"\", \"Expected 400 or closed connection\"\n    assert normal_get(), \"Server did not recover after null byte path\"\n    print(\"  -> server recovered\")\n\n\ndef test_invalid_http_version():\n    \"\"\"Invalid SERVER_PROTOCOL string.\"\"\"\n    response = send_raw(b\"GET / HTTP/3.0\\r\\nHost: localhost\\r\\n\\r\\n\")\n    print(f\"Invalid HTTP version: {response[:60]!r}\")\n    assert b\"400\" in response or response == b\"\", \"Expected 400 or closed connection\"\n    assert normal_get(), \"Server did not recover after invalid HTTP version\"\n    print(\"  -> server recovered\")\n\n\ndef main():\n    print(f\"Testing server resilience at {HOST}:{PORT}\")\n    print(\"Ensure the WebCMS server is running before continuing.\")\n    time.sleep(1)\n\n    tests = [\n        test_tls_garbage,\n        test_connection_reset,\n        test_oversized_request_line,\n        test_http2_pri,\n        test_null_bytes_in_path,\n        test_invalid_http_version,\n    ]\n\n    for test in tests:\n        print(f\"\\nRunning {test.__name__}...\")\n        try:\n            test()\n            print(f\"  PASSED\")\n        except AssertionError as exc:\n            print(f\"  FAILED: {exc}\")\n            return 1\n        except Exception as exc:\n            print(f\"  ERROR: {exc}\")\n            return 1\n\n    print(\"\\nAll resilience tests passed.\")\n    return 0\n\n\nif __name__ == \"__main__\":\n    sys.exit(main())\n</contentOfFile>\n</WriteFile>", "sessionId": 336, "rowId": 28, "timestamp": 1784355244.216116, "date": "2026-07-18", "thinking": "", "prompt_tokens": 86017, "response_tokens": 1553} -->
+
+## [06:14] tool: WriteFile
+tests/test_server_resilience.py was created with length 5301
+
+---
+
+<!-- {"role": "tool", "content": "tests/test_server_resilience.py was created with length 5301", "sessionId": 336, "rowId": 28, "timestamp": 1784355244.2167194, "date": "2026-07-18", "name": "WriteFile"} -->
+
+## [06:14] ASSISTANT
+<nextTask>completed</nextTask>
+
+---
+
+<!-- {"role": "assistant", "content": "<nextTask>completed</nextTask>", "sessionId": 336, "rowId": 28, "timestamp": 1784355246.1345613, "date": "2026-07-18", "thinking": "", "prompt_tokens": 87595, "response_tokens": 39} -->
+
+## [06:14] tool: nextTask
+ALL_COMPLETED:Plan finished successfully
+
+---
+
+<!-- {"role": "tool", "content": "ALL_COMPLETED:Plan finished successfully", "sessionId": 336, "rowId": 28, "timestamp": 1784355246.136468, "date": "2026-07-18", "name": "nextTask"} -->
+
+## [06:14] ASSISTANT
+All 6 tasks in the plan are complete:
+> 
+> 1. ✅ Reviewed current server implementation (`application.py`, `request.py`, `app_factory.py`)
+> 2. ✅ Created hardened WSGI request handler and server in `webcms/core/server.py`
+> 3. ✅ Updated `Application.run()` to use the hardened server
+> 4. ✅ Added `RequestValidationMiddleware` in `webcms/core/middleware.py`
+> 5. ✅ Hardened `Request` parsing in `webcms/core/request.py`
+> 6. ✅ Created resilience test script at `tests/test_server_resilience.py`
+> 
+> The server should n...
+> (truncated, 691 chars total)
+
+---
+
+<!-- {"role": "assistant", "content": "All 6 tasks in the plan are complete:\n\n1. \u2705 Reviewed current server implementation (`application.py`, `request.py`, `app_factory.py`)\n2. \u2705 Created hardened WSGI request handler and server in `webcms/core/server.py`\n3. \u2705 Updated `Application.run()` to use the hardened server\n4. \u2705 Added `RequestValidationMiddleware` in `webcms/core/middleware.py`\n5. \u2705 Hardened `Request` parsing in `webcms/core/request.py`\n6. \u2705 Created resilience test script at `tests/test_server_resilience.py`\n\nThe server should now survive TLS/binary garbage, connection resets, oversized request lines, HTTP/2 PRI requests, null bytes, and invalid HTTP versions without crashing.\n\nReady for the next plan or build task.", "sessionId": 336, "rowId": 28, "timestamp": 1784355248.7463813, "date": "2026-07-18", "thinking": "", "prompt_tokens": 87624, "response_tokens": 160} -->
+
