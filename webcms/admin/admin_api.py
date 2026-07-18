@@ -23,27 +23,46 @@ class AdminAPI:
     # ---------------- Database Helpers ----------------
 
     def _is_kosdb(self) -> bool:
-        """Detect if self.db is a KosDB client (dict-like) vs SQLAlchemy session."""
+        """Detect if self.db is a KosDB client vs SQLAlchemy session."""
         if self.db is None:
             return False
-        # KosDB client lacks SQLAlchemy's query attribute
-        return not hasattr(self.db, 'query')
+        # KosDB client class names contain "KosDB". SQLAlchemy session does not.
+        cls = getattr(self.db, '__class__', type(self.db))
+        cls_name = getattr(cls, '__name__', '')
+        return 'KosDB' in cls_name
+
+    @staticmethod
+    def _sql_escape(value) -> str:
+        """Basic SQL string escaping for KosDB query construction."""
+        if value is None:
+            return "NULL"
+        s = str(value)
+        # Escape single quotes by doubling them
+        return s.replace("'", "''")
 
     def _get_model_count(self, model_class, filter_conditions=None) -> int:
         """Get count of model records, works with both SQLAlchemy and KosDB."""
         if self.db is None:
             return 0
         
-        if self._is_kosdb():
-            # KosDB: use table name from model, apply simple filters
+        # Extra defensive check: if self.db is a dict, always use KosDB path.
+        is_kosdb = self._is_kosdb() or isinstance(self.db, dict)
+        
+        if is_kosdb:
+            # KosDB: use SQL query interface
             table_name = getattr(model_class, '__tablename__', 
                                 getattr(model_class, '__name__', '').lower() + 's')
-            records = self.db.get(table_name, [])
             if filter_conditions:
-                # Apply simple equality filters
-                for key, value in filter_conditions.items():
-                    records = [r for r in records if r.get(key) == value]
-            return len(records)
+                where = " AND ".join(f"{k}='{self._sql_escape(v)}'" for k, v in filter_conditions.items())
+                cmd = f"SELECT COUNT(*) FROM {table_name} WHERE {where}"
+            else:
+                cmd = f"SELECT COUNT(*) FROM {table_name}"
+            result = self.db.query(cmd)
+            rows = result.get('rows', [])
+            if rows:
+                # First value in first row, regardless of column name
+                return int(list(rows[0].values())[0])
+            return 0
         else:
             # SQLAlchemy: use ORM query
             query = self.db.query(model_class)
@@ -58,24 +77,23 @@ class AdminAPI:
         if self.db is None:
             return []
         
-        if self._is_kosdb():
-            # KosDB: get records from table
+        # Extra defensive check: if self.db is a dict, always use KosDB path.
+        is_kosdb = self._is_kosdb() or isinstance(self.db, dict)
+        
+        if is_kosdb:
+            # KosDB: use SQL query interface
             table_name = getattr(model_class, '__tablename__', 
                                 getattr(model_class, '__name__', '').lower() + 's')
-            records = self.db.get(table_name, [])
+            cmd = f"SELECT * FROM {table_name}"
             if filter_conditions:
-                for key, value in filter_conditions.items():
-                    records = [r for r in records if r.get(key) == value]
-            # Sort
+                where = " AND ".join(f"{k}='{self._sql_escape(v)}'" for k, v in filter_conditions.items())
+                cmd += f" WHERE {where}"
             if order_by:
-                reverse = desc
-                records = sorted(records, 
-                               key=lambda x: x.get(order_by) or '', 
-                               reverse=reverse)
-            # Limit
+                cmd += f" ORDER BY {order_by} {'DESC' if desc else 'ASC'}"
             if limit:
-                records = records[:limit]
-            return records
+                cmd += f" LIMIT {limit}"
+            result = self.db.query(cmd)
+            return result.get('rows', [])
         else:
             # SQLAlchemy ORM
             query = self.db.query(model_class)
@@ -101,19 +119,17 @@ class AdminAPI:
         if extra_filters:
             filters.update(extra_filters)
         
-        if self._is_kosdb():
+        # Extra defensive check: if self.db is a dict, always use KosDB path.
+        is_kosdb = self._is_kosdb() or isinstance(self.db, dict)
+        
+        if is_kosdb:
             table_name = getattr(model_class, '__tablename__', 
                                 getattr(model_class, '__name__', '').lower() + 's')
-            records = self.db.get(table_name, [])
-            for r in records:
-                match = True
-                for key, value in filters.items():
-                    if r.get(key) != value:
-                        match = False
-                        break
-                if match:
-                    return r
-            return None
+            where = " AND ".join(f"{k}='{self._sql_escape(v)}'" for k, v in filters.items())
+            cmd = f"SELECT * FROM {table_name} WHERE {where}"
+            result = self.db.query(cmd)
+            rows = result.get('rows', [])
+            return rows[0] if rows else None
         else:
             query = self.db.query(model_class)
             for key, value in filters.items():
@@ -166,6 +182,19 @@ class AdminAPI:
     # ---------------- Content: Pages & Posts ----------------
 
     def _serialize_page(self, page) -> dict:
+        # Handle both dict (KosDB) and object (SQLAlchemy) access
+        if isinstance(page, dict):
+            author = page.get('author')
+            if isinstance(author, dict):
+                author = author.get('display_name')
+            return {
+                "id": page.get('id'),
+                "title": page.get('title'),
+                "slug": page.get('slug'),
+                "status": page.get('status'),
+                "author": author,
+                "updated_at": page.get('updated_at')
+            }
         return {
             "id": page.id,
             "title": page.title,
@@ -176,6 +205,19 @@ class AdminAPI:
         }
 
     def _serialize_post(self, post) -> dict:
+        # Handle both dict (KosDB) and object (SQLAlchemy) access
+        if isinstance(post, dict):
+            author = post.get('author')
+            if isinstance(author, dict):
+                author = author.get('display_name')
+            return {
+                "id": post.get('id'),
+                "title": post.get('title'),
+                "slug": post.get('slug'),
+                "status": post.get('status'),
+                "author": author,
+                "updated_at": post.get('updated_at')
+            }
         return {
             "id": post.id,
             "title": post.title,
@@ -193,7 +235,6 @@ class AdminAPI:
         return Response.json({"pages": [self._serialize_page(p) for p in pages]})
 
     def create_page(self, request: Request) -> Response:
-        from webcms.models.content import Page
         from webcms.content.manager import ContentManager
         data = request.json or {}
         if not data:
@@ -440,16 +481,32 @@ class AdminAPI:
         users = self._get_model_list(User, {"is_deleted": False}, order_by="created_at", limit=50, desc=True)
         result = []
         for u in users:
-            role_name = u.roles[0].name if u.roles else "user"
-            result.append({
-                "id": u.id,
-                "username": u.username,
-                "email": u.email,
-                "display_name": u.display_name,
-                "role": role_name,
-                "is_active": u.is_active,
-                "roles": [r.name for r in u.roles]
-            })
+            # Handle both dict (KosDB) and object (SQLAlchemy) access
+            if isinstance(u, dict):
+                roles = u.get('roles', [])
+                role_name = roles[0].get('name') if roles and isinstance(roles[0], dict) else (
+                    roles[0].name if roles else "user"
+                )
+                result.append({
+                    "id": u.get('id'),
+                    "username": u.get('username'),
+                    "email": u.get('email'),
+                    "display_name": u.get('display_name'),
+                    "role": role_name,
+                    "is_active": u.get('is_active'),
+                    "roles": [r.get('name') if isinstance(r, dict) else r.name for r in roles]
+                })
+            else:
+                role_name = u.roles[0].name if u.roles else "user"
+                result.append({
+                    "id": u.id,
+                    "username": u.username,
+                    "email": u.email,
+                    "display_name": u.display_name,
+                    "role": role_name,
+                    "is_active": u.is_active,
+                    "roles": [r.name for r in u.roles]
+                })
         return Response.json({"users": result})
 
     def create_user(self, request: Request) -> Response:
@@ -471,11 +528,17 @@ class AdminAPI:
                 is_active=data.get("is_active", True)
             )
             if self._is_kosdb():
-                # KosDB: append to users list
-                users = self.db.get('users', [])
+                # KosDB: use SQL INSERT
+                table_name = getattr(User, '__tablename__', 'users')
+                cols = ['id', 'username', 'email', 'password_hash', 'display_name', 'is_active', 'is_deleted']
                 user.id = str(uuid.uuid4())
-                users.append(user.__dict__ if hasattr(user, '__dict__') else user)
-                self.db['users'] = users
+                vals = [
+                    user.id, user.username, user.email, user.password_hash,
+                    user.display_name, 1 if user.is_active else 0, 0
+                ]
+                val_str = ", ".join(f"'{self._sql_escape(v)}'" for v in vals)
+                cmd = f"INSERT INTO {table_name} ({', '.join(cols)}) VALUES ({val_str})"
+                self.db.execute(cmd)
             else:
                 # SQLAlchemy
                 self.db.add(user)
@@ -501,26 +564,49 @@ class AdminAPI:
         if not user:
             return Response.not_found()
         try:
-            if "username" in data:
-                user.username = data["username"]
-            if "email" in data:
-                user.email = data["email"]
-            if "display_name" in data:
-                user.display_name = data["display_name"]
-            if "is_active" in data:
-                user.is_active = bool(data["is_active"])
-            if "password" in data and data["password"]:
-                from webcms.auth.password import PasswordHasher
-                user.password_hash = PasswordHasher().hash(data["password"])
-            if not self._is_kosdb():
+            if self._is_kosdb():
+                # KosDB: build UPDATE
+                table_name = getattr(User, '__tablename__', 'users')
+                sets = []
+                for key, value in data.items():
+                    if key == "is_active":
+                        value = 1 if value else 0
+                    elif key == "password" and value:
+                        from webcms.auth.password import PasswordHasher
+                        key = "password_hash"
+                        value = PasswordHasher().hash(value)
+                    sets.append(f"{key}='{self._sql_escape(value)}'")
+                if sets:
+                    cmd = f"UPDATE {table_name} SET {', '.join(sets)} WHERE id='{self._sql_escape(user_id)}' AND is_deleted='0'"
+                    self.db.execute(cmd)
+                return Response.json({
+                    "id": user_id,
+                    "username": data.get("username", user.get('username') if isinstance(user, dict) else user.username),
+                    "email": data.get("email", user.get('email') if isinstance(user, dict) else user.email),
+                    "role": "user",
+                    "is_active": data.get("is_active", user.get('is_active') if isinstance(user, dict) else user.is_active)
+                })
+            else:
+                # SQLAlchemy
+                if "username" in data:
+                    user.username = data["username"]
+                if "email" in data:
+                    user.email = data["email"]
+                if "display_name" in data:
+                    user.display_name = data["display_name"]
+                if "is_active" in data:
+                    user.is_active = bool(data["is_active"])
+                if "password" in data and data["password"]:
+                    from webcms.auth.password import PasswordHasher
+                    user.password_hash = PasswordHasher().hash(data["password"])
                 self.db.commit()
-            return Response.json({
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "role": user.roles[0].name if user.roles else "user",
-                "is_active": user.is_active
-            })
+                return Response.json({
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "role": user.roles[0].name if user.roles else "user",
+                    "is_active": user.is_active
+                })
         except Exception as e:
             if not self._is_kosdb():
                 self.db.rollback()
@@ -533,10 +619,19 @@ class AdminAPI:
         user = self._get_model_by_id(User, user_id, extra_filters={"is_deleted": False})
         if not user:
             return Response.not_found()
-        user.is_deleted = True
-        if not self._is_kosdb():
-            self.db.commit()
-        return Response.json({"id": user_id, "deleted": True})
+        try:
+            if self._is_kosdb():
+                table_name = getattr(User, '__tablename__', 'users')
+                cmd = f"UPDATE {table_name} SET is_deleted='1' WHERE id='{self._sql_escape(user_id)}'"
+                self.db.execute(cmd)
+            else:
+                user.is_deleted = True
+                self.db.commit()
+            return Response.json({"id": user_id, "deleted": True})
+        except Exception as e:
+            if not self._is_kosdb():
+                self.db.rollback()
+            return Response.error(str(e), 400)
 
     def list_roles(self, request: Request) -> Response:
         from webcms.models.user import Role
@@ -574,25 +669,29 @@ class AdminAPI:
             return Response.not_found()
         try:
             if self._is_kosdb():
-                # KosDB: update dict directly
+                # KosDB: build UPDATE
+                table_name = getattr(Role, '__tablename__', 'roles')
+                sets = []
                 if "permissions" in data:
-                    role['permissions'] = ",".join(data["permissions"])
+                    sets.append(f"permissions='{self._sql_escape(','.join(data['permissions']))}'")
                 if "description" in data:
-                    role['description'] = data["description"]
-                # Save back to db
-                roles = self.db.get('roles', [])
-                for i, r in enumerate(roles):
-                    if r.get('id') == role_id:
-                        roles[i] = role
-                        break
-                self.db['roles'] = roles
-                perms = role.get('permissions', '')
-                perms_list = [p.strip() for p in perms.split(',')] if perms else []
+                    sets.append(f"description='{self._sql_escape(data['description'])}'")
+                if sets:
+                    cmd = f"UPDATE {table_name} SET {', '.join(sets)} WHERE id='{self._sql_escape(role_id)}'"
+                    self.db.execute(cmd)
+                perms = ','.join(data.get('permissions', []))
+                if isinstance(role, dict):
+                    return Response.json({
+                        "id": role.get('id'),
+                        "name": role.get('name'),
+                        "description": data.get('description', role.get('description')),
+                        "permissions": [p.strip() for p in perms.split(',')] if perms else []
+                    })
                 return Response.json({
-                    "id": role.get('id'),
-                    "name": role.get('name'),
-                    "description": role.get('description'),
-                    "permissions": perms_list
+                    "id": role.id,
+                    "name": role.name,
+                    "description": data.get('description', role.description),
+                    "permissions": [p.strip() for p in perms.split(',')] if perms else []
                 })
             else:
                 # SQLAlchemy
@@ -638,7 +737,8 @@ class AdminAPI:
             return Response.json({"settings": defaults})
         try:
             if self._is_kosdb():
-                settings = self.db.get('settings', [])
+                result = self.db.query("SELECT * FROM settings")
+                settings = result.get('rows', [])
                 for s in settings:
                     defaults[s.get('key')] = self._coerce_setting(s.get('value'), s.get('type'))
             else:
@@ -656,19 +756,16 @@ class AdminAPI:
             return Response.json({"updated": True, "settings": data})
         try:
             if self._is_kosdb():
-                settings = self.db.get('settings', [])
                 for key, value in data.items():
-                    existing = next((s for s in settings if s.get('key') == key), None)
-                    if existing:
-                        existing['value'] = str(value)
-                        existing['type'] = self._guess_type(value)
-                    else:
-                        settings.append({
-                            'key': key,
-                            'value': str(value),
-                            'type': self._guess_type(value)
-                        })
-                self.db['settings'] = settings
+                    type_ = self._guess_type(value)
+                    val_str = self._sql_escape(str(value))
+                    # Try UPDATE first, then INSERT if no rows affected
+                    update_cmd = f"UPDATE settings SET value='{val_str}', type='{type_}' WHERE key='{self._sql_escape(key)}'"
+                    update_result = self.db.execute(update_cmd)
+                    # KosDB returns something like "OK 1 row(s) affected" or "OK 0 row(s) affected"
+                    if "0 row" in str(update_result) or "Empty set" in str(update_result):
+                        insert_cmd = f"INSERT INTO settings (key, value, type) VALUES ('{self._sql_escape(key)}', '{val_str}', '{type_}')"
+                        self.db.execute(insert_cmd)
             else:
                 for key, value in data.items():
                     existing = self.db.query(Setting).filter(Setting.key == key).first()
@@ -698,7 +795,7 @@ class AdminAPI:
     @staticmethod
     def _coerce_setting(value, type_):
         if type_ == "bool":
-            return value.lower() in ("true", "1", "yes", "on")
+            return str(value).lower() in ("true", "1", "yes", "on")
         if type_ == "int":
             try:
                 return int(value)

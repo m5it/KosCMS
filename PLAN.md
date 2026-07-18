@@ -1,26 +1,26 @@
-# Plan: Fix WSGI Server Crash on Malformed/TLS Requests
-## ID: 1784355121.151412
-## Created: 2026-07-18 06:12:01
+# Plan: Fix Admin Panel KosDB Compatibility Bugs
+## ID: 1784359341.4322383
+## Created: 2026-07-18 07:22:21
 ## Status: in_progress
 
 ### Tasks (6):
-1. [pending] Review Current Server Implementation
-   ID: 1784355123.4023643
+1. [pending] Fix KosDB Detection in AdminAPI Helpers
+   ID: 1784359344.9278455
 
-2. [pending] Implement Custom WSGI Server Request Handler
-   ID: 1784355125.5977619
+2. [pending] Fix _get_model_count for KosDB Backend
+   ID: 1784359347.9958322
 
-3. [pending] Update Application.run() to Use Custom Server
-   ID: 1784355128.0588076
+3. [pending] Fix _get_model_list and _get_model_by_id for KosDB
+   ID: 1784359351.4230478
 
-4. [pending] Add Request Validation Middleware
-   ID: 1784355130.8077407
+4. [pending] Fix User.encode Error in KosDB
+   ID: 1784359354.7176104
 
-5. [pending] Review and Harden Request Parsing
-   ID: 1784355133.27105
+5. [pending] Fix Serialization of Dict Records in Admin API
+   ID: 1784359357.610088
 
-6. [pending] Test Server Resilience
-   ID: 1784355136.3121703
+6. [pending] Test Admin Dashboard with KosDB Backend
+   ID: 1784359360.8688984
 
 ---
 

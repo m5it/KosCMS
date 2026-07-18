@@ -1,3 +1,12 @@
+## 2026-07-18 — v1.3.17
+
+### Auto: Version v1.3.17
+
+- Version auto-incremented from v1.3.16
+- Files changed: HISTORY.md, PLAN.md, PROJECT.md, background.log, current_task.txt, plans/1784359341.4322383.json, state.aiia, tests/test_admin_kosdb.py, webcms/admin/admin_api.py
+
+---
+
 ## 2026-07-18 — v1.3.16
 
 ### Auto: Version v1.3.16

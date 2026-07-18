@@ -6,6 +6,7 @@
 .
 ../../OurAI/.git/hooks/
 ../KosDB
+../KosDB/
 
 ## Approved Files
 
