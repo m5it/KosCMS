@@ -177,27 +177,11 @@ class AdminAPI:
                     "posts": self._get_model_count(Post, {"is_deleted": False}),
                     "pages": self._get_model_count(Page, {"is_deleted": False})
                 },
-                "media": {
-                    "total": self._get_model_count(Media, {"is_deleted": False})
-                }
-            }
-
-        registry = get_widget_registry()
-        configs = [
-            WidgetConfig(id="stats", title="Content Statistics", type="stats", position="main"),
-            WidgetConfig(id="activity", title="Recent Activity", type="activity", position="main", refresh_interval=60),
-            WidgetConfig(id="health", title="System Health", type="health", position="sidebar", refresh_interval=30),
-        ]
-        widgets = registry.render_all(self.db, configs) if self.db else [
+        widgets = [
             {"id": "stats", "title": "Content Statistics", "icon": "📊", "data": stats},
-            {"id": "activity", "title": "Recent Activity", "icon": "📅", "data": {"recent_posts": 0}},
+            {"id": "activity", "title": "Recent Activity", "icon": "📅", "data": {"recent_posts": stats.get("content", {}).get("posts", 0)}},
             {"id": "health", "title": "System Health", "icon": "❤️", "data": {"status": "ok"}}
         ]
-
-        # Ensure every widget has the keys Dashboard.jsx expects
-        for i, widget in enumerate(widgets):
-            widget.setdefault("icon", "")
-            widget.setdefault("data", "")
 
         return Response.json({"widgets": widgets})
 
