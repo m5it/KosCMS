@@ -1,6 +1,6 @@
 # WebCMS - Modern Python Content Management System
 
-A production-ready CMS with plugin architecture, template system, HTTPS support, KosDB integration, and a full React-based admin control panel. **Version 1.3.6**
+A production-ready CMS with plugin architecture, template system, HTTPS support, KosDB integration, and a full React-based admin control panel. **Version 1.3.29**
 
 ## Features
 
