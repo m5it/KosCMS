@@ -40,6 +40,16 @@ class AdminAPI:
         # Escape single quotes by doubling them
         return s.replace("'", "''")
 
+    def _kosdb_where_clause(self, key: str, value) -> str:
+        """
+        Build a KosDB WHERE clause that handles boolean values correctly.
+        KosDB stores booleans as 0/1 strings, so we compare against both.
+        """
+        if isinstance(value, bool):
+            int_val = 1 if value else 0
+            return f"({key}='{int_val}' OR {key}='{str(value).lower()}')"
+        return f"{key}='{self._sql_escape(value)}'"
+
     def _get_model_count(self, model_class, filter_conditions=None) -> int:
         """Get count of model records, works with both SQLAlchemy and KosDB."""
         if self.db is None:
@@ -53,11 +63,15 @@ class AdminAPI:
             table_name = getattr(model_class, '__tablename__', 
                                 getattr(model_class, '__name__', '').lower() + 's')
             if filter_conditions:
-                where = " AND ".join(f"{k}='{self._sql_escape(v)}'" for k, v in filter_conditions.items())
+                where = " AND ".join(
+                    self._kosdb_where_clause(k, v) for k, v in filter_conditions.items()
+                )
                 cmd = f"SELECT COUNT(*) FROM {table_name} WHERE {where}"
             else:
                 cmd = f"SELECT COUNT(*) FROM {table_name}"
             result = self.db.query(cmd)
+            if result.get('error'):
+                return 0
             rows = result.get('rows', [])
             if rows:
                 # First value in first row, regardless of column name
@@ -86,13 +100,17 @@ class AdminAPI:
                                 getattr(model_class, '__name__', '').lower() + 's')
             cmd = f"SELECT * FROM {table_name}"
             if filter_conditions:
-                where = " AND ".join(f"{k}='{self._sql_escape(v)}'" for k, v in filter_conditions.items())
+                where = " AND ".join(
+                    self._kosdb_where_clause(k, v) for k, v in filter_conditions.items()
+                )
                 cmd += f" WHERE {where}"
             if order_by:
                 cmd += f" ORDER BY {order_by} {'DESC' if desc else 'ASC'}"
             if limit:
                 cmd += f" LIMIT {limit}"
             result = self.db.query(cmd)
+            if result.get('error'):
+                return []
             return result.get('rows', [])
         else:
             # SQLAlchemy ORM
@@ -125,9 +143,13 @@ class AdminAPI:
         if is_kosdb:
             table_name = getattr(model_class, '__tablename__', 
                                 getattr(model_class, '__name__', '').lower() + 's')
-            where = " AND ".join(f"{k}='{self._sql_escape(v)}'" for k, v in filters.items())
+            where = " AND ".join(
+                self._kosdb_where_clause(k, v) for k, v in filters.items()
+            )
             cmd = f"SELECT * FROM {table_name} WHERE {where}"
             result = self.db.query(cmd)
+            if result.get('error'):
+                return None
             rows = result.get('rows', [])
             return rows[0] if rows else None
         else:
