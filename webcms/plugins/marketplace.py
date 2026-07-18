@@ -1,4 +1,3 @@
-
 """
 Plugin Marketplace
 
@@ -46,10 +45,96 @@ class PluginRegistry:
     
     def __init__(self, registry_path: str = None, plugins_dir: str = None):
         self.registry_path = Path(registry_path or self.REGISTRY_FILE)
-        self.plugins_dir = Path(plugins_dir or "plugins")
+        # Use webcms/plugins as the default plugins directory
+        webcms_root = Path(__file__).parent.parent
+        self.plugins_dir = Path(plugins_dir or webcms_root / "plugins")
         self.plugins_dir.mkdir(exist_ok=True)
         self._registry: Dict[str, PluginInfo] = {}
         self._load_registry()
+        # Auto-discover plugins from filesystem
+        self._discover_installed_plugins()
+    
+    def _discover_installed_plugins(self):
+        """Discover plugins from the filesystem and sync with registry."""
+        try:
+            # Look for plugin directories with plugin.yaml or __init__.py
+            if not self.plugins_dir.exists():
+                return
+            
+            for item in self.plugins_dir.iterdir():
+                if not item.is_dir():
+                    continue
+                if item.name.startswith('_') or item.name == '__pycache__':
+                    continue
+                
+                plugin_name = item.name
+                
+                # Check for plugin.yaml
+                config_file = item / "plugin.yaml"
+                info_file = item / "plugin.json"
+                
+                plugin_data = {
+                    'name': plugin_name,
+                    'version': '1.0.0',
+                    'description': f'Plugin: {plugin_name}',
+                    'author': 'Unknown',
+                    'min_cms_version': '1.0.0',
+                    'max_cms_version': None,
+                    'dependencies': [],
+                    'tags': [],
+                    'installed': True,
+                    'active': False
+                }
+                
+                # Try to load from plugin.yaml
+                if config_file.exists():
+                    try:
+                        import yaml
+                        with open(config_file, 'r') as f:
+                            yaml_data = yaml.safe_load(f)
+                            if yaml_data:
+                                plugin_data.update({
+                                    'name': yaml_data.get('name', plugin_name),
+                                    'version': yaml_data.get('version', '1.0.0'),
+                                    'description': yaml_data.get('description', ''),
+                                    'author': yaml_data.get('author', 'Unknown'),
+                                    'dependencies': yaml_data.get('requires', []),
+                                    'tags': yaml_data.get('tags', []),
+                                })
+                    except Exception as e:
+                        print(f"Error loading plugin.yaml for {plugin_name}: {e}")
+                
+                # Try to load from plugin.json as fallback
+                elif info_file.exists():
+                    try:
+                        with open(info_file, 'r') as f:
+                            json_data = json.load(f)
+                            plugin_data.update({
+                                'name': json_data.get('name', plugin_name),
+                                'version': json_data.get('version', '1.0.0'),
+                                'description': json_data.get('description', ''),
+                                'author': json_data.get('author', 'Unknown'),
+                                'min_cms_version': json_data.get('min_cms_version', '1.0.0'),
+                                'max_cms_version': json_data.get('max_cms_version'),
+                                'dependencies': json_data.get('dependencies', []),
+                                'tags': json_data.get('tags', []),
+                            })
+                    except Exception as e:
+                        print(f"Error loading plugin.json for {plugin_name}: {e}")
+                
+                # Check if already in registry - preserve active state
+                if plugin_name in self._registry:
+                    existing = self._registry[plugin_name]
+                    plugin_data['active'] = existing.active
+                
+                # Create PluginInfo and add to registry
+                self._registry[plugin_name] = PluginInfo(**plugin_data)
+            
+            # Save updated registry
+            self._save_registry()
+            
+        except Exception as e:
+            print(f"Error discovering plugins: {e}")
     
     def _load_registry(self):
         """Load registry from JSON file."""
@@ -65,9 +150,12 @@ class PluginRegistry:
     
     def _save_registry(self):
         """Save registry to JSON file."""
-        data = {name: asdict(info) for name, info in self._registry.items()}
-        with open(self.registry_path, 'w') as f:
-            json.dump(data, f, indent=2)
+        try:
+            data = {name: asdict(info) for name, info in self._registry.items()}
+            with open(self.registry_path, 'w') as f:
+                json.dump(data, f, indent=2)
+        except Exception as e:
+            print(f"Error saving registry: {e}")
     
     def list_available(self, tag: str = None, 
                        installed_only: bool = False) -> List[PluginInfo]:

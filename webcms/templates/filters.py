@@ -5,9 +5,15 @@ Custom Jinja2 filters for WebCMS.
 """
 
 import re
-import markdown
 from datetime import datetime
 from typing import Any
+
+try:
+    import markdown
+    MARKDOWN_AVAILABLE = True
+except ImportError:
+    MARKDOWN_AVAILABLE = False
+    markdown = None
 
 
 def register_filters(env):
@@ -66,13 +72,19 @@ def register_filters(env):
         """Convert markdown to HTML."""
         if not text:
             return ""
-        md = markdown.Markdown(extensions=[
-            'fenced_code',
-            'tables',
-            'toc',
-            'nl2br'
-        ])
-        return md.convert(text)
+        if MARKDOWN_AVAILABLE and markdown:
+            try:
+                md = markdown.Markdown(extensions=[
+                    'fenced_code',
+                    'tables',
+                    'toc',
+                    'nl2br'
+                ])
+                return md.convert(text)
+            except Exception:
+                pass
+        # Fallback: return text with line breaks converted to <br>
+        return str(text).replace('\n', '<br>\n')
     
     @env.filter('truncate')
     def truncate_filter(text, length=100, suffix='...'):
@@ -97,13 +109,17 @@ def register_filters(env):
         if not text:
             return ""
         text = text.lower()
-        text = re.sub(r'[^\\w\\s-]', '', text)
-        text = re.sub(r'[-\\s]+', '-', text)
+        text = re.sub(r'[^\w\s-]', '', text)
+        text = re.sub(r'[-\s]+', '-', text)
         return text.strip('-')
     
     @env.filter('filesize')
     def filesize_filter(size):
         """Format file size."""
+        try:
+            size = float(size)
+        except (ValueError, TypeError):
+            return str(size)
         for unit in ['B', 'KB', 'MB', 'GB']:
             if size < 1024.0:
                 return f"{size:.1f} {unit}"

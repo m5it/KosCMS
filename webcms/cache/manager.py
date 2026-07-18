@@ -2,7 +2,7 @@
 """
 Cache Manager
 
-Multi-level caching with tagging and warming support.
+Multi-level caching with tagging, warming support, and KosDB persistence.
 """
 
 import json
@@ -50,9 +50,10 @@ class CacheManager:
     """Multi-level cache manager with tagging support."""
     
     def __init__(self, backends: List[CacheBackend] = None, 
-                 namespace: str = "default"):
+                 namespace: str = "default", db=None):
         self.backends = backends or [MemoryCache()]
         self.namespace = namespace
+        self.db = db
         self._tags: Dict[str, CacheTag] = {}
         self._metadata: Dict[str, CacheEntry] = {}
         self._stats = {
@@ -62,6 +63,105 @@ class CacheManager:
             "deletes": 0,
             "tag_invalidations": 0
         }
+        self._ensure_cache_table()
+    
+    def _is_kosdb(self) -> bool:
+        """Check if database is KosDB."""
+        if self.db is None:
+            return False
+        has_methods = all(
+            hasattr(self.db, method) 
+            for method in ['execute', 'query', 'list_tables']
+        )
+        return has_methods
+    
+    def _ensure_cache_table(self):
+        """Ensure cache stats table exists in KosDB."""
+        if not self.db or not self._is_kosdb():
+            return
+        
+        try:
+            tables = self.db.list_tables()
+            if 'cache_stats' in tables:
+                return
+        except Exception:
+            pass
+        
+        try:
+            self.db.execute("""
+                CREATE TABLE cache_stats (
+                    id TEXT PRIMARY KEY,
+                    namespace TEXT,
+                    hits INTEGER DEFAULT 0,
+                    misses INTEGER DEFAULT 0,
+                    sets INTEGER DEFAULT 0,
+                    deletes INTEGER DEFAULT 0,
+                    tag_invalidations INTEGER DEFAULT 0,
+                    keys_count INTEGER DEFAULT 0,
+                    memory_usage TEXT,
+                    updated_at TEXT
+                )
+            """)
+        except Exception:
+            pass
+    
+    def _save_stats_to_kosdb(self):
+        """Save cache stats to KosDB."""
+        if not self.db or not self._is_kosdb():
+            return
+        
+        try:
+            now = time.time()
+            keys_count = len(self._metadata)
+            memory_usage = self._estimate_memory()
+            
+            # Check if exists
+            result = self.db.query(f"SELECT id FROM cache_stats WHERE namespace='{self.namespace}'")
+            
+            if result.get('rows'):
+                self.db.execute(f"""
+                    UPDATE cache_stats SET
+                        hits={self._stats['hits']},
+                        misses={self._stats['misses']},
+                        sets={self._stats['sets']},
+                        deletes={self._stats['deletes']},
+                        tag_invalidations={self._stats['tag_invalidations']},
+                        keys_count={keys_count},
+                        memory_usage='{memory_usage}',
+                        updated_at='{now}'
+                    WHERE namespace='{self.namespace}'
+                """)
+            else:
+                self.db.execute(f"""
+                    INSERT INTO cache_stats 
+                    (id, namespace, hits, misses, sets, deletes, tag_invalidations, keys_count, memory_usage, updated_at)
+                    VALUES (
+                        '{self.namespace}_{int(now)}',
+                        '{self.namespace}',
+                        {self._stats['hits']},
+                        {self._stats['misses']},
+                        {self._stats['sets']},
+                        {self._stats['deletes']},
+                        {self._stats['tag_invalidations']},
+                        {keys_count},
+                        '{memory_usage}',
+                        '{now}'
+                    )
+                """)
+        except Exception:
+            pass
+    
+    def _estimate_memory(self) -> str:
+        """Estimate memory usage."""
+        try:
+            import sys
+            total = sys.getsizeof(self._metadata)
+            for key, entry in self._metadata.items():
+                total += sys.getsizeof(key)
+                total += sys.getsizeof(entry)
+            return f"{total / 1024 / 1024:.2f}MB"
+        except Exception:
+            return "unknown"
     
     def _namespaced_key(self, key: str) -> str:
         """Add namespace prefix to key."""
@@ -132,6 +232,7 @@ class CacheManager:
             results.append(backend.set(namespaced, value, timeout))
         
         self._stats["sets"] += 1
+        self._save_stats_to_kosdb()
         return any(results)
     
     def delete(self, key: str) -> bool:
@@ -151,6 +252,7 @@ class CacheManager:
             results.append(backend.delete(namespaced))
         
         self._stats["deletes"] += 1
+        self._save_stats_to_kosdb()
         return any(results)
     
     def tag_invalidate(self, tag: str) -> int:
@@ -176,159 +278,122 @@ class CacheManager:
         
         tag_obj.clear()
         self._stats["tag_invalidations"] += 1
+        self._save_stats_to_kosdb()
         
         return count
     
     def tag_warm(self, tag: str, data_loader: Callable[[], Dict[str, Any]],
-                 timeout: int = 300) -> int:
+                  timeout: int = 300) -> int:
         """
-        Pre-warm cache for a tag by loading data.
+        Pre-populate cache for a tag.
         
         Args:
-            tag: Tag name
-            data_loader: Function that returns dict of key->value
-            timeout: Cache TTL
+            tag: Tag to warm
+            data_loader: Function returning dict of key->value
+            timeout: TTL for warmed entries
         
         Returns:
             Number of entries warmed
         """
-        try:
-            data = data_loader()
-            count = 0
-            
-            for key, value in data.items():
-                self.set(key, value, timeout, tags=[tag])
+        data = data_loader()
+        count = 0
+        
+        for key, value in data.items():
+            if self.set(key, value, timeout, tags=[tag]):
                 count += 1
-            
-            return count
-            
-        except Exception as e:
-            print(f"Cache warming error for tag '{tag}': {e}")
-            return 0
+        
+        return count
     
     def get_stats(self) -> Dict[str, Any]:
         """Get cache statistics."""
-        total_requests = self._stats["hits"] + self._stats["misses"]
-        hit_rate = self._stats["hits"] / total_requests if total_requests > 0 else 0
+        total = self._stats["hits"] + self._stats["misses"]
+        hit_rate = self._stats["hits"] / total if total > 0 else 0
         
         return {
-            "namespace": self.namespace,
+            "keys": len(self._metadata),
+            "hit_rate": round(hit_rate, 4),
+            "memory": self._estimate_memory(),
+            "evicted": self._stats.get("tag_invalidations", 0),
             "hits": self._stats["hits"],
             "misses": self._stats["misses"],
-            "hit_rate": round(hit_rate, 4),
             "sets": self._stats["sets"],
-            "deletes": self._stats["deletes"],
-            "tag_invalidations": self._stats["tag_invalidations"],
-            "tag_count": len(self._tags),
-            "metadata_entries": len(self._metadata),
-            "backends": len(self.backends)
+            "deletes": self._stats["deletes"]
         }
+    
+    def get_stats_from_kosdb(self) -> Dict[str, Any]:
+        """Get stats from KosDB persistence."""
+        if self.db and self._is_kosdb():
+            try:
+                result = self.db.query(f"SELECT * FROM cache_stats WHERE namespace='{self.namespace}'")
+                if result.get('rows'):
+                    row = result['rows'][0]
+                    total = int(row.get('hits', 0)) + int(row.get('misses', 0))
+                    hit_rate = int(row.get('hits', 0)) / total if total > 0 else 0
+                    return {
+                        "keys": int(row.get('keys_count', 0)),
+                        "hit_rate": round(hit_rate, 4),
+                        "memory": row.get('memory_usage', '0MB'),
+                        "evicted": int(row.get('tag_invalidations', 0)),
+                        "hits": int(row.get('hits', 0)),
+                        "misses": int(row.get('misses', 0)),
+                        "sets": int(row.get('sets', 0)),
+                        "deletes": int(row.get('deletes', 0))
+                    }
+            except Exception:
+                pass
+        return self.get_stats()
     
     def clear(self) -> bool:
         """Clear all caches."""
-        self._tags.clear()
-        self._metadata.clear()
-        
-        results = []
         for backend in self.backends:
-            results.append(backend.clear())
+            if hasattr(backend, 'clear'):
+                backend.clear()
         
-        return all(results)
+        self._metadata.clear()
+        self._tags.clear()
+        self._save_stats_to_kosdb()
+        return True
     
-    def memoize(self, timeout: int = 300, tags: List[str] = None):
+    def invalidate_pattern(self, pattern: str) -> int:
         """
-        Decorator to cache function results with tagging.
-        
-        Usage:
-            @cache.memoize(timeout=60, tags=["posts"])
-            def get_posts():
-                return db.query(Post).all()
-        """
-        tags = tags or []
-        
-        def decorator(func):
-            def wrapper(*args, **kwargs):
-                key = f"memo:{func.__name__}:{hash(str(args))}:{hash(str(kwargs))}"
-                
-                result = self.get(key)
-                if result is not None:
-                    return result
-                
-                result = func(*args, **kwargs)
-                self.set(key, result, timeout, tags=tags)
-                return result
-            
-            wrapper.clear_cache = lambda: self.delete(
-                f"memo:{func.__name__}"
-            )
-            
-            wrapper.invalidate_tag = lambda tag: self.tag_invalidate(tag)
-            
-            return wrapper
-        return decorator
-
-
-class CacheWarmer:
-    """Service for pre-warming common cache queries."""
-    
-    def __init__(self, cache: CacheManager):
-        self.cache = cache
-        self._warmers: Dict[str, Callable] = {}
-    
-    def register(self, name: str, data_loader: Callable[[], Dict[str, Any]],
-                 timeout: int = 300):
-        """
-        Register a cache warming function.
+        Invalidate keys matching pattern.
         
         Args:
-            name: Warmer name
-            data_loader: Function returning dict of key->value
-            timeout: Cache TTL
-        """
-        self._warmers[name] = {
-            "loader": data_loader,
-            "timeout": timeout
-        }
-    
-    def warm(self, name: str = None) -> Dict[str, int]:
-        """
-        Execute cache warming.
-        
-        Args:
-            name: Specific warmer to run, or None for all
+            pattern: Glob pattern to match
         
         Returns:
-            Dict of warmer name -> entries warmed
+            Number of keys invalidated
         """
-        results = {}
+        import fnmatch
+        count = 0
         
-        warmers_to_run = [name] if name else list(self._warmers.keys())
+        for key in list(self._metadata.keys()):
+            if fnmatch.fnmatch(key, pattern):
+                if self.delete(key):
+                    count += 1
         
-        for warmer_name in warmers_to_run:
-            if warmer_name not in self._warmers:
-                continue
-            
-            config = self._warmers[warmer_name]
-            count = self.cache.tag_warm(
-                warmer_name,
-                config["loader"],
-                config["timeout"]
-            )
-            results[warmer_name] = count
-        
-        return results
-    
-    def warm_all(self) -> Dict[str, int]:
-        """Warm all registered caches."""
-        return self.warm()
+        self._save_stats_to_kosdb()
+        return count
 
 
-# Tenant-aware cache factory
-_tenant_caches: Dict[str, CacheManager] = {}
+# Global cache instances
+_cache_instances: Dict[str, CacheManager] = {}
 
 
-def get_tenant_cache(tenant_id: str = "default") -> CacheManager:
-    """Get or create namespaced cache for tenant."""
-    if tenant_id not in _tenant_caches:
-        _tenant_caches[tenant_id] = CacheManager(namespace=tenant_id)
-    return _tenant_caches[tenant_id]
+def get_cache(namespace: str = "default", db=None) -> CacheManager:
+    """Get or create cache manager for namespace."""
+    if namespace not in _cache_instances:
+        _cache_instances[namespace] = CacheManager(namespace=namespace, db=db)
+    return _cache_instances[namespace]
+
+
+def get_tenant_cache(tenant_id: str, db=None) -> CacheManager:
+    """Get cache for specific tenant."""
+    return get_cache(f"tenant:{tenant_id}", db=db)
+
+
+def clear_all_caches():
+    """Clear all cache instances."""
+    for cache in _cache_instances.values():
+        cache.clear()
+    _cache_instances.clear()

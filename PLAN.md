@@ -1,26 +1,41 @@
-# Plan: Fix Admin Panel KosDB Compatibility Bugs
-## ID: 1784359341.4322383
-## Created: 2026-07-18 07:22:21
+# Plan: Admin Panel Completion
+## ID: 1784367312.5403392
+## Created: 2026-07-18 09:35:12
 ## Status: in_progress
 
-### Tasks (6):
-1. [pending] Fix KosDB Detection in AdminAPI Helpers
-   ID: 1784359344.9278455
+### Goal:
+Finish the WebCMS admin panel so all sections work with KosDB and SQLAlchemy. First fix settings save (site name currently does not persist). Then implement or wire up the remaining admin pages that are present in the React UI but not fully functional: ContentManager, MediaManager, UserManager, RoleManager, PluginManager, TemplateManager, ThemeManager, WorkflowManager, BackupManager, CacheManager, TenantManager, SearchManager, NotificationManager. Ensure every backend endpoint returns proper JSON, handles KosDB dict records, and persists changes.
 
-2. [pending] Fix _get_model_count for KosDB Backend
-   ID: 1784359347.9958322
+### Tasks (10):
+1. [pending] Fix admin settings save
+   ID: 1784367315.35624
 
-3. [pending] Fix _get_model_list and _get_model_by_id for KosDB
-   ID: 1784359351.4230478
+2. [pending] Wire Content Manager (pages/posts)
+   ID: 1784367317.6565092
 
-4. [pending] Fix User.encode Error in KosDB
-   ID: 1784359354.7176104
+3. [pending] Wire Media Manager
+   ID: 1784367320.0209253
 
-5. [pending] Fix Serialization of Dict Records in Admin API
-   ID: 1784359357.610088
+4. [pending] Wire User Manager and Role Manager
+   ID: 1784367321.9482493
 
-6. [pending] Test Admin Dashboard with KosDB Backend
-   ID: 1784359360.8688984
+5. [pending] Wire Plugin Manager
+   ID: 1784367323.7581875
+
+6. [pending] Wire Template and Theme Managers
+   ID: 1784367325.6286693
+
+7. [pending] Wire Workflow Manager
+   ID: 1784367328.1510165
+
+8. [pending] Wire Backup and Cache Managers
+   ID: 1784367329.83678
+
+9. [pending] Wire Tenant, Search and Notification Managers
+   ID: 1784367331.8279858
+
+10. [pending] Final admin smoke test
+   ID: 1784367333.5826037
 
 ---
 

@@ -1,1 +1,0 @@
-{"backup_id": "db_incremental_1783835444", "type": "incremental", "timestamp": "2026-07-12T05:50:44.778135", "tables": ["posts", "pages", "users", "media"], "checksum": "3cc6a785400b826149a6779a8705921f65e31bb59e6bc43df9c05a1f6ce22625"}

@@ -1,3 +1,21 @@
+## 2026-07-18 — v1.3.25
+
+### Auto: Version v1.3.25
+
+- Version auto-incremented from v1.3.24
+- Files changed: (none)
+
+---
+
+## 2026-07-18 — v1.3.24
+
+### Auto: Version v1.3.24
+
+- Version auto-incremented from v1.3.23
+- Files changed: HISTORY.md, PLAN.md, background.log, current_task.txt, fix_admin_api_tenants_search_notifications.py, fix_backup_engine.py, fix_cache_api.py, fix_kosdb_storage.py, fix_templates_api.py, fix_test_debug.py, fix_workflow_api.py, patch_admin_api.py, plans/1784367312.5403392.json, plugin_registry.json, start_server.py, state.aiia, task10_summary.md, task5_summary.md, task6_summary.md, task7_summary.md, task8_summary.md, task9_summary.md, terminal_audit.log, test_admin_api_validation.py, test_admin_content.py, test_admin_users_roles.py, test_backup_cache.py, test_backups/db_full_1783835386.json, test_backups/db_full_1783835389.json, test_backups/db_full_1783835395.json, test_backups/db_full_1783835407.json, test_backups/db_full_1783835411.json, test_backups/db_full_1783835422.json, test_backups/db_full_1783835444.json, test_backups/db_full_1783844257.json, test_backups/db_incremental_1783835386.json, test_backups/db_incremental_1783835389.json, test_backups/db_incremental_1783835395.json, test_backups/db_incremental_1783835407.json, test_backups/db_incremental_1783835411.json, test_backups/db_incremental_1783835422.json, test_backups/db_incremental_1783835444.json, test_backups/db_incremental_1783844257.json, test_backups/logo.png, test_backups/media/logo.png, test_plugin_api.py, test_plugin_api_direct.py, test_plugin_http.py, test_plugin_marketplace.py, test_plugins.py, test_settings_sqlalchemy.py, test_templates_themes.py, test_workflows.py, test_workflows_debug.py, test_workflows_debug2.py, test_workflows_simple.py, webcms/admin-ui/terminal_audit.log, webcms/admin/admin_api.py, webcms/auth/manager.py, webcms/backup/engine.py, webcms/cache/manager.py, webcms/cache/redis_client.py, webcms/content/manager.py, webcms/content/manager_kosdb.py, webcms/media/manager.py, webcms/media/storage.py, webcms/notifications/manager.py, webcms/notifications/preferences.py, webcms/plugins/manager.py, webcms/plugins/marketplace.py, webcms/search/analytics.py, webcms/templates/engine.py, webcms/templates/filters.py, webcms/templates/theme.py, webcms/tenants/manager.py, webcms/workflow/kosdb_storage.py, webcms/workflow/manager.py, webcms_search.db
+
+---
+
 ## 2026-07-18 — v1.3.23
 
 ### Auto: Version v1.3.23

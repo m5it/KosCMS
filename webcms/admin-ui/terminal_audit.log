@@ -22,3 +22,5 @@ info, body = req('/admin'); print('/admin:', info['status'], 'has external scrip
 [2026-07-12 07:11:10] CMD: sed -i s/@app.route('\/admin\/<path:filename>'/@app.route('\/admin\/{filename:path}'/g webcms/admin/routes.py | SUCCESS: True | OUTPUT_LEN: 0
 [2026-07-12 07:11:40] CMD: python3 -c from pathlib import Path; html=Path('webcms/admin-ui/dist/index.html'); js=Path('webcms/admin-ui/dist/assets/admin.js'); print('index.html exists:', html.exists(), 'size:', html.stat().st_size); print('admin.js exists:', js.exists(), 'size:', js.stat().st_size); print('external script tag:', 'src="/admin/assets/admin.js"' in html.read_text()) | SUCCESS: True | OUTPUT_LEN: 95
 [2026-07-12 07:12:09] CMD: sed -i s|@app.route('/admin/&lt;path:filename&gt;'|@app.route('/admin/{filename:path}'|g /home/t3ch/adata2/OurAI/playground/collecting_program_data/KosCMS/webcms/admin/routes.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-18 10:52:51] CMD: cd webcms/admin-ui &amp;&amp; npm run build | SUCCESS: True | OUTPUT_LEN: 68
+[2026-07-18 10:52:53] CMD: npm run build | SUCCESS: False | OUTPUT_LEN: 0

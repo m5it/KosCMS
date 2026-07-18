@@ -2,8 +2,14 @@
 Redis client with connection pooling.
 """
 
-import redis
-from redis.connection import ConnectionPool
+try:
+    import redis
+    from redis.connection import ConnectionPool
+    REDIS_AVAILABLE = True
+except ImportError:
+    REDIS_AVAILABLE = False
+    redis = None
+    ConnectionPool = None
 
 
 class RedisClient:
@@ -11,6 +17,9 @@ class RedisClient:
 
     def __init__(self, host="localhost", port=6379, db=0,
                  password=None, max_connections=50, socket_timeout=5):
+        if not REDIS_AVAILABLE:
+            raise ImportError("redis module not installed. Install with: pip install redis")
+        
         self.host = host
         self.port = port
         self.db = db
@@ -63,3 +72,11 @@ def get_redis_client(host="localhost", port=6379, db=0):
     if _redis_client is None:
         _redis_client = RedisClient(host=host, port=port, db=db)
     return _redis_client
+
+
+def get_redis_client_safe(host="localhost", port=6379, db=0):
+    """Get Redis client or None if redis not available."""
+    try:
+        return get_redis_client(host, port, db)
+    except ImportError:
+        return None

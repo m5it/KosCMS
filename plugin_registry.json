@@ -1,0 +1,28 @@
+{
+  "seo_optimizer": {
+    "name": "seo_optimizer",
+    "version": "1.0.0",
+    "description": "Plugin: seo_optimizer",
+    "author": "Unknown",
+    "min_cms_version": "1.0.0",
+    "max_cms_version": null,
+    "dependencies": [],
+    "tags": [],
+    "download_url": null,
+    "installed": true,
+    "active": false
+  },
+  "contact_form": {
+    "name": "contact_form",
+    "version": "1.0.0",
+    "description": "Simple contact form with admin dashboard",
+    "author": "WebCMS Team",
+    "min_cms_version": "1.0.0",
+    "max_cms_version": null,
+    "dependencies": [],
+    "tags": [],
+    "download_url": null,
+    "installed": true,
+    "active": false
+  }
+}

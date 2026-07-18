@@ -18,12 +18,47 @@ from .hooks import HookManager
 class PluginManager:
     """Plugin discovery and management."""
     
-    def __init__(self, plugins_dir: str, hook_manager: HookManager):
+    def __init__(self, plugins_dir: str = "plugins", hook_manager: HookManager = None, db=None):
         self.plugins_dir = Path(plugins_dir)
-        self.hook_manager = hook_manager
+        self.hook_manager = hook_manager or HookManager()
+        self.db = db
         self._plugins: Dict[str, PluginBase] = {}
         self._configs: Dict[str, PluginConfig] = {}
         self._loaded: Dict[str, bool] = {}
+    
+    def _is_kosdb(self) -> bool:
+        """Check if database is KosDB."""
+        if self.db is None:
+            return False
+        has_methods = all(
+            hasattr(self.db, method) 
+            for method in ['execute', 'query', 'list_tables']
+        )
+        return has_methods
+    
+    def _ensure_tables(self):
+        """Ensure plugin tables exist."""
+        if not self.db or not self._is_kosdb():
+            return
+        
+        try:
+            tables = self.db.list_tables()
+        except Exception:
+            tables = []
+        
+        if 'plugins' not in tables:
+            try:
+                self.db.execute("""
+                    CREATE TABLE plugins (
+                        name TEXT PRIMARY KEY,
+                        version TEXT,
+                        enabled TEXT DEFAULT '0',
+                        config TEXT,
+                        installed_at TEXT
+                    )
+                """)
+            except Exception:
+                pass
     
     def discover(self) -> List[PluginConfig]:
         """
@@ -69,136 +104,115 @@ class PluginManager:
             print(f"Error loading plugin config from {plugin_dir}: {e}")
             return None
     
-    def load(self, name: str) -> Optional[PluginBase]:
+    def load(self, plugin_name: str) -> bool:
         """
-        Load plugin by name.
+        Load a plugin.
         
         Args:
-            name: Plugin name
+            plugin_name: Name of the plugin to load
         
         Returns:
-            Plugin instance or None
+            True if loaded successfully
         """
-        if name in self._loaded:
-            return self._plugins.get(name)
+        if plugin_name in self._loaded:
+            return True
         
-        config = self._configs.get(name)
+        config = self._configs.get(plugin_name)
+        if not config:
+            return False
+        
+        try:
+            plugin_dir = self.plugins_dir / plugin_name
+            module_path = f"webcms.plugins.{plugin_name}"
+            
+            # Add to path
+            sys.path.insert(0, str(plugin_dir.parent))
+            
+            # Import plugin module
+            module = importlib.import_module(f"{plugin_name}.plugin")
+            
+            # Get plugin class
+            plugin_class = getattr(module, 'Plugin', None)
+            if not plugin_class:
+                return False
+            
+            # Instantiate
+            plugin = plugin_class(config)
+            self._plugins[plugin_name] = plugin
+            
+            # Register hooks
+            if self.hook_manager:
+                plugin.register_hooks(self.hook_manager)
+            
+            self._loaded[plugin_name] = True
+            return True
+            
+        except Exception as e:
+            print(f"Error loading plugin {plugin_name}: {e}")
+            return False
+    
+    def unload(self, plugin_name: str) -> bool:
+        """Unload a plugin."""
+        if plugin_name not in self._loaded:
+            return False
+        
+        plugin = self._plugins.get(plugin_name)
+        if plugin:
+            plugin.shutdown()
+        
+        del self._plugins[plugin_name]
+        del self._loaded[plugin_name]
+        return True
+    
+    def is_loaded(self, plugin_name: str) -> bool:
+        """Check if plugin is loaded."""
+        return plugin_name in self._loaded
+    
+    def get_plugin(self, plugin_name: str) -> Optional[PluginBase]:
+        """Get loaded plugin instance."""
+        return self._plugins.get(plugin_name)
+    
+    def list_plugins(self) -> List[Dict]:
+        """List all plugins."""
+        return [
+            {
+                "name": name,
+                "version": config.version,
+                "description": config.description,
+                "author": config.author,
+                "loaded": name in self._loaded
+            }
+            for name, config in self._configs.items()
+        ]
+    
+    def get_plugin_info(self, plugin_name: str) -> Optional[Dict]:
+        """Get plugin information."""
+        config = self._configs.get(plugin_name)
         if not config:
             return None
         
-        # Check dependencies
-        for req in config.requires:
-            if req not in self._loaded:
-                # Auto-load dependency
-                self.load(req)
-        
-        # Import plugin module
-        plugin_dir = self.plugins_dir / name
-        init_file = plugin_dir / "__init__.py"
-        
-        if not init_file.exists():
-            return None
-        
-        try:
-            # Add to path
-            if str(plugin_dir.parent) not in sys.path:
-                sys.path.insert(0, str(plugin_dir.parent))
-            
-            # Import
-            module = importlib.import_module(name)
-            
-            # Find plugin class
-            plugin_class = getattr(module, "Plugin", None)
-            if plugin_class is None:
-                # Look for subclasses
-                for attr_name in dir(module):
-                    attr = getattr(module, attr_name)
-                    if (isinstance(attr, type) and 
-                        issubclass(attr, PluginBase) and 
-                        attr != PluginBase):
-                        plugin_class = attr
-                        break
-            
-            if plugin_class:
-                # Instantiate
-                plugin = plugin_class(config)
-                plugin.register()
-                
-                self._plugins[name] = plugin
-                self._loaded[name] = False  # Not yet activated
-                
-                return plugin
-                
-        except Exception as e:
-            print(f"Error loading plugin {name}: {e}")
-        
-        return None
+        return {
+            "name": config.name,
+            "version": config.version,
+            "description": config.description,
+            "author": config.author,
+            "requires": config.requires,
+            "permissions": config.permissions,
+            "loaded": plugin_name in self._loaded
+        }
     
-    def activate(self, name: str) -> bool:
-        """
-        Activate plugin.
-        
-        Args:
-            name: Plugin name
-        
-        Returns:
-            True if activated
-        """
-        plugin = self._plugins.get(name)
-        if not plugin:
+    def enable_plugin(self, plugin_name: str) -> bool:
+        """Enable plugin."""
+        if plugin_name not in self._configs:
             return False
-        
-        if self._loaded.get(name):
-            return True  # Already active
-        
-        try:
-            if plugin.activate():
-                self._loaded[name] = True
-                
-                # Register plugin hooks
-                for event, hooks in plugin._hooks.items():
-                    for hook in hooks:
-                        self.hook_manager.register(event, hook)
-                
-                return True
-        except Exception as e:
-            print(f"Error activating plugin {name}: {e}")
-        
-        return False
+        return self.load(plugin_name)
     
-    def deactivate(self, name: str) -> bool:
-        """Deactivate plugin."""
-        plugin = self._plugins.get(name)
-        if not plugin:
-            return False
-        
-        try:
-            plugin.deactivate()
-            self._loaded[name] = False
-            
-            # Unregister hooks
-            for event, hooks in plugin._hooks.items():
-                for hook in hooks:
-                    self.hook_manager.unregister(event, hook)
-            
-            return True
-        except Exception as e:
-            print(f"Error deactivating plugin {name}: {e}")
-        
-        return False
+    def disable_plugin(self, plugin_name: str) -> bool:
+        """Disable plugin."""
+        return self.unload(plugin_name)
     
-    def get_active_plugins(self) -> List[PluginBase]:
-        """Get list of active plugins."""
-        return [
-            self._plugins[name] 
-            for name, active in self._loaded.items() 
-            if active
-        ]
-    
-    def get_plugin(self, name: str) -> Optional[PluginBase]:
-        """Get plugin by name."""
-        return self._plugins.get(name)
-    
-    def is_active(self, name: str) -> bool:
-        """Check if plugin is active."""
-        return self._loaded.get(name, False)
+    def get_hooks(self) -> List[str]:
+        """Get registered hook names."""
+        if self.hook_manager:
+            return self.hook_manager.list_hooks()
+        return []
