@@ -8,7 +8,7 @@ and other low-level socket errors without crashing the server.
 
 import logging
 import sys
-from wsgiref.simple_server import WSGIRequestHandler, WSGIServer
+from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
 
 
 logger = logging.getLogger("webcms.server")
@@ -88,22 +88,17 @@ class HardenedWSGIRequestHandler(WSGIRequestHandler):
             return b""
 
 
-class HardenedWSGIServer(WSGIServer):
+def _patch_server(server, timeout=30):
     """
-    WSGI server that uses HardenedWSGIRequestHandler by default and
-    handles connection-level errors gracefully.
+    Patch a wsgiref WSGIServer instance with hardened error handling
+    and socket timeouts.
     """
+    server.request_timeout = timeout
+    server.allow_reuse_address = True
 
-    request_timeout = 30
-    allow_reuse_address = True
+    original_handle_error = server.handle_error
 
-    def __init__(self, server_address, handler_class=None):
-        # Default to hardened handler if not provided.
-        if handler_class is None:
-            handler_class = HardenedWSGIRequestHandler
-        super().__init__(server_address, handler_class)
-
-    def handle_error(self, request, client_address):
+    def handle_error(request, client_address):
         """
         Override BaseServer.handle_error to suppress noisy tracebacks for
         routine socket errors.
@@ -117,19 +112,30 @@ class HardenedWSGIServer(WSGIServer):
             return
         logger.warning("Server error processing request from %s", client_address, exc_info=True)
 
-    def get_request(self):
+    server.handle_error = handle_error
+
+    original_get_request = server.get_request
+
+    def get_request():
         """Accept a connection with a socket timeout to defend slowloris."""
-        conn, client_address = super().get_request()
+        conn, client_address = original_get_request()
         try:
-            conn.settimeout(self.request_timeout)
+            conn.settimeout(timeout)
         except OSError:
             pass
         return conn, client_address
+
+    server.get_request = get_request
+
+    return server
 
 
 def make_hardened_server(host, port, app, handler_class=None, timeout=30):
     """
     Factory for a hardened WSGI development server.
+
+    Uses the standard wsgiref make_server factory with a hardened request
+    handler, then patches the server instance for graceful error handling.
 
     Args:
         host: Interface to bind to.
@@ -139,10 +145,8 @@ def make_hardened_server(host, port, app, handler_class=None, timeout=30):
         timeout: Socket timeout in seconds.
 
     Returns:
-        HardenedWSGIServer instance.
+        WSGIServer instance patched for hardened behavior.
     """
     handler_class = handler_class or HardenedWSGIRequestHandler
-    server = HardenedWSGIServer((host, port), handler_class)
-    server.set_app(app)
-    server.request_timeout = timeout
-    return server
+    server = make_server(host, port, app, handler_class=handler_class)
+    return _patch_server(server, timeout=timeout)
