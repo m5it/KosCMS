@@ -19,11 +19,6 @@ from .router import Router
 from .middleware import MiddlewareStack
 from .container import Container
 from .server import make_hardened_server
-from .response import Response
-from .router import Router
-from .middleware import MiddlewareStack
-from .container import Container
-from .server import make_hardened_server
 
 
 class Application:
@@ -119,6 +114,13 @@ class Application:
             )
         
         self.logger = logging.getLogger("webcms")
+    
+    def _init_container(self) -> None:
+        """Initialize dependency injection container."""
+        self.container.register("app", self)
+        self.container.register("config", self.config)
+        self.container.register("router", self.router)
+        self.container.register("hooks", self.hooks)
     
     def route(self, path: str, methods: Optional[List[str]] = None):
         """Decorator to register a route."""

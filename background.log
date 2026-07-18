@@ -5101,3 +5101,13 @@ Usage:
 [07:13:18] INFO: AI response: 109707 prompt + 103 response tokens (total: 10222742 / 76110)
 [07:13:18] [after +103] [Context: 127883/262144 (48.8%)]
 [07:13:18] You: 
+[07:14:16] [Context: 128067/262144 (48.9%)]
+[07:14:16] [iter 1] [Context: 128067/262144 (48.9%)]
+[07:14:16] INFO: AI request (iteration 1, msgs=300)
+[07:14:29] INFO: AI response: 110010 prompt + 1392 response tokens (total: 10332752 / 77502)
+[07:14:29] [after +1392] [Context: 129807/262144 (49.5%)]
+[07:14:29] [iter 2] [Context: 129807/262144 (49.5%)]
+[07:14:29] INFO: AI request (iteration 2, msgs=302)
+[07:14:31] INFO: AI response: 111426 prompt + 66 response tokens (total: 10444178 / 77568)
+[07:14:31] [after +66] [Context: 129876/262144 (49.5%)]
+[07:14:31] You: 

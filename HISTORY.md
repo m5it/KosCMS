@@ -3782,3 +3782,75 @@ All tasks in the plan are complete. The server now:
 
 <!-- {"role": "assistant", "content": "All tasks in the plan are complete. The server now:\n\n1. \u2705 Uses a hardened WSGI server that survives malformed requests, TLS garbage, and connection resets\n2. \u2705 Has request validation middleware for defense in depth\n3. \u2705 Has hardened request parsing that safely handles edge cases\n4. \u2705 Includes a resilience test suite\n5. \u2705 Logs to terminal in debug mode (`-d`) and to `logs/webcms.log` in production mode\n\nReady for the next plan or task.", "sessionId": 338, "rowId": 33, "timestamp": 1784358798.2282014, "date": "2026-07-18", "thinking": "", "prompt_tokens": 109707, "response_tokens": 103} -->
 
+## [07:14] USER
+now error, probably replaceline cause corruption:
+> 
+> (.venv) kqs@vmi3205629:~/www/test.KosCMS$ python3 run.py
+> Traceback (most recent call last):
+>   File "/home/kqs/www/test.KosCMS/run.py", line 42, in <module>
+>     main()
+>   File "/home/kqs/www/test.KosCMS/run.py", line 30, in main
+>     app = create_app(args.config)
+>           ^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/home/kqs/www/test.KosCMS/webcms/app_factory.py", line 28, in create_app
+>     app = Application(config_path)
+>           ^^^^^^^^^^^^^^^^^^^^^^^^
+>   F...
+> (truncated, 704 chars total)
+
+---
+
+<!-- {"role": "user", "content": "now error, probably replaceline cause corruption:\n\n(.venv) kqs@vmi3205629:~/www/test.KosCMS$ python3 run.py\nTraceback (most recent call last):\n  File \"/home/kqs/www/test.KosCMS/run.py\", line 42, in <module>\n    main()\n  File \"/home/kqs/www/test.KosCMS/run.py\", line 30, in main\n    app = create_app(args.config)\n          ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/kqs/www/test.KosCMS/webcms/app_factory.py\", line 28, in create_app\n    app = Application(config_path)\n          ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/kqs/www/test.KosCMS/webcms/core/application.py\", line 42, in __init__\n    self._init_container()\n    ^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'Application' object has no attribute '_init_container'", "sessionId": 338, "rowId": 34, "timestamp": 1784358856.2748423, "date": "2026-07-18"} -->
+
+## [07:14] ASSISTANT
+The file is corrupted again. Let me rewrite `webcms/core/application.py` cleanly:
+> 
+> <WriteFile>
+> <fileName>webcms/core/application.py</fileName>
+> <contentOfFile>"""
+> WebCMS Application Core
+> 
+> Main application class handling WSGI/ASGI requests, routing,
+> and plugin lifecycle management.
+> """
+> 
+> import os
+> import sys
+> import yaml
+> import logging
+> import logging.handlers
+> from typing import Dict, List, Callable, Optional, Any
+> from pathlib import Path
+> 
+> from .request import Request
+> from .response import Response
+> f...
+> (truncated, 6845 chars total)
+> </contentOfFile>
+> </WriteFile>
+
+---
+
+<!-- {"role": "assistant", "content": "The file is corrupted again. Let me rewrite `webcms/core/application.py` cleanly:\n\n<WriteFile>\n<fileName>webcms/core/application.py</fileName>\n<contentOfFile>\"\"\"\nWebCMS Application Core\n\nMain application class handling WSGI/ASGI requests, routing,\nand plugin lifecycle management.\n\"\"\"\n\nimport os\nimport sys\nimport yaml\nimport logging\nimport logging.handlers\nfrom typing import Dict, List, Callable, Optional, Any\nfrom pathlib import Path\n\nfrom .request import Request\nfrom .response import Response\nfrom .router import Router\nfrom .middleware import MiddlewareStack\nfrom .container import Container\nfrom .server import make_hardened_server\n\n\nclass Application:\n    \"\"\"Main WebCMS application class.\"\"\"\n    \n    def __init__(self, config_path: Optional[str] = None):\n        self.root_path = Path(__file__).parent.parent.absolute()\n        self.config = self._load_config(config_path)\n        self.container = Container()\n        self.router = Router()\n        self.middleware = MiddlewareStack()\n        self.plugins: Dict[str, Any] = {}\n        self.hooks: Dict[str, List[Callable]] = {}\n        \n        self._setup_logging()\n        self._init_container()\n        \n        logging.info(f\"WebCMS {self._get_version()} initialized\")\n    \n    def _load_config(self, config_path: Optional[str]) -> Dict:\n        \"\"\"Load configuration from YAML file.\"\"\"\n        if config_path is None:\n            config_path = self.root_path / \"config\" / \"config.yaml\"\n        \n        default_config = {\n            \"app\": {\n                \"name\": \"WebCMS\",\n                \"debug\": False,\n                \"secret_key\": \"change-me-in-production\",\n                \"timezone\": \"UTC\"\n            },\n            \"server\": {\n                \"host\": \"0.0.0.0\",\n                \"port\": 8000,\n                \"workers\": 4\n            },\n            \"database\": {\n                \"url\": \"sqlite:///webcms.db\",\n                \"pool_size\": 10\n            }\n        }\n        \n        if os.path.exists(config_path):\n            with open(config_path, 'r') as f:\n                user_config = yaml.safe_load(f)\n                self._deep_update(default_config, user_config)\n        \n        return default_config\n    \n    def _deep_update(self, base: Dict, update: Dict) -> None:\n        \"\"\"Recursively update nested dictionaries.\"\"\"\n        for key, value in update.items():\n            if key in base and isinstance(base[key], dict) and isinstance(value, dict):\n                self._deep_update(base[key], value)\n            else:\n                base[key] = value\n    \n    def _setup_logging(self) -> None:\n        \"\"\"Configure logging.\"\"\"\n        log_format = \"%(asctime)s - %(name)s - %(levelname)s - %(message)s\"\n        debug = self.config[\"app\"][\"debug\"]\n        level = logging.DEBUG if debug else logging.INFO\n        \n        # Remove existing handlers to avoid duplicates on reconfiguration.\n        root_logger = logging.getLogger()\n        for handler in root_logger.handlers[:]:\n            root_logger.removeHandler(handler)\n        \n        if debug:\n            # Debug mode: log to terminal (stdout).\n            logging.basicConfig(\n                level=level,\n                format=log_format,\n                handlers=[logging.StreamHandler(sys.stdout)]\n            )\n        else:\n            # Production mode: log to file in the project root.\n            log_dir = self.root_path / \"logs\"\n            log_dir.mkdir(exist_ok=True)\n            log_file = log_dir / \"webcms.log\"\n            \n            file_handler = logging.handlers.RotatingFileHandler(\n                log_file,\n                maxBytes=10 * 1024 * 1024,  # 10 MB\n                backupCount=5\n            )\n            file_handler.setFormatter(logging.Formatter(log_format))\n            \n            logging.basicConfig(\n                level=level,\n                format=log_format,\n                handlers=[file_handler]\n            )\n        \n        self.logger = logging.getLogger(\"webcms\")\n    \n    def _init_container(self) -> None:\n        \"\"\"Initialize dependency injection container.\"\"\"\n        self.container.register(\"app\", self)\n        self.container.register(\"config\", self.config)\n        self.container.register(\"router\", self.router)\n        self.container.register(\"hooks\", self.hooks)\n    \n    def route(self, path: str, methods: Optional[List[str]] = None):\n        \"\"\"Decorator to register a route.\"\"\"\n        def decorator(func: Callable) -> Callable:\n            self.router.add(path, func, methods or [\"GET\"])\n            return func\n        return decorator\n    \n    def use(self, middleware) -> None:\n        \"\"\"Register middleware.\"\"\"\n        self.middleware.add(middleware)\n    \n    def wsgi_app(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"WSGI application entry point.\"\"\"\n        request = Request.from_wsgi(environ)\n        response = self.middleware.process(request, self._handle_request)\n        return response.to_wsgi(start_response)\n    \n    def _handle_request(self, request: Request) -> Response:\n        \"\"\"Handle request and return response.\"\"\"\n        try:\n            handler, params = self.router.match(request.path, request.method)\n            \n            if handler is None:\n                return Response.not_found()\n            \n            response = handler(request, **params)\n            \n            if not isinstance(response, Response):\n                response = Response(response)\n            \n            return response\n            \n        except Exception as e:\n            self.logger.exception(\"Request handling error\")\n            return Response.error(\"Internal Server Error\", 500)\n    \n    def run(self, host: Optional[str] = None, port: Optional[int] = None, debug: bool = False, **kwargs) -> None:\n        \"\"\"Run hardened development server.\"\"\"\n        host = host or self.config[\"server\"][\"host\"]\n        port = port or self.config[\"server\"][\"port\"]\n        \n        if debug:\n            self.config[\"app\"][\"debug\"] = True\n            self._setup_logging()\n        \n        # Use hardened server that survives malformed requests and connection resets.\n        timeout = self.config.get(\"server\", {}).get(\"request_timeout\", 30)\n        server = make_hardened_server(host, port, self.wsgi_app, timeout=timeout)\n        self.logger.info(f\"Server running on http://{host}:{port}\")\n        \n        try:\n            server.serve_forever()\n        except KeyboardInterrupt:\n            self.logger.info(\"Shutting down...\")\n    \n    def _get_version(self) -> str:\n        \"\"\"Get WebCMS version.\"\"\"\n        from .. import __version__\n        return __version__\n    \n    def __call__(self, environ: Dict, start_response: Callable) -> List[bytes]:\n        \"\"\"Make application callable for WSGI.\"\"\"\n        return self.wsgi_app(environ, start_response)\n</contentOfFile>\n</WriteFile>", "sessionId": 338, "rowId": 34, "timestamp": 1784358869.2785132, "date": "2026-07-18", "thinking": "", "prompt_tokens": 110010, "response_tokens": 1392} -->
+
+## [07:14] tool: WriteFile
+webcms/core/application.py was created with length 6658
+
+---
+
+<!-- {"role": "tool", "content": "webcms/core/application.py was created with length 6658", "sessionId": 338, "rowId": 34, "timestamp": 1784358869.279147, "date": "2026-07-18", "name": "WriteFile"} -->
+
+## [07:14] ASSISTANT
+Fixed. The file was corrupted. I rewrote `webcms/core/application.py` cleanly with all methods intact, including `_init_container()`.
+> 
+> Clear the cache and restart:
+> 
+> ```bash
+> find . -type d -name __pycache__ -exec rm -rf {} +
+> python3 run.py
+> ```
+
+---
+
+<!-- {"role": "assistant", "content": "Fixed. The file was corrupted. I rewrote `webcms/core/application.py` cleanly with all methods intact, including `_init_container()`.\n\nClear the cache and restart:\n\n```bash\nfind . -type d -name __pycache__ -exec rm -rf {} +\npython3 run.py\n```", "sessionId": 338, "rowId": 34, "timestamp": 1784358871.6182103, "date": "2026-07-18", "thinking": "<think>", "prompt_tokens": 111426, "response_tokens": 66} -->
+
