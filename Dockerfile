@@ -1,51 +1,45 @@
-# WebCMS Docker Image
 
-FROM python:3.11-slim as builder
+# WebCMS Admin Panel - Production Dockerfile
 
-WORKDIR /app
+FROM python:3.11-slim
 
-# Install build dependencies
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_APP=run.py \
+    FLASK_ENV=production
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
+    gcc \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
-
-# Production image
-FROM python:3.11-slim
-
+# Set work directory
 WORKDIR /app
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    libjpeg62-turbo \
-    libpng16-16 \
-    && rm -rf /var/lib/apt/lists/*
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy Python packages from builder
-COPY --from=builder /root/.local /root/.local
-
-# Make sure scripts are in PATH
-ENV PATH=/root/.local/bin:$PATH \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-# Copy application
+# Copy project
 COPY . .
 
-# Create directories
-RUN mkdir -p /app/data /app/media /app/static
+# Create necessary directories
+RUN mkdir -p /app/data /app/uploads /app/logs /app/backups && \
+    chmod 755 /app/data /app/uploads /app/logs /app/backups
+
+# Create non-root user
+RUN useradd -m -u 1000 webcms && \
+    chown -R webcms:webcms /app
+USER webcms
 
 # Expose port
-EXPOSE 8000
+EXPOSE 5000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:5000/health')" || exit 1
 
 # Run application
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "run:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--threads", "2", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-", "run:app"]

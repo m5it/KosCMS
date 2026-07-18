@@ -1,0 +1,25 @@
+# WebCMS Admin Panel - Docker Compose (Development)
+
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=sqlite:///webcms.db
+      - SECRET_KEY=dev-secret-key
+      - JWT_SECRET_KEY=dev-jwt-key
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    volumes:
+      - .:/app
+      - uploads:/app/uploads
+      - backups:/app/backups
+    command: python3 run.py -d
+    restart: unless-stopped
+
+volumes:
+  uploads:
+  backups:

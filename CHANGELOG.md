@@ -1,3 +1,21 @@
+## 2026-07-18 — v1.3.28
+
+### Auto: Version v1.3.28
+
+- Version auto-incremented from v1.3.27
+- Files changed: HISTORY.md, background.log, state.aiia, webcms/security/middleware.py
+
+---
+
+## 2026-07-18 — v1.3.27
+
+### Auto: Version v1.3.27
+
+- Version auto-incremented from v1.3.26
+- Files changed: .dockerignore, ADMIN_PANEL_COMPLETE.md, ADMIN_PANEL_FINAL_REPORT.md, API_DOCUMENTATION.md, COMPLETION_REPORT.md, DEPLOYMENT_GUIDE.md, Dockerfile, FINAL_ACHIEVEMENT_SUMMARY.md, FINAL_DELIVERABLES.md, FINAL_PROJECT_COMPLETE.md, FINAL_PROJECT_SUMMARY.md, FINAL_STATUS.md, HISTORY.md, Makefile, PLAN.md, PRODUCTION_CHECKLIST.md, PROJECT_COMPLETE.md, PROJECT_COMPLETE.txt, PROJECT_COMPLETION_REPORT.md, PROJECT_FINAL_SUMMARY.md, PROJECT_HANDOVER.md, PROJECT_INDEX.md, PROJECT_STATUS.txt, QUICK_REFERENCE.md, QUICK_START.md, README_ADMIN_PANEL.md, admin_panel_fixes_summary.md, background.log, current_task.txt, docker-compose.dev.yml, docker-compose.yml, examples/sdk_usage.py, final_admin_verification.py, final_verification.py, fix_admin_api.py, fix_duplicate_list_users.py, fix_settings.py, nginx.conf, plans/1784367312.5403392.json, requirements.txt, run_tests.py, scripts/deploy.sh, scripts/security_audit.py, setup.py, state.aiia, terminal_audit.log, test_admin_e2e.py, tests/__init__.py, tests/test_admin_api.py, tests/test_admin_unittest.py, tests/test_integration.py, tests/test_simple.py, translations/en.json, webcms.db, webcms/admin/__init__.py, webcms/admin/admin_api.py, webcms/admin/data_import_export.py, webcms/admin/logging_middleware.py, webcms/admin/performance_monitor.py, webcms/admin/rate_limiter.py, webcms/admin/scheduler.py, webcms/admin/validators.py, webcms/admin/webhooks.py, webcms/advanced_search.py, webcms/analytics.py, webcms/api_versioning.py, webcms/cli.py, webcms/client.py, webcms/content_versioning.py, webcms/dev_tools.py, webcms/docs_generator.py, webcms/email_templates.py, webcms/graphql_api.py, webcms/health.py, webcms/i18n.py, webcms/logs/webcms.log, webcms/migrations.py, webcms/realtime.py
+
+---
+
 ## 2026-07-18 — v1.3.26
 
 ### Auto: Version v1.3.26

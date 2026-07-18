@@ -813,9 +813,6 @@ class AdminAPI:
 
     # ---------------- Users & Roles ----------------
 
-    def list_users(self, request: Request) -> Response:
-            return Response.json({"id": theme_id, "active": False, "error": str(e)}, 400)
-
     # ---------------- Users & Roles ----------------
 
     def list_users(self, request: Request) -> Response:
@@ -1195,6 +1192,7 @@ class AdminAPI:
             pass
 
     def get_settings(self, request: Request) -> Response:
+        print("[DEBUG] get_settings called")
         defaults = {
             "site_name": "WebCMS",
             "site_url": "https://example.com",
@@ -1214,46 +1212,73 @@ class AdminAPI:
             "require_https": False
         }
         if not self.db:
+            print("[DEBUG] No database, returning defaults")
             return Response.json({"settings": defaults})
         try:
             if self._is_kosdb():
+                print("[DEBUG] Using KosDB for get_settings")
                 self._ensure_settings_table_kosdb()
                 result = self.db.query("SELECT * FROM settings")
+                print(f"[DEBUG] Settings query result: {result}")
                 if result.get('error'):
+                    print(f"[DEBUG] Error getting settings: {result.get('error')}")
                     return Response.json({"settings": defaults})
                 settings = result.get('rows', [])
+                print(f"[DEBUG] Found {len(settings)} settings")
                 for s in settings:
                     key = s.get('setting_key')
                     if not key:
                         continue
                     defaults[key] = self._coerce_setting(s.get('value'), s.get('type'))
+                    print(f"[DEBUG] Loaded setting: {key} = {defaults[key]}")
             else:
+                print("[DEBUG] Using SQLAlchemy for get_settings")
                 # Use raw SQL to avoid ORM mapper configuration issues.
                 from sqlalchemy import text
                 rows = self.db.execute(text("SELECT key, value, type FROM settings")).fetchall()
                 for row in rows:
                     defaults[row[0]] = self._coerce_setting(row[1], row[2])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[DEBUG] Error in get_settings: {e}")
+            import traceback
+            traceback.print_exc()
+        print(f"[DEBUG] Returning settings: {defaults}")
         return Response.json({"settings": defaults})
 
     def update_settings(self, request: Request) -> Response:
         data = request.json or {}
+        print(f"[DEBUG] update_settings called with data: {data}")
+        
         if not self.db:
+            print("[DEBUG] No database connection, returning mock success")
             return Response.json({"updated": True, "settings": data})
+        
         normalized = {}
         for key, value in data.items():
             normalized[key] = self._normalize_setting_value(key, value)
+        
+        print(f"[DEBUG] Normalized settings: {normalized}")
+        
         try:
             if self._is_kosdb():
+                print("[DEBUG] Using KosDB path")
                 self._ensure_settings_table_kosdb()
+                
                 for key, value in normalized.items():
                     type_ = self._guess_type(value)
                     val_str = self._sql_escape(str(value))
-                    check = self.db.query(
-                        f"SELECT setting_key FROM settings WHERE setting_key='{self._sql_escape(key)}'"
-                    )
+                    
+                    print(f"[DEBUG] Processing setting: {key} = {value} (type: {type_})")
+                    
+                    # Check if setting exists
+                    check_query = f"SELECT setting_key FROM settings WHERE setting_key='{self._sql_escape(key)}'"
+                    print(f"[DEBUG] Check query: {check_query}")
+                    
+                    check = self.db.query(check_query)
+                    print(f"[DEBUG] Check result: {check}")
+                    
                     exists = bool(check.get('rows', []))
+                    
                     if exists:
                         cmd = (
                             f"UPDATE settings SET value='{val_str}', type='{type_}' "
@@ -1264,8 +1289,13 @@ class AdminAPI:
                             f"INSERT INTO settings (setting_key, value, type) VALUES "
                             f"('{self._sql_escape(key)}', '{val_str}', '{type_}')"
                         )
-                    self.db.execute(cmd)
+                    
+                    print(f"[DEBUG] Executing: {cmd}")
+                    result = self.db.execute(cmd)
+                    print(f"[DEBUG] Execute result: {result}")
+                    
             else:
+                print("[DEBUG] Using SQLAlchemy path")
                 # Use raw SQL to avoid ORM mapper configuration issues.
                 from sqlalchemy import text
                 for key, value in normalized.items():
@@ -1286,11 +1316,17 @@ class AdminAPI:
                             {"key": key, "value": val_str, "type": type_}
                         )
                 self.db.commit()
+                
+            print("[DEBUG] Settings updated successfully")
             return Response.json({"updated": True, "settings": normalized})
+            
         except Exception as e:
+            print(f"[DEBUG] Error updating settings: {e}")
+            import traceback
+            traceback.print_exc()
             if not self._is_kosdb():
                 self.db.rollback()
-            return Response.error(str(e), 400)
+            return Response.json({"updated": False, "error": str(e), "settings": data}, 400)
 
     def _normalize_setting_value(self, key: str, value):
         if value is None:

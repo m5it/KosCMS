@@ -1,3 +1,4 @@
+
 """
 Security Middleware
 
@@ -33,13 +34,21 @@ class CSPConfig:
     report_only: bool = False
     upgrade_insecure: bool = True
     
-    def build_policy(self, nonce: Optional[str] = None) -> str:
+    def build_policy(self, nonce: Optional[str] = None, allow_inline: bool = False) -> str:
         """Build CSP header value."""
         directives = []
         
+        # Build script-src with optional nonce or unsafe-inline
+        script_sources = self.script_src.copy()
+        if nonce:
+            script_sources.append(f"'nonce-{nonce}'")
+        if allow_inline:
+            script_sources.append("'unsafe-inline'")
+            script_sources.append("'unsafe-hashes'")
+        
         policy_map = {
             "default-src": self.default_src,
-            "script-src": self.script_src + ([f"'nonce-{nonce}'"] if nonce else []),
+            "script-src": script_sources,
             "style-src": self.style_src,
             "img-src": self.img_src,
             "font-src": self.font_src,
@@ -153,7 +162,9 @@ class SecurityHeadersMiddleware:
         if is_admin and existing_csp:
             pass
         else:
-            csp_value = self.csp_config.build_policy(request_nonce)
+            # For admin paths, allow inline scripts (needed for event handlers)
+            allow_inline = is_admin
+            csp_value = self.csp_config.build_policy(request_nonce, allow_inline=allow_inline)
             if self.csp_config.report_only:
                 response.headers["Content-Security-Policy-Report-Only"] = csp_value
             else:
