@@ -22,44 +22,31 @@ class AdminAPI:
     # ---------------- Database Helpers ----------------
 
     def _is_kosdb(self) -> bool:
-        """Detect if self.db is a KosDB client vs SQLAlchemy session."""
         if self.db is None:
             return False
-        # KosDB client class names contain "KosDB". SQLAlchemy session does not.
         cls = getattr(self.db, '__class__', type(self.db))
         cls_name = getattr(cls, '__name__', '')
         return 'KosDB' in cls_name
 
     @staticmethod
     def _sql_escape(value) -> str:
-        """Basic SQL string escaping for KosDB query construction."""
         if value is None:
             return "NULL"
         s = str(value)
-        # Escape single quotes by doubling them
         return s.replace("'", "''")
 
     def _kosdb_where_clause(self, key: str, value) -> str:
-        """
-        Build a KosDB WHERE clause that handles boolean values correctly.
-        KosDB stores booleans as 0/1 strings, so we compare against both.
-        """
         if isinstance(value, bool):
             int_val = 1 if value else 0
             return f"({key}='{int_val}' OR {key}='{str(value).lower()}')"
         return f"{key}='{self._sql_escape(value)}'"
 
     def _get_model_count(self, model_class, filter_conditions=None) -> int:
-        """Get count of model records, works with both SQLAlchemy and KosDB."""
         if self.db is None:
             return 0
-        
-        # Extra defensive check: if self.db is a dict, always use KosDB path.
         is_kosdb = self._is_kosdb() or isinstance(self.db, dict)
-        
         if is_kosdb:
-            # KosDB: use SQL query interface
-            table_name = getattr(model_class, '__tablename__', 
+            table_name = getattr(model_class, '__tablename__',
                                 getattr(model_class, '__name__', '').lower() + 's')
             if filter_conditions:
                 where = " AND ".join(
@@ -73,29 +60,22 @@ class AdminAPI:
                 return 0
             rows = result.get('rows', [])
             if rows:
-                # First value in first row, regardless of column name
                 return int(list(rows[0].values())[0])
             return 0
         else:
-            # SQLAlchemy: use ORM query
             query = self.db.query(model_class)
             if filter_conditions:
                 for key, value in filter_conditions.items():
                     query = query.filter(getattr(model_class, key) == value)
             return query.count()
 
-    def _get_model_list(self, model_class, filter_conditions=None, 
+    def _get_model_list(self, model_class, filter_conditions=None,
                        order_by=None, limit=None, desc=True) -> list:
-        """Get list of model records, works with both SQLAlchemy and KosDB."""
         if self.db is None:
             return []
-        
-        # Extra defensive check: if self.db is a dict, always use KosDB path.
         is_kosdb = self._is_kosdb() or isinstance(self.db, dict)
-        
         if is_kosdb:
-            # KosDB: use SQL query interface
-            table_name = getattr(model_class, '__tablename__', 
+            table_name = getattr(model_class, '__tablename__',
                                 getattr(model_class, '__name__', '').lower() + 's')
             cmd = f"SELECT * FROM {table_name}"
             if filter_conditions:
@@ -112,7 +92,6 @@ class AdminAPI:
                 return []
             return result.get('rows', [])
         else:
-            # SQLAlchemy ORM
             query = self.db.query(model_class)
             if filter_conditions:
                 for key, value in filter_conditions.items():
@@ -126,21 +105,16 @@ class AdminAPI:
                 query = query.limit(limit)
             return query.all()
 
-    def _get_model_by_id(self, model_class, record_id: str, 
+    def _get_model_by_id(self, model_class, record_id: str,
                         id_field='id', extra_filters=None) -> any:
-        """Get single record by ID, works with both SQLAlchemy and KosDB."""
         if self.db is None:
             return None
-        
         filters = {id_field: record_id}
         if extra_filters:
             filters.update(extra_filters)
-        
-        # Extra defensive check: if self.db is a dict, always use KosDB path.
         is_kosdb = self._is_kosdb() or isinstance(self.db, dict)
-        
         if is_kosdb:
-            table_name = getattr(model_class, '__tablename__', 
+            table_name = getattr(model_class, '__tablename__',
                                 getattr(model_class, '__name__', '').lower() + 's')
             where = " AND ".join(
                 self._kosdb_where_clause(k, v) for k, v in filters.items()
@@ -160,11 +134,9 @@ class AdminAPI:
     # ---------------- Dashboard ----------------
 
     def dashboard(self, request: Request) -> Response:
-        """Return dashboard widgets with real-ish stats."""
         from webcms.models.user import User
         from webcms.models.content import Post, Page
         from webcms.models.media import Media
-
         stats = {}
         if self.db:
             stats = {
@@ -180,26 +152,19 @@ class AdminAPI:
                     "total": self._get_model_count(Media, {"is_deleted": False})
                 }
             }
-
-        # Widget registry render_all() is async and takes only services dict,
-        # so build fallback widgets directly with computed stats.
         widgets = [
             {"id": "stats", "title": "Content Statistics", "icon": "📊", "data": stats},
             {"id": "activity", "title": "Recent Activity", "icon": "📅", "data": {"recent_posts": stats.get("content", {}).get("posts", 0)}},
             {"id": "health", "title": "System Health", "icon": "❤️", "data": {"status": "ok"}}
         ]
-
-        # Ensure every widget has the keys Dashboard.jsx expects
         for widget in widgets:
             widget.setdefault("icon", "")
             widget.setdefault("data", "")
-
         return Response.json({"widgets": widgets})
 
     # ---------------- Content: Pages & Posts ----------------
 
     def _serialize_page(self, page) -> dict:
-        # Handle both dict (KosDB) and object (SQLAlchemy) access
         if isinstance(page, dict):
             author = page.get('author')
             if isinstance(author, dict):
@@ -222,7 +187,6 @@ class AdminAPI:
         }
 
     def _serialize_post(self, post) -> dict:
-        # Handle both dict (KosDB) and object (SQLAlchemy) access
         if isinstance(post, dict):
             author = post.get('author')
             if isinstance(author, dict):
@@ -341,7 +305,6 @@ class AdminAPI:
         media = self._get_model_list(Media, {"is_deleted": False}, order_by="created_at", limit=50, desc=True)
         result = []
         for m in media:
-            # Handle both dict (KosDB) and object (SQLAlchemy) access
             if isinstance(m, dict):
                 result.append({
                     "id": m.get('id'),
@@ -370,7 +333,6 @@ class AdminAPI:
             return Response.json({"id": str(uuid.uuid4()), "uploaded": True}, 201)
         manager = MediaManager(self.db)
         try:
-            # request.files may contain multipart uploads
             files = getattr(request, "files", {}) or {}
             uploaded = []
             for name, file_storage in files.items():
@@ -498,7 +460,6 @@ class AdminAPI:
         users = self._get_model_list(User, {"is_deleted": False}, order_by="created_at", limit=50, desc=True)
         result = []
         for u in users:
-            # Handle both dict (KosDB) and object (SQLAlchemy) access
             if isinstance(u, dict):
                 roles = u.get('roles', [])
                 role_name = roles[0].get('name') if roles and isinstance(roles[0], dict) else (
@@ -534,7 +495,6 @@ class AdminAPI:
             return Response.error("Invalid JSON", 400)
         if not self.db:
             return Response.json({"id": str(uuid.uuid4()), "created": True}, 201)
-
         try:
             hasher = PasswordHasher()
             user = User(
@@ -545,7 +505,6 @@ class AdminAPI:
                 is_active=data.get("is_active", True)
             )
             if self._is_kosdb():
-                # KosDB: use SQL INSERT
                 table_name = getattr(User, '__tablename__', 'users')
                 cols = ['id', 'username', 'email', 'password_hash', 'display_name', 'is_active', 'is_deleted']
                 user.id = str(uuid.uuid4())
@@ -557,7 +516,6 @@ class AdminAPI:
                 cmd = f"INSERT INTO {table_name} ({', '.join(cols)}) VALUES ({val_str})"
                 self.db.execute(cmd)
             else:
-                # SQLAlchemy
                 self.db.add(user)
                 self.db.commit()
             return Response.json({
@@ -582,7 +540,6 @@ class AdminAPI:
             return Response.not_found()
         try:
             if self._is_kosdb():
-                # KosDB: build UPDATE
                 table_name = getattr(User, '__tablename__', 'users')
                 sets = []
                 for key, value in data.items():
@@ -604,7 +561,6 @@ class AdminAPI:
                     "is_active": data.get("is_active", user.get('is_active') if isinstance(user, dict) else user.is_active)
                 })
             else:
-                # SQLAlchemy
                 if "username" in data:
                     user.username = data["username"]
                 if "email" in data:
@@ -657,7 +613,6 @@ class AdminAPI:
         roles = self._get_model_list(Role, order_by="name")
         result = []
         for r in roles:
-            # Handle both dict (KosDB) and object (SQLAlchemy) access
             if isinstance(r, dict):
                 perms = r.get('permissions', '')
                 perms_list = [p.strip() for p in perms.split(',')] if perms else []
@@ -686,7 +641,6 @@ class AdminAPI:
             return Response.not_found()
         try:
             if self._is_kosdb():
-                # KosDB: build UPDATE
                 table_name = getattr(Role, '__tablename__', 'roles')
                 sets = []
                 if "permissions" in data:
@@ -711,7 +665,6 @@ class AdminAPI:
                     "permissions": [p.strip() for p in perms.split(',')] if perms else []
                 })
             else:
-                # SQLAlchemy
                 if "permissions" in data:
                     role.permissions = ",".join(data["permissions"])
                 if "description" in data:
@@ -730,8 +683,25 @@ class AdminAPI:
 
     # ---------------- Settings ----------------
 
+    def _ensure_settings_table_kosdb(self):
+        """Create the settings table in KosDB if it does not exist."""
+        if not self.db:
+            return
+        try:
+            tables = self.db.list_tables()
+            if "settings" in tables:
+                return
+        except Exception:
+            pass
+        # Use the same simple CREATE TABLE syntax that works for counters.
+        try:
+            self.db.execute(
+                "CREATE TABLE settings (setting_key TEXT, value TEXT, type TEXT)"
+            )
+        except Exception:
+            pass
+
     def get_settings(self, request: Request) -> Response:
-        from webcms.models.system import Setting
         defaults = {
             "site_name": "WebCMS",
             "site_url": "https://example.com",
@@ -754,50 +724,93 @@ class AdminAPI:
             return Response.json({"settings": defaults})
         try:
             if self._is_kosdb():
+                self._ensure_settings_table_kosdb()
                 result = self.db.query("SELECT * FROM settings")
+                if result.get('error'):
+                    return Response.json({"settings": defaults})
                 settings = result.get('rows', [])
                 for s in settings:
-                    defaults[s.get('key')] = self._coerce_setting(s.get('value'), s.get('type'))
+                    key = s.get('setting_key')
+                    if not key:
+                        continue
+                    defaults[key] = self._coerce_setting(s.get('value'), s.get('type'))
             else:
-                settings = self.db.query(Setting).all()
-                for s in settings:
-                    defaults[s.key] = self._coerce_setting(s.value, s.type)
+                # Use raw SQL to avoid ORM mapper configuration issues.
+                from sqlalchemy import text
+                rows = self.db.execute(text("SELECT key, value, type FROM settings")).fetchall()
+                for row in rows:
+                    defaults[row[0]] = self._coerce_setting(row[1], row[2])
         except Exception:
             pass
         return Response.json({"settings": defaults})
 
     def update_settings(self, request: Request) -> Response:
-        from webcms.models.system import Setting
         data = request.json or {}
         if not self.db:
             return Response.json({"updated": True, "settings": data})
+        normalized = {}
+        for key, value in data.items():
+            normalized[key] = self._normalize_setting_value(key, value)
         try:
             if self._is_kosdb():
-                for key, value in data.items():
+                self._ensure_settings_table_kosdb()
+                for key, value in normalized.items():
                     type_ = self._guess_type(value)
                     val_str = self._sql_escape(str(value))
-                    # Try UPDATE first, then INSERT if no rows affected
-                    update_cmd = f"UPDATE settings SET value='{val_str}', type='{type_}' WHERE key='{self._sql_escape(key)}'"
-                    update_result = self.db.execute(update_cmd)
-                    # KosDB returns something like "OK 1 row(s) affected" or "OK 0 row(s) affected"
-                    if "0 row" in str(update_result) or "Empty set" in str(update_result):
-                        insert_cmd = f"INSERT INTO settings (key, value, type) VALUES ('{self._sql_escape(key)}', '{val_str}', '{type_}')"
-                        self.db.execute(insert_cmd)
-            else:
-                for key, value in data.items():
-                    existing = self.db.query(Setting).filter(Setting.key == key).first()
-                    if existing:
-                        existing.value = str(value)
-                        existing.type = self._guess_type(value)
+                    check = self.db.query(
+                        f"SELECT setting_key FROM settings WHERE setting_key='{self._sql_escape(key)}'"
+                    )
+                    exists = bool(check.get('rows', []))
+                    if exists:
+                        cmd = (
+                            f"UPDATE settings SET value='{val_str}', type='{type_}' "
+                            f"WHERE setting_key='{self._sql_escape(key)}'"
+                        )
                     else:
-                        setting = Setting(key=key, value=str(value), type=self._guess_type(value))
-                        self.db.add(setting)
+                        cmd = (
+                            f"INSERT INTO settings (setting_key, value, type) VALUES "
+                            f"('{self._sql_escape(key)}', '{val_str}', '{type_}')"
+                        )
+                    self.db.execute(cmd)
+            else:
+                # Use raw SQL to avoid ORM mapper configuration issues.
+                from sqlalchemy import text
+                for key, value in normalized.items():
+                    type_ = self._guess_type(value)
+                    val_str = str(value).replace("'", "''")
+                    check = self.db.execute(
+                        text("SELECT key FROM settings WHERE key=:key"),
+                        {"key": key}
+                    ).fetchone()
+                    if check:
+                        self.db.execute(
+                            text("UPDATE settings SET value=:value, type=:type WHERE key=:key"),
+                            {"key": key, "value": val_str, "type": type_}
+                        )
+                    else:
+                        self.db.execute(
+                            text("INSERT INTO settings (key, value, type) VALUES (:key, :value, :type)"),
+                            {"key": key, "value": val_str, "type": type_}
+                        )
                 self.db.commit()
-            return Response.json({"updated": True, "settings": data})
+            return Response.json({"updated": True, "settings": normalized})
         except Exception as e:
             if not self._is_kosdb():
                 self.db.rollback()
             return Response.error(str(e), 400)
+
+    def _normalize_setting_value(self, key: str, value):
+        if value is None:
+            return value
+        if isinstance(value, bool):
+            return value
+        numeric_keys = {"posts_per_page", "cache_ttl", "smtp_port"}
+        if key in numeric_keys:
+            try:
+                return int(value)
+            except (ValueError, TypeError):
+                return value
+        return value
 
     @staticmethod
     def _guess_type(value):
@@ -1148,94 +1161,63 @@ class AdminAPI:
 
 
 def register_admin_api(app, db=None, auth=None):
-    """Register all /api/v1/admin/* routes on the application."""
     api = AdminAPI(db=db, auth=auth)
 
     def add(path, handler, methods=None):
         methods = methods or ["GET"]
         app.route(path, methods=methods)(handler)
 
-    # Dashboard
     add("/api/v1/admin/dashboard", api.dashboard, ["GET"])
-
-    # Content: pages & posts
     add("/api/v1/admin/pages", api.list_pages, ["GET"])
     add("/api/v1/admin/pages", api.create_page, ["POST"])
     add("/api/v1/admin/pages/<page_id>", api.update_page, ["PUT"])
     add("/api/v1/admin/pages/<page_id>", api.delete_page, ["DELETE"])
-
     add("/api/v1/admin/posts", api.list_posts, ["GET"])
     add("/api/v1/admin/posts", api.create_post, ["POST"])
     add("/api/v1/admin/posts/<post_id>", api.update_post, ["PUT"])
     add("/api/v1/admin/posts/<post_id>", api.delete_post, ["DELETE"])
-
-    # Media
     add("/api/v1/admin/media", api.list_media, ["GET"])
     add("/api/v1/admin/media", api.upload_media, ["POST"])
     add("/api/v1/admin/media/<media_id>", api.delete_media, ["DELETE"])
-
-    # Plugins
     add("/api/v1/admin/plugins", api.list_plugins, ["GET"])
     add("/api/v1/admin/plugins/<plugin_id>/activate", api.activate_plugin, ["POST"])
     add("/api/v1/admin/plugins/<plugin_id>/deactivate", api.deactivate_plugin, ["POST"])
     add("/api/v1/admin/plugins/<plugin_id>", api.delete_plugin, ["DELETE"])
-
-    # Templates
     add("/api/v1/admin/templates", api.list_templates, ["GET"])
     add("/api/v1/admin/templates", api.create_template, ["POST"])
     add("/api/v1/admin/templates/<template_id>", api.update_template, ["PUT"])
     add("/api/v1/admin/templates/<template_id>", api.delete_template, ["DELETE"])
-
-    # Themes
     add("/api/v1/admin/themes", api.list_themes, ["GET"])
     add("/api/v1/admin/themes/<theme_id>/activate", api.activate_theme, ["POST"])
-
-    # Users
     add("/api/v1/admin/users", api.list_users, ["GET"])
     add("/api/v1/admin/users", api.create_user, ["POST"])
     add("/api/v1/admin/users/<user_id>", api.update_user, ["PUT"])
     add("/api/v1/admin/users/<user_id>", api.delete_user, ["DELETE"])
-
-    # Roles
     add("/api/v1/admin/roles", api.list_roles, ["GET"])
     add("/api/v1/admin/roles/<role_id>", api.update_role, ["PUT"])
-
-    # Settings
     add("/api/v1/admin/settings", api.get_settings, ["GET"])
     add("/api/v1/admin/settings", api.update_settings, ["PUT"])
-
-    # Cache
     add("/api/v1/admin/cache/stats", api.cache_stats, ["GET"])
     add("/api/v1/admin/cache/warm", api.cache_warm, ["POST"])
     add("/api/v1/admin/cache/invalidate", api.cache_invalidate, ["POST"])
-
-    # Backups
     add("/api/v1/admin/backups", api.list_backups, ["GET"])
     add("/api/v1/admin/backups", api.create_backup, ["POST"])
     add("/api/v1/admin/backups/<backup_id>/restore", api.restore_backup, ["POST"])
     add("/api/v1/admin/backups/<backup_id>/verify", api.verify_backup, ["POST"])
     add("/api/v1/admin/backups/<backup_id>", api.delete_backup, ["DELETE"])
-
-    # Workflows
     add("/api/v1/admin/workflows/instances", api.list_workflow_instances, ["GET"])
     add("/api/v1/admin/workflows/definitions", api.list_workflow_definitions, ["GET"])
     add("/api/v1/admin/workflows/instances/<instance_id>/transition", api.workflow_transition, ["POST"])
     add("/api/v1/admin/workflows/instances/<instance_id>/assign", api.workflow_assign, ["POST"])
-
-    # Tenants
     add("/api/v1/admin/tenants", api.list_tenants, ["GET"])
     add("/api/v1/admin/tenants", api.create_tenant, ["POST"])
     add("/api/v1/admin/tenants/<tenant_id>", api.update_tenant, ["PUT"])
     add("/api/v1/admin/tenants/<tenant_id>", api.delete_tenant, ["DELETE"])
     add("/api/v1/admin/tenants/<tenant_id>/analytics", api.tenant_analytics, ["GET"])
-
-    # Search
     add("/api/v1/admin/search/analytics", api.search_analytics, ["GET"])
     add("/api/v1/admin/search/suggestions", api.list_search_suggestions, ["GET"])
     add("/api/v1/admin/search/suggestions", api.add_search_suggestion, ["POST"])
     add("/api/v1/admin/search/suggestions/<suggestion_id>", api.delete_search_suggestion, ["DELETE"])
-
-    # Notifications
     add("/api/v1/admin/notifications/preferences", api.get_notification_preferences, ["GET"])
     add("/api/v1/admin/notifications/preferences", api.update_notification_preferences, ["PUT"])
     add("/api/v1/admin/notifications/queue", api.notification_queue, ["GET"])

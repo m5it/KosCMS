@@ -1,3 +1,21 @@
+## 2026-07-18 — v1.3.23
+
+### Auto: Version v1.3.23
+
+- Version auto-incremented from v1.3.22
+- Files changed: AUTOVERSION.py, CHANGELOG.md, webcms/admin/admin_api.py
+
+---
+
+## 2026-07-18 — v1.3.22
+
+### Auto: Version v1.3.22
+
+- Version auto-incremented from v1.3.21
+- Files changed: (none)
+
+---
+
 ## 2026-07-18 — v1.3.21
 
 ### Auto: Version v1.3.21
