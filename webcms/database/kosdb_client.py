@@ -1,3 +1,4 @@
+
 """
 KosDB Client Adapter
 
@@ -51,6 +52,7 @@ class KosDBConnection:
         self.lock = threading.RLock()
         self.last_used = time.time()
         self.connected = False
+        self._db_selected = False
     
     def connect(self) -> bool:
         """Establish connection to KosDB server."""
@@ -59,6 +61,7 @@ class KosDBConnection:
             self.socket.settimeout(self.config.query_timeout)
             self.socket.connect((self.config.host, self.config.port))
             self.connected = True
+            self._db_selected = False
             
             # Authenticate
             if not self._authenticate():
@@ -119,7 +122,8 @@ class KosDBConnection:
     def _select_database(self, database: str) -> bool:
         """Select database."""
         result = self.execute(f"USE {database}")
-        return result.startswith("OK")
+        self._db_selected = result.startswith("OK")
+        return self._db_selected
     
     def _send(self, command: str) -> None:
         """Send command to server."""
@@ -271,6 +275,7 @@ class KosDBConnection:
             self.socket = None
             self.connected = False
             self.authenticated = False
+            self._db_selected = False
 
 
 class KosDBConnectionPool:
@@ -328,7 +333,7 @@ class KosDBConnectionPool:
                 conn.close()
                 conn.connect()
             
-            if self.config.database:
+            if self.config.database and not conn._db_selected:
                 conn.execute(f"USE {self.config.database}")
             
             yield conn
@@ -463,7 +468,8 @@ class KosDBClient:
         result = self.execute("SHOW TABLES")
         if result.startswith("ERROR"):
             return []
-        return [line.strip() for line in result.split('\n') if line.strip()]
+        return [line.strip() for line in result.split('\n')
+                if line.strip() and not line.strip().startswith("OK")]
     
     def close(self):
         """Close client and pool."""

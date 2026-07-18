@@ -1,3 +1,12 @@
+## 2026-07-18 — v1.3.30
+
+### Auto: Version v1.3.30
+
+- Version auto-incremented from v1.3.29
+- Files changed: Dockerfile, HISTORY.md, PLAN.md, background.log, config.json, current_task.txt, docker-compose.yml, plans/1784401930.1614323.json, requirements.txt, setup.py, state.aiia, terminal_audit.log, webcms/admin/admin_api.py, webcms/database/kosdb_client.py
+
+---
+
 ## 2026-07-18 — v1.3.29
 
 ### Auto: Version v1.3.29

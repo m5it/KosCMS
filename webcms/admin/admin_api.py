@@ -1264,6 +1264,7 @@ class AdminAPI:
                 print("[DEBUG] Using KosDB path")
                 self._ensure_settings_table_kosdb()
                 
+                errors = []
                 for key, value in normalized.items():
                     type_ = self._guess_type(value)
                     val_str = self._sql_escape(str(value))
@@ -1276,6 +1277,11 @@ class AdminAPI:
                     
                     check = self.db.query(check_query)
                     print(f"[DEBUG] Check result: {check}")
+                    
+                    # If query itself failed, report it
+                    if check.get('error'):
+                        errors.append({"key": key, "error": check.get('error')})
+                        continue
                     
                     exists = bool(check.get('rows', []))
                     
@@ -1293,6 +1299,13 @@ class AdminAPI:
                     print(f"[DEBUG] Executing: {cmd}")
                     result = self.db.execute(cmd)
                     print(f"[DEBUG] Execute result: {result}")
+                    
+                    if result and ("ERROR" in result or "No database" in result):
+                        errors.append({"key": key, "error": result})
+                
+                if errors:
+                    print(f"[DEBUG] Errors during update: {errors}")
+                    return Response.json({"updated": False, "errors": errors, "settings": normalized}, 400)
                     
             else:
                 print("[DEBUG] Using SQLAlchemy path")
@@ -1326,6 +1339,7 @@ class AdminAPI:
             traceback.print_exc()
             if not self._is_kosdb():
                 self.db.rollback()
+            return Response.json({"updated": False, "error": str(e), "settings": data}, 400)
             return Response.json({"updated": False, "error": str(e), "settings": data}, 400)
 
     def _normalize_setting_value(self, key: str, value):

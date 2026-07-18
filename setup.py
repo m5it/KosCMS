@@ -1,3 +1,4 @@
+
 """
 Setup script for WebCMS Admin Panel
 """
@@ -19,13 +20,13 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'Flask>=2.3.0',
-        'Flask-SQLAlchemy>=3.0.0',
-        'Flask-JWT-Extended>=4.5.0',
-        'Flask-CORS>=4.0.0',
         'SQLAlchemy>=2.0.0',
-        'Werkzeug>=2.3.0',
+        'psycopg2-binary>=2.9.0',
+        'plyvel>=1.5.0',
+        'redis>=4.6.0',
         'python-dotenv>=1.0.0',
+        'bcrypt>=4.0.0',
+        'cryptography>=41.0.0',
     ],
     extras_require={
         'dev': [
@@ -34,9 +35,7 @@ setup(
             'flake8>=6.1.0',
         ],
         'prod': [
-            'psycopg2-binary>=2.9.0',
             'redis>=4.6.0',
-            'gunicorn>=21.2.0',
         ],
     },
     entry_points={
@@ -47,7 +46,6 @@ setup(
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
-        'Framework :: Flask',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: MIT License',
@@ -59,11 +57,10 @@ setup(
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
-        'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
         'Topic :: Software Development :: Libraries :: Application Frameworks',
     ],
     python_requires='>=3.8',
-    keywords='cms admin panel content management flask',
+    keywords='cms admin panel content management system',
     project_urls={
         'Documentation': 'https://webcms.readthedocs.io',
         'Source': 'https://github.com/webcms/webcms',

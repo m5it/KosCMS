@@ -7,10 +7,14 @@ services:
     container_name: webcms
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "8080:8080"
     environment:
-      - FLASK_ENV=production
-      - DATABASE_URL=sqlite:///data/webcms.db
+      - DATABASE_URL=kosdb://kosdb:5556/webcms
+      - KOSDB_HOST=kosdb
+      - KOSDB_PORT=5556
+      - KOSDB_USER=admin
+      - KOSDB_PASSWORD=${KOSDB_PASSWORD:-admin}
+      - KOSDB_DATABASE=webcms
       - CACHE_TYPE=redis
       - REDIS_URL=redis://redis:6379/0
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-secret-key-change-in-production}
@@ -20,7 +24,19 @@ services:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
     depends_on:
+      - kosdb
       - redis
+    networks:
+      - webcms-network
+
+  kosdb:
+    image: m5it/kosdb:latest
+    container_name: webcms-kosdb
+    restart: unless-stopped
+    ports:
+      - "5556:5556"
+    volumes:
+      - kosdb-data:/data
     networks:
       - webcms-network
 
@@ -49,6 +65,7 @@ services:
       - webcms-network
 
 volumes:
+  kosdb-data:
   redis-data:
 
 networks:

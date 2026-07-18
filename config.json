@@ -1,9 +1,10 @@
+
 {
   "database": {
-    "url": "kosdb://127.0.0.1:5555/webcms",
+    "url": "kosdb://127.0.0.1:5556/webcms",
     "kosdb": {
       "host": "127.0.0.1",
-      "port": 5555,
+      "port": 5556,
       "username": "admin",
       "password": "skrlat",
       "database": "webcms",
