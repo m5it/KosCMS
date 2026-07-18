@@ -1,7 +1,7 @@
 """
 System Models
 
-Plugins, Themes, and Audit Logging.
+Plugins, Themes, Settings and Audit Logging.
 """
 
 from sqlalchemy import Column, String, Text, Boolean, JSON
@@ -75,3 +75,13 @@ class AuditLog(Base, UUIDMixin, TimestampMixin):
     
     def __repr__(self):
         return f"<AuditLog {self.action} {self.entity_type}>"
+
+
+class Setting(Base, UUIDMixin, TimestampMixin):
+    """System setting key/value store."""
+    
+    __tablename__ = 'settings'
+    
+    key = Column(String(100), unique=True, nullable=False)
+    value = Column(Text, nullable=True)
+    type = Column(String(20), default='str', nullable=False)  # str, int, float, bool

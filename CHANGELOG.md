@@ -1,3 +1,12 @@
+## 2026-07-18 — v1.3.21
+
+### Auto: Version v1.3.21
+
+- Version auto-incremented from v1.3.20
+- Files changed: HISTORY.md, background.log, cookies.json, current_task.txt, plans/1784359341.4322383.json, state.aiia, webcms/models/system.py
+
+---
+
 ## 2026-07-18 — v1.3.20
 
 ### Auto: Version v1.3.20
