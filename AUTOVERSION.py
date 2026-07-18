@@ -1,6 +1,6 @@
 # Auto-generated version file - do not edit manually
 # Incremented automatically by git pre-commit hook
-VERSION = "1.3.13"
+VERSION = "1.3.14"
 
 if __name__ == "__main__":
     import sys

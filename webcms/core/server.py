@@ -20,13 +20,12 @@ class HardenedWSGIRequestHandler(WSGIRequestHandler):
     connection resets instead of printing full tracebacks to stderr.
     """
 
-    # Do not emit default GET /path log lines for every request.
-    # Security-relevant events are logged explicitly below.
+    # Log normal requests at INFO so they are visible by default.
     def log_message(self, format, *args):
-        logger.debug("%s - %s", self.address_string(), format % args)
+        logger.info("%s - %s", self.address_string(), format % args)
 
     def log_error(self, format, *args):
-        logger.debug("Request error from %s: %s", self.address_string(), format % args)
+        logger.warning("Request error from %s: %s", self.address_string(), format % args)
 
     def handle(self):
         """Handle a single connection, swallowing expected socket errors."""
@@ -95,8 +94,6 @@ def _patch_server(server, timeout=30):
     """
     server.request_timeout = timeout
     server.allow_reuse_address = True
-
-    original_handle_error = server.handle_error
 
     def handle_error(request, client_address):
         """
