@@ -9,6 +9,7 @@ from webcms.database import init_db, KosDBClient, KosDBConfig
 from webcms.database.kosdb_replication import KosDBReplicationManager, ReplicationConfig, ReplicationRole
 from webcms.security import SecurityMiddleware, HTTPSRedirectMiddleware
 from webcms.security.middleware import CSPConfig
+from webcms.core.middleware import CORSMiddleware
 from webcms.core.response import Response
 from webcms.admin.api import create_api
 from webcms.admin.routes import admin_routes
@@ -134,8 +135,15 @@ def create_app(config_path: str = None) -> Application:
         csp_config=csp_config,
         hsts_enabled=security_config.get("hsts", True)
     ))
-    
     # Register admin routes
+    admin_routes(app)
+
+    # Add CORS middleware so the admin UI can call the API
+    app.use(CORSMiddleware(
+        allow_origins=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"]
+    ))
     admin_routes(app)
     
     # Register API (for both SQLAlchemy 'db' and KosDB)

@@ -1,0 +1,1 @@
+from pathlib import Path; p = Path("webcms/models/content.py"); print(p.read_text()[:2500])

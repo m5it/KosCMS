@@ -4,7 +4,7 @@ System Models
 Plugins, Themes, Settings and Audit Logging.
 """
 
-from sqlalchemy import Column, String, Text, Boolean, JSON
+from sqlalchemy import Column, String, Text, Boolean, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 
 from .base import Base, UUIDMixin, TimestampMixin, SoftDeleteMixin
@@ -70,7 +70,7 @@ class AuditLog(Base, UUIDMixin, TimestampMixin):
     user_agent = Column(Text, nullable=True)
     
     # Relationships
-    user_id = Column(String(36), nullable=True)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=True)
     user = relationship('User', foreign_keys=[user_id])
     
     def __repr__(self):

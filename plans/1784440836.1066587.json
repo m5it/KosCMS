@@ -1,0 +1,87 @@
+{
+  "id": "1784440836.1066587",
+  "title": "Fix Admin Settings Save & Complete KosDB Support for Settings, Pages, Plugins, Templates",
+  "instructions": "",
+  "startTimestamp": 1784440836.1066618,
+  "endTimestamp": 1784449919.7836704,
+  "tasks": {
+    "1784440841.1806934": {
+      "id": "1784440841.1806934",
+      "status": "completed",
+      "instruction": "The shipped dist/admin.js settings screen renders a read-only input and a Save button that only calls alert('Saved'). Replace that static form with a real editable form that fetches current settings, binds inputs for all setting groups, and sends PUT /api/v1/admin/settings with the changed payload. Also show success/error feedback instead of a hard-coded alert. The React source (admin-ui/src/admin/pages/Settings.jsx) already does this correctly, so the fix is to rebuild the admin UI and/or directly patch the static dist/admin.js so the served /admin UI works immediately.",
+      "startTimestamp": 1784440871.2663417,
+      "endTimestamp": 1784441027.7586849,
+      "log": [
+        {
+          "timestamp": 1784440871.2664466,
+          "text": "Build started"
+        },
+        {
+          "timestamp": 1784441023.7726421,
+          "text": "Replaced the static dist/assets/admin.js with a version that includes a real settings form. Added putJson helper, showMessage feedback, and a settings screen that binds all setting groups (Site, Cache, Search, Notifications, Security) and sends PUT /api/v1/admin/settings with the correct payload. Success/error messages are shown for 5 seconds."
+        }
+      ]
+    },
+    "1784440844.8566062": {
+      "id": "1784440844.8566062",
+      "status": "completed",
+      "instruction": "The AdminAPI update_settings already has KosDB logic, but it may fail silently or return success when the underlying KosDB execute returns an unexpected non-OK string. Harden the KosDB path: ensure the settings table is created with a deterministic schema, treat any response that is not \"OK\" or \"Rows affected\" as an error, log the raw response, and make the handler return 400 with errors so the UI can show a real failure. Also ensure get_settings reads the same setting_key/value/type columns and coerces bool/int types correctly. Remove leftover debug print statements or convert them to logging.",
+      "startTimestamp": 1784441027.7586873,
+      "endTimestamp": 1784441079.4853241,
+      "log": [
+        {
+          "timestamp": 1784441076.190797,
+          "text": "Hardened KosDB settings persistence in admin_api.py: added module logger, replaced debug print statements with logging, made settings table schema deterministic with PRIMARY KEY on setting_key, made get_settings read explicit columns, made update_settings treat any non-OK/No-database response as an error and return 400 with per-key errors."
+        },
+        {
+          "timestamp": 1784441732.9809332,
+          "text": "Completed task 3/7: hardened KosDB-backed pages/posts CRUD in admin_api.py (deterministic table schema with PRIMARY KEY, boolean/date/author_id normalization, full serialized responses, error logging for non-OK KosDB execute), fixed admin route placeholders from <id> to {id} so PUT/DELETE match, verified static admin.js uses /pages and /posts endpoints, and smoke-tested create_page with a mock KosDB."
+        },
+        {
+          "timestamp": 1784442179.4354692,
+          "text": "Completed task 4/7: made PluginRegistry KosDB-aware with a plugins table, kept filesystem registry as fallback, auto-sync on startup, added install/upload endpoints in admin_api.py with actionable messages, updated PluginManager.jsx and static admin.js with description/version/author display, error handling, and upload/install flow, and added multipart files/form parsing to Request."
+        }
+      ]
+    },
+    "1784440848.300103": {
+      "id": "1784440848.300103",
+      "status": "completed",
+      "instruction": "The static admin.js calls GET /api/v1/admin/content, which is not registered; the registered endpoints are /pages and /posts. The ContentManager.jsx uses /pages and /posts correctly. Ensure the admin UI uses the correct endpoints and that the KosDB-backed list/create/update/delete for pages and posts works: ensure pages/posts tables exist, normalize payloads (booleans to '0'/'1', dates to ISO strings), handle missing author_id, and return full serialized objects. Also fix the admin routes so PUT/DELETE with dynamic IDs are matched.",
+      "startTimestamp": 1784441079.4853263,
+      "endTimestamp": 1784441736.5242386,
+      "log": []
+    },
+    "1784440852.7040381": {
+      "id": "1784440852.7040381",
+      "status": "completed",
+      "instruction": "Plugins currently rely on a filesystem registry (plugin_registry.json) and the UI lists them but cannot edit metadata or install from source. Make the plugin system KosDB-aware: persist plugin state (active/installed) in a plugins table when db is KosDB, keep filesystem registry as fallback, and ensure activate/deactivate/delete_plugin endpoints return actionable messages. Update the PluginManager UI to show description, version, author, and handle errors; add a simple upload/install flow if missing. Ensure the registry auto-discovers plugins on startup and syncs to KosDB.",
+      "startTimestamp": 1784441736.5242393,
+      "endTimestamp": 1784442181.231719,
+      "log": []
+    },
+    "1784440860.310966": {
+      "id": "1784440860.310966",
+      "status": "completed",
+      "instruction": "TemplateManager.jsx expects templates with id/name/path/content/updated_at and sends PUT/POST /api/v1/admin/templates. The TemplateEngine already has KosDB save/delete logic but uses unescaped SQL and may fail if no template_dirs exist. Harden it: escape template names/content, ensure templates table exists, return the saved record including content so the editor can re-populate, and make list_templates return DB-only templates even when no disk templates exist. Update the UI to read content back after save and show a code editor with feedback. Ensure template IDs are URL-safe and consistent between create and update.",
+      "startTimestamp": 1784442181.2317197,
+      "endTimestamp": 1784443165.1077065,
+      "log": []
+    },
+    "1784440864.8125803": {
+      "id": "1784440864.8125803",
+      "status": "completed",
+      "instruction": "The served /admin UI is the static dist/admin.js, which is stale and missing real Save/Edit/Delete handlers. Rebuild the React admin UI (npm run build in webcms/admin-ui) so the modern JSX components (Settings.jsx, ContentManager.jsx, TemplateManager.jsx, etc.) are served. If the build fails due to missing dependencies or source errors, fix the source. After rebuilding, verify that /admin loads the new bundle, that the API_BASE paths match the backend routes, and that CORS/CSP headers allow the fetch calls.",
+      "startTimestamp": 1784443165.1077077,
+      "endTimestamp": 1784443513.4158816,
+      "log": []
+    },
+    "1784440869.0736513": {
+      "id": "1784440869.0736513",
+      "status": "completed",
+      "instruction": "After code changes, run the server and exercise the admin UI and API directly: change site name and reload to confirm persistence; create and update a page; activate/deactivate a plugin; create and edit a template. Capture any KosDB errors and fix SQL syntax, escaping, or schema mismatches. Document the exact test commands and expected responses.",
+      "startTimestamp": 1784443513.4158826,
+      "endTimestamp": 1784449919.7834864,
+      "log": []
+    }
+  }
+}

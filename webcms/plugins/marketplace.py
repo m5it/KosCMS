@@ -5,14 +5,18 @@ Plugin registry and management system.
 """
 
 import json
+import logging
 import os
 import shutil
 import zipfile
 from dataclasses import dataclass, asdict
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from packaging.version import Version, parse as parse_version
 from webcms import __version__
+
+logger = logging.getLogger("webcms.plugins.marketplace")
 
 
 @dataclass
@@ -43,16 +47,145 @@ class PluginRegistry:
     REGISTRY_FILE = "plugin_registry.json"
     CMS_VERSION = __version__  # Current WebCMS version
     
-    def __init__(self, registry_path: str = None, plugins_dir: str = None):
+    def __init__(self, registry_path: str = None, plugins_dir: str = None, db=None):
         self.registry_path = Path(registry_path or self.REGISTRY_FILE)
         # Use webcms/plugins as the default plugins directory
         webcms_root = Path(__file__).parent.parent
         self.plugins_dir = Path(plugins_dir or webcms_root / "plugins")
         self.plugins_dir.mkdir(exist_ok=True)
+        self.db = db
         self._registry: Dict[str, PluginInfo] = {}
         self._load_registry()
         # Auto-discover plugins from filesystem
         self._discover_installed_plugins()
+        # Sync discovered state to KosDB if available
+        self._sync_to_kosdb()
+    def _is_kosdb(self) -> bool:
+        """Check if the provided db is a KosDB instance."""
+        if self.db is None:
+            return False
+        cls = getattr(self.db, '__class__', type(self.db))
+        cls_name = getattr(cls, '__name__', '')
+        return 'KosDB' in cls_name
+
+    def _ensure_plugins_table(self):
+        """Create the plugins table in KosDB if it does not exist."""
+        if not self.db or not self._is_kosdb():
+            return
+        try:
+            tables = self.db.list_tables()
+            if "plugins" in tables:
+                return
+        except Exception:
+            pass
+        try:
+            self.db.execute(
+                "CREATE TABLE plugins ("
+                "    name TEXT PRIMARY KEY,"
+                "    version TEXT,"
+                "    description TEXT,"
+                "    author TEXT,"
+                "    min_cms_version TEXT,"
+                "    max_cms_version TEXT,"
+                "    dependencies TEXT,"
+                "    tags TEXT,"
+                "    download_url TEXT,"
+                "    installed TEXT DEFAULT '0',"
+                "    active TEXT DEFAULT '0',"
+                "    installed_at TEXT"
+                ")"
+            )
+        except Exception:
+            pass
+
+    @staticmethod
+    def _sql_escape(value) -> str:
+        if value is None:
+            return "NULL"
+        return str(value).replace("'", "''")
+
+    def _sync_to_kosdb(self):
+        """Persist current registry state to KosDB, merging with existing rows."""
+        if not self.db or not self._is_kosdb():
+            return
+        self._ensure_plugins_table()
+        for name, info in self._registry.items():
+            self._upsert_plugin_kosdb(info)
+
+    def _upsert_plugin_kosdb(self, plugin: PluginInfo):
+        """Insert or update a plugin row in KosDB."""
+        if not self.db or not self._is_kosdb():
+            return
+        self._ensure_plugins_table()
+        check = self.db.query(f"SELECT name FROM plugins WHERE name='{self._sql_escape(plugin.name)}'")
+        exists = not check.get('error') and bool(check.get('rows', []))
+        deps = json.dumps(plugin.dependencies) if plugin.dependencies else '[]'
+        tags = json.dumps(plugin.tags) if plugin.tags else '[]'
+        installed = '1' if plugin.installed else '0'
+        active = '1' if plugin.active else '0'
+        installed_at = datetime.utcnow().isoformat() if plugin.installed else None
+        if exists:
+            cmd = (
+                f"UPDATE plugins SET "
+                f"version='{self._sql_escape(plugin.version)}', "
+                f"description='{self._sql_escape(plugin.description)}', "
+                f"author='{self._sql_escape(plugin.author)}', "
+                f"min_cms_version='{self._sql_escape(plugin.min_cms_version)}', "
+                f"max_cms_version='{self._sql_escape(plugin.max_cms_version)}', "
+                f"dependencies='{self._sql_escape(deps)}', "
+                f"tags='{self._sql_escape(tags)}', "
+                f"download_url='{self._sql_escape(plugin.download_url)}', "
+                f"installed='{installed}', "
+                f"active='{active}' "
+                f"WHERE name='{self._sql_escape(plugin.name)}'"
+            )
+        else:
+            cmd = (
+                f"INSERT INTO plugins (name, version, description, author, min_cms_version, "
+                f"max_cms_version, dependencies, tags, download_url, installed, active, installed_at) "
+                f"VALUES ('{self._sql_escape(plugin.name)}', '{self._sql_escape(plugin.version)}', "
+                f"'{self._sql_escape(plugin.description)}', '{self._sql_escape(plugin.author)}', "
+                f"'{self._sql_escape(plugin.min_cms_version)}', '{self._sql_escape(plugin.max_cms_version)}', "
+                f"'{self._sql_escape(deps)}', '{self._sql_escape(tags)}', '{self._sql_escape(plugin.download_url)}', "
+                f"'{installed}', '{active}', '{self._sql_escape(installed_at)}')"
+            )
+        try:
+            self.db.execute(cmd)
+        except Exception as e:
+            logger.warning("Failed to sync plugin %s to KosDB: %s", plugin.name, e)
+
+    def _load_from_kosdb(self):
+        """Load plugin state from KosDB into the registry."""
+        if not self.db or not self._is_kosdb():
+            return
+        self._ensure_plugins_table()
+        result = self.db.query("SELECT * FROM plugins")
+        if result.get('error'):
+            return
+        for row in result.get('rows', []):
+            name = row.get('name')
+            if not name:
+                continue
+            try:
+                deps = json.loads(row.get('dependencies') or '[]')
+                tags = json.loads(row.get('tags') or '[]')
+            except Exception:
+                deps, tags = [], []
+            info = PluginInfo(
+                name=name,
+                version=row.get('version', '1.0.0'),
+                description=row.get('description', ''),
+                author=row.get('author', 'Unknown'),
+                min_cms_version=row.get('min_cms_version', '1.0.0'),
+                max_cms_version=row.get('max_cms_version'),
+                dependencies=deps,
+                tags=tags,
+                download_url=row.get('download_url'),
+                installed=str(row.get('installed')).lower() in ('1', 'true', 'yes'),
+                active=str(row.get('active')).lower() in ('1', 'true', 'yes')
+            )
+            self._registry[name] = info
+
     
     def _discover_installed_plugins(self):
         """Discover plugins from the filesystem and sync with registry."""
@@ -102,7 +235,7 @@ class PluginRegistry:
                                     'tags': yaml_data.get('tags', []),
                                 })
                     except Exception as e:
-                        print(f"Error loading plugin.yaml for {plugin_name}: {e}")
+                        logger.warning("Error loading plugin.yaml for %s: %s", plugin_name, e)
                 
                 # Try to load from plugin.json as fallback
                 elif info_file.exists():
@@ -120,7 +253,7 @@ class PluginRegistry:
                                 'tags': json_data.get('tags', []),
                             })
                     except Exception as e:
-                        print(f"Error loading plugin.json for {plugin_name}: {e}")
+                        logger.warning("Error loading plugin.json for %s: %s", plugin_name, e)
                 
                 # Check if already in registry - preserve active state
                 if plugin_name in self._registry:
@@ -134,10 +267,15 @@ class PluginRegistry:
             self._save_registry()
             
         except Exception as e:
-            print(f"Error discovering plugins: {e}")
+            logger.warning("Error discovering plugins: %s", e)
     
     def _load_registry(self):
-        """Load registry from JSON file."""
+        """Load registry from KosDB (preferred) or JSON file fallback."""
+        # Prefer KosDB when available
+        self._load_from_kosdb()
+        if self._registry:
+            return
+        # Fallback to filesystem registry
         if self.registry_path.exists():
             try:
                 with open(self.registry_path, 'r') as f:
@@ -145,17 +283,19 @@ class PluginRegistry:
                     for name, info in data.items():
                         self._registry[name] = PluginInfo(**info)
             except (json.JSONDecodeError, TypeError) as e:
-                print(f"Error loading registry: {e}")
+                logger.warning("Error loading registry: %s", e)
                 self._registry = {}
     
     def _save_registry(self):
-        """Save registry to JSON file."""
+        """Save registry to JSON file and KosDB if available."""
         try:
             data = {name: asdict(info) for name, info in self._registry.items()}
             with open(self.registry_path, 'w') as f:
                 json.dump(data, f, indent=2)
         except Exception as e:
-            print(f"Error saving registry: {e}")
+            logger.warning("Error saving registry: %s", e)
+        # Always sync to KosDB when available
+        self._sync_to_kosdb()
     
     def list_available(self, tag: str = None, 
                        installed_only: bool = False) -> List[PluginInfo]:
@@ -394,13 +534,14 @@ class PluginRegistry:
         return [p for p in self._registry.values() if p.active]
 
 
-# Global registry instance
-_registry_instance: Optional[PluginRegistry] = None
+# Global registry cache keyed by db identity
+_registry_instances: Dict[int, PluginRegistry] = {}
 
 
-def get_registry() -> PluginRegistry:
-    """Get or create global registry instance."""
-    global _registry_instance
-    if _registry_instance is None:
-        _registry_instance = PluginRegistry()
-    return _registry_instance
+def get_registry(db=None) -> PluginRegistry:
+    """Get or create a PluginRegistry instance for the given db."""
+    global _registry_instances
+    key = id(db) if db else 0
+    if key not in _registry_instances:
+        _registry_instances[key] = PluginRegistry(db=db)
+    return _registry_instances[key]

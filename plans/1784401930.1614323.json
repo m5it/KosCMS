@@ -3,7 +3,7 @@
   "title": "Fix KosCMS Database Issues",
   "instructions": "Fix all 7 bugs identified in KOSCMS_DB_ISSUES.md to resolve settings not persisting and other database-related issues when using KosCMS with KosDB.",
   "startTimestamp": 1784401930.1614356,
-  "endTimestamp": 1784402725.6525552,
+  "endTimestamp": 1784405672.21145,
   "tasks": {
     "1784401936.542633": {
       "id": "1784401936.542633",
@@ -13,11 +13,11 @@
       "endTimestamp": 1784402492.8752942,
       "log": [
         {
-          "timestamp": 1784401979.837095,
+          "timestamp": 1784405663.8964326,
           "text": "Build started"
         },
         {
-          "timestamp": 1784402490.7719123,
+          "timestamp": 1784405663.8964338,
           "text": "Fixed list_tables() in webcms/database/kosdb_client.py to filter out \"OK:\" lines from SHOW TABLES response. Verified the change with ReadFile."
         }
       ]
@@ -30,7 +30,7 @@
       "endTimestamp": 1784402540.265733,
       "log": [
         {
-          "timestamp": 1784402536.5911024,
+          "timestamp": 1784405663.896437,
           "text": "Fixed update_settings() in webcms/admin/admin_api.py to collect and return errors from KosDB execute() results. Added errors list, checks for query errors and execute errors, and returns 400 with error details if any INSERT/UPDATE fails."
         }
       ]
@@ -43,7 +43,7 @@
       "endTimestamp": 1784402626.269152,
       "log": [
         {
-          "timestamp": 1784402624.7545266,
+          "timestamp": 1784405663.8964393,
           "text": "Fixed kosdb_client.py connection pool to only send USE on new connections. Added _db_selected flag to KosDBConnection, set it in __init__/connect/close/_select_database, and checked it in pool.acquire(). Also fixed list_tables() filtering. Rewrote the corrupted file to ensure correctness."
         }
       ]
@@ -56,7 +56,7 @@
       "endTimestamp": 1784402651.8675008,
       "log": [
         {
-          "timestamp": 1784402649.5837407,
+          "timestamp": 1784405663.89644,
           "text": "Updated config.json to use port 5556 for KosDB (both URL and kosdb.host/kosdb.port). Fixed duplicate lines that resulted from ReplaceLine and rewrote the file cleanly."
         }
       ]
@@ -69,7 +69,7 @@
       "endTimestamp": 1784402666.0906472,
       "log": [
         {
-          "timestamp": 1784402664.101634,
+          "timestamp": 1784405663.8964407,
           "text": "Verified version numbers: setup.py, pyproject.toml, and AUTOVERSION.py all show version 1.3.29. No stale versions found; no changes needed."
         }
       ]
@@ -82,7 +82,7 @@
       "endTimestamp": 1784402698.6811352,
       "log": [
         {
-          "timestamp": 1784402696.582537,
+          "timestamp": 1784405663.8964415,
           "text": "Removed Flask, Flask-SQLAlchemy, Flask-JWT-Extended, Flask-CORS from requirements.txt and setup.py. Added actual dependencies like plyvel, bcrypt, and cryptography. Verified setup.py compiles correctly."
         }
       ]
@@ -95,7 +95,7 @@
       "endTimestamp": 1784402725.652334,
       "log": [
         {
-          "timestamp": 1784402723.5392053,
+          "timestamp": 1784405663.896442,
           "text": "Updated Dockerfile to remove FLASK_APP/FLASK_ENV, changed CMD from gunicorn to python run.py --host 0.0.0.0 --port 8080, updated health check to use urllib. Updated docker-compose.yml to use KosDB (kosdb://kosdb:5556/webcms), added kosdb service, removed SQLite/Flask env vars, mapped port 8080."
         }
       ]

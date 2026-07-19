@@ -1,19 +1,31 @@
-#!/usr/bin/env python3
-"""Start WebCMS server for testing."""
+import subprocess, time, os, sys, socket, json, urllib.request
 
-import sys
-import os
-sys.path.insert(0, '/home/user/KosCMS')
+root = os.path.dirname(os.path.abspath(__file__))
+os.chdir(root)
 
-# Set minimal config
-os.environ['WEBCMS_CONFIG'] = '/home/user/KosCMS/config_minimal.json'
+s = socket.socket(); s.bind(("", 0)); port = s.getsockname()[1]; s.close()
 
-from webcms.app_factory import create_app
+env = os.environ.copy()
+env["WEBCMS_PORT"] = str(port)
+env["WEBCMS_DB"] = "sqlite:///webcms_test.db"
 
-# Create app with minimal config
-app = create_app('/home/user/KosCMS/config_minimal.json')
+proc = subprocess.Popen(
+    [sys.executable, "-m", "webcms.cli.commands", "serve", "--host", "127.0.0.1", "--port", str(port), "--debug"],
+    env=env,
+    stdout=open("server_out.log", "w"),
+    stderr=subprocess.STDOUT,
+)
 
-# Run server
-if __name__ == '__main__':
-    print("Starting WebCMS server on http://127.0.0.1:8000")
-    app.run(host='127.0.0.1', port=8000, debug=True)
+base = f"http://127.0.0.1:{port}"
+for i in range(40):
+    try:
+        urllib.request.urlopen(base + "/", timeout=1)
+        break
+    except Exception:
+        time.sleep(0.5)
+else:
+    print("server did not start")
+    proc.terminate()
+    sys.exit(1)
+
+print(json.dumps({"pid": proc.pid, "port": port, "base": base}))

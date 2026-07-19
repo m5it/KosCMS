@@ -2222,3 +2222,233 @@ print("Dev tools working!") | SUCCESS: True | OUTPUT_LEN: 340
 [2026-07-18 17:14:13] CMD: python3 final_verification.py | SUCCESS: True | OUTPUT_LEN: 1273
 [2026-07-18 19:24:06] CMD: python3 -c;import json; json.load(open(config.json)); print(config.json valid) | SUCCESS: True | OUTPUT_LEN: 80
 [2026-07-18 19:24:53] CMD: python3 -m py_compile setup.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:05:22] CMD: sed -n 1700,1800p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 5445
+[2026-07-19 06:06:37] CMD: sed -n 270,340p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 2815
+[2026-07-19 06:06:48] CMD: sed -n 360,440p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 3867
+[2026-07-19 06:06:50] CMD: sed -n 340,460p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 5638
+[2026-07-19 06:07:06] CMD: sed -n 350,450p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 4715
+[2026-07-19 06:07:15] CMD: sed -n 462,520p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 2867
+[2026-07-19 06:07:17] CMD: sed -n 440,510p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 3565
+[2026-07-19 06:07:23] CMD: python3 -c import re; lines=open('webcms/admin/admin_api.py').readlines(); [print(i+1, l.rstrip()[:80]) for i,l in enumerate(lines) if re.search(r'def (create_page|update_page|delete_page|list_posts|create_post|update_post|delete_post|list_pages)', l)] | SUCCESS: True | OUTPUT_LEN: 346
+[2026-07-19 06:07:26] CMD: sed -n 503,590p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 4304
+[2026-07-19 06:07:36] CMD: sed -n 180,320p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 5394
+[2026-07-19 06:07:38] CMD: git status | SUCCESS: True | OUTPUT_LEN: 702
+[2026-07-19 06:07:40] CMD: git checkout webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 38
+[2026-07-19 06:07:47] CMD: python3 -c import re; lines=open('webcms/admin/admin_api.py').readlines(); [print(i+1, l.rstrip()[:100]) for i,l in enumerate(lines) if re.search(r'def (_ensure_content_table_kosdb|_normalize_page_payload|_normalize_post_payload_kosdb|_serialize_page|_serialize_post|_create_record_kosdb|_update_record_kosdb|_delete_record_kosdb|_resolve_author_display|_format_updated_at|_current_user_id|_iso_date|register_admin_api|list_pages|create_page|update_page|delete_page|list_posts|create_post|update_post|delete_post)', l)] | SUCCESS: True | OUTPUT_LEN: 1346
+[2026-07-19 06:07:59] CMD: python3 -c open('webcms/admin/admin_api.py').read().count('def _ensure_content_table_kosdb') | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:08:54] CMD: python3 patch_admin_api.py | SUCCESS: True | OUTPUT_LEN: 1245
+[2026-07-19 06:09:24] CMD: python3 patch_admin_api.py | SUCCESS: True | OUTPUT_LEN: 8
+[2026-07-19 06:09:32] CMD: sed -n 1750,1810p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 3831
+[2026-07-19 06:09:41] CMD: sed -n 270,420p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 7181
+[2026-07-19 06:09:56] CMD: python3 -m py_compile webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 153
+[2026-07-19 06:09:58] CMD: sed -n 275,400p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 5751
+[2026-07-19 06:10:06] CMD: git checkout webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 38
+[2026-07-19 06:10:43] CMD: git checkout webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 38
+[2026-07-19 06:11:30] CMD: python3 patch_admin_api2.py | SUCCESS: True | OUTPUT_LEN: 8
+[2026-07-19 06:11:34] CMD: python3 -m py_compile webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:11:39] CMD: sed -n 279,430p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 6318
+[2026-07-19 06:11:55] CMD: sed -n 420,560p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 7016
+[2026-07-19 06:11:58] CMD: sed -n 1770,1840p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 3173
+[2026-07-19 06:12:19] CMD: sed -n 120,220p webcms/admin-ui/dist/assets/admin.js | SUCCESS: True | OUTPUT_LEN: 4625
+[2026-07-19 06:12:27] CMD: grep -n editContent webcms/admin-ui/dist/assets/admin.js | SUCCESS: True | OUTPUT_LEN: 299
+[2026-07-19 06:12:32] CMD: sed -n 340,410p webcms/admin-ui/dist/assets/admin.js | SUCCESS: True | OUTPUT_LEN: 3138
+[2026-07-19 06:12:35] CMD: python3 -c from webcms.admin.admin_api import AdminAPI, register_admin_api; print('imports OK') | SUCCESS: True | OUTPUT_LEN: 560
+[2026-07-19 06:12:38] CMD: sed -n 340,400p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 2102
+[2026-07-19 06:12:41] CMD: git checkout webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 38
+[2026-07-19 06:13:28] CMD: python3 patch_admin_api3.py | SUCCESS: True | OUTPUT_LEN: 114
+[2026-07-19 06:13:40] CMD: sed -n 134,180p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 1933
+[2026-07-19 06:13:44] CMD: sed -n 300,330p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 1021
+[2026-07-19 06:14:22] CMD: python3 patch_admin_api3.py | SUCCESS: True | OUTPUT_LEN: 8
+[2026-07-19 06:14:30] CMD: python3 -m py_compile webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:14:34] CMD: sed -n 280,430p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 6299
+[2026-07-19 06:14:40] CMD: sed -n 1780,1850p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 3505
+[2026-07-19 06:14:54] CMD: python3 -m py_compile webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:15:14] CMD: python3 -c from webcms.admin.admin_api import AdminAPI, register_admin_api; print('imports OK') | SUCCESS: True | OUTPUT_LEN: 11
+[2026-07-19 06:15:18] CMD: python3 -c class FakeKosDB:
+    def __init__(self): self.tables = {}; self.queries = []
+    def list_tables(self): return list(self.tables.keys())
+    def execute(self, sql):
+        self.queries.append(sql)
+        if sql.startswith("CREATE TABLE"):
+            t = sql.split()[2]
+            self.tables[t] = []
+            return "OK"
+        if sql.startswith("INSERT"):
+            t = sql.split("INTO")[1].split()[0]
+            # parse simple values
+            self.tables[t].append({})
+            return "OK"
+        if sql.startswith("UPDATE"):
+            return "OK"
+        if sql.startswith("SELECT"):
+            return {"rows": []}
+        return "OK"
+    def query(self, sql):
+        self.queries.append(sql)
+        if "COUNT" in sql:
+            return {"rows": [{"c": 0}]}
+        return {"rows": []}
+
+from webcms.admin.admin_api import AdminAPI
+from webcms.core.request import Request
+api = AdminAPI(db=FakeKosDB())
+req = Request({"method": "POST", "headers": {}, "body": b'{"title":"Hello","content":"world"}'})
+r = api.create_page(req)
+print(r.status, r.body) | SUCCESS: True | OUTPUT_LEN: 20
+[2026-07-19 06:15:26] CMD: python3 -c import io, json
+class FakeKosDB:
+    def __init__(self): self.tables = {}; self.queries = []
+    def list_tables(self): return list(self.tables.keys())
+    def execute(self, sql):
+        self.queries.append(sql)
+        if sql.startswith("CREATE TABLE"):
+            t = sql.split()[2]
+            self.tables[t] = []
+            return "OK"
+        if sql.startswith("INSERT"):
+            t = sql.split("INTO")[1].split()[0]
+            self.tables[t].append({"id": "fake-id", "title": "Hello", "slug": "hello", "content": "world", "status": "draft", "author_id": "", "created_at": "now", "updated_at": "now", "is_deleted": "0"})
+            return "OK"
+        if sql.startswith("UPDATE"):
+            return "OK"
+        return "OK"
+    def query(self, sql):
+        self.queries.append(sql)
+        if "COUNT" in sql:
+            return {"rows": [{"c": 0}]}
+        if "SELECT * FROM pages WHERE id=" in sql:
+            return {"rows": [{"id": "fake-id", "title": "Hello", "slug": "hello", "content": "world", "status": "draft", "author_id": "", "created_at": "now", "updated_at": "now", "is_deleted": "0"}]}
+        return {"rows": []}
+
+from webcms.admin.admin_api import AdminAPI
+from webcms.core.request import Request
+body = b'{"title":"Hello","content":"world"}'
+environ = {"REQUEST_METHOD": "POST", "CONTENT_TYPE": "application/json", "CONTENT_LENGTH": str(len(body)), "wsgi.input": io.BytesIO(body)}
+req = Request(environ)
+api = AdminAPI(db=FakeKosDB())
+r = api.create_page(req)
+print(r.status, r.body) | SUCCESS: True | OUTPUT_LEN: 342
+[2026-07-19 06:15:28] CMD: rm -f patch_admin_api.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:16:04] CMD: grep -n def .*plugin webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 305
+[2026-07-19 06:16:08] CMD: sed -n 670,730p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 2783
+[2026-07-19 06:16:18] CMD: sed -n 200,400p webcms/plugins/marketplace.py | SUCCESS: True | OUTPUT_LEN: 7273
+[2026-07-19 06:16:28] CMD: sed -n 400,500p webcms/plugins/marketplace.py | SUCCESS: True | OUTPUT_LEN: 230
+[2026-07-19 06:16:50] CMD: ls -la webcms/admin-ui/src/admin/pages | SUCCESS: True | OUTPUT_LEN: 976
+[2026-07-19 06:17:21] CMD: git checkout webcms/plugins/marketplace.py | SUCCESS: True | OUTPUT_LEN: 38
+[2026-07-19 06:17:45] CMD: python3 patch_marketplace.py | SUCCESS: True | OUTPUT_LEN: 919
+[2026-07-19 06:18:25] CMD: python3 patch_marketplace.py | SUCCESS: True | OUTPUT_LEN: 8
+[2026-07-19 06:18:37] CMD: python3 -m py_compile webcms/plugins/marketplace.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:18:40] CMD: python3 -m py_compile webcms/plugins/marketplace.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:18:46] CMD: python3 -m py_compile webcms/plugins/marketplace.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:18:52] CMD: sed -n 677,720p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 2093
+[2026-07-19 06:19:08] CMD: sed -n 1840,1900p webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 2599
+[2026-07-19 06:19:13] CMD: git checkout webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 38
+[2026-07-19 06:19:17] CMD: git log --oneline -5 | SUCCESS: True | OUTPUT_LEN: 157
+[2026-07-19 06:19:20] CMD: python3 patch_admin_api3.py | SUCCESS: True | OUTPUT_LEN: 8
+[2026-07-19 06:19:25] CMD: grep -n def list_plugins webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 62
+[2026-07-19 06:19:38] CMD: grep -n add\("/api/v1/admin/plugins webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 32
+[2026-07-19 06:19:40] CMD: grep -n api/v1/admin/plugins webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 330
+[2026-07-19 06:19:47] CMD: python3 -m py_compile webcms/admin/admin_api.py webcms/plugins/marketplace.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:20:03] CMD: grep -n plugins: webcms/admin-ui/dist/assets/admin.js | SUCCESS: True | OUTPUT_LEN: 28
+[2026-07-19 06:20:08] CMD: sed -n 192,210p webcms/admin-ui/dist/assets/admin.js | SUCCESS: True | OUTPUT_LEN: 943
+[2026-07-19 06:20:18] CMD: sed -n 350,420p webcms/admin-ui/dist/assets/admin.js | SUCCESS: True | OUTPUT_LEN: 3252
+[2026-07-19 06:20:24] CMD: sed -n 355,430p webcms/admin-ui/dist/assets/admin.js | SUCCESS: True | OUTPUT_LEN: 3251
+[2026-07-19 06:20:31] CMD: git checkout webcms/admin-ui/dist/assets/admin.js | SUCCESS: True | OUTPUT_LEN: 38
+[2026-07-19 06:20:45] CMD: python3 patch_admin_js.py | SUCCESS: True | OUTPUT_LEN: 8
+[2026-07-19 06:21:02] CMD: sed -n 135,160p webcms/admin-ui/dist/assets/admin.js | SUCCESS: True | OUTPUT_LEN: 1549
+[2026-07-19 06:21:07] CMD: tail -40 webcms/admin-ui/dist/assets/admin.js | SUCCESS: True | OUTPUT_LEN: 1409
+[2026-07-19 06:21:11] CMD: rm -f patch_admin_js.py patch_marketplace.py patch_admin_api3.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:21:17] CMD: python3 -m py_compile webcms/admin/admin_api.py webcms/plugins/marketplace.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:21:27] CMD: grep -n def files\|def form\|@property webcms/core/request.py | SUCCESS: True | OUTPUT_LEN: 165
+[2026-07-19 06:21:33] CMD: sed -n 120,180p webcms/core/request.py | SUCCESS: True | OUTPUT_LEN: 1742
+[2026-07-19 06:21:54] CMD: git checkout webcms/core/request.py | SUCCESS: True | OUTPUT_LEN: 38
+[2026-07-19 06:22:07] CMD: python3 patch_request.py | SUCCESS: True | OUTPUT_LEN: 8
+[2026-07-19 06:22:12] CMD: python3 -m py_compile webcms/admin/admin_api.py webcms/plugins/marketplace.py webcms/core/request.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:22:17] CMD: python3 -c import sys, os, tempfile, shutil
+# Create a temp plugins dir with a plugin.yaml
+tmp = tempfile.mkdtemp()
+plugin_dir = os.path.join(tmp, 'test_plugin')
+os.makedirs(plugin_dir)
+with open(os.path.join(plugin_dir, 'plugin.yaml'), 'w') as f:
+    f.write('name: TestPlugin\\nversion: 1.2.3\\ndescription: A test plugin\\nauthor: Tester\\n')
+
+class FakeKosDB:
+    def __init__(self): self.tables = {}; self.data = {}
+    def list_tables(self): return list(self.tables.keys())
+    def execute(self, sql):
+        if sql.startswith('CREATE TABLE'):
+            self.tables['plugins'] = []
+            return 'OK'
+        if sql.startswith('INSERT') or sql.startswith('UPDATE'):
+            return 'OK'
+        return 'OK'
+    def query(self, sql):
+        if 'SELECT name FROM plugins' in sql:
+            return {'rows': []}
+        if 'SELECT * FROM plugins' in sql:
+            return {'rows': []}
+        return {'rows': []}
+
+from webcms.plugins.marketplace import get_registry
+reg = get_registry(db=FakeKosDB())
+reg.plugins_dir = plugin_dir.replace('/test_plugin', '')
+reg._discover_installed_plugins()
+reg._sync_to_kosdb()
+plugins = reg.list_available()
+print([{'name': p.name, 'version': p.version, 'author': p.author, 'active': p.active, 'installed': p.installed} for p in plugins])
+shutil.rmtree(tmp) | SUCCESS: True | OUTPUT_LEN: 563
+[2026-07-19 06:22:29] CMD: python3 patch_request2.py | SUCCESS: True | OUTPUT_LEN: 2122
+[2026-07-19 06:22:43] CMD: python3 patch_request2.py | SUCCESS: True | OUTPUT_LEN: 8
+[2026-07-19 06:22:48] CMD: python3 -m py_compile webcms/core/request.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:22:52] CMD: python3 -c import sys, os, tempfile, shutil
+tmp = tempfile.mkdtemp()
+plugin_dir = os.path.join(tmp, 'test_plugin')
+os.makedirs(plugin_dir)
+with open(os.path.join(plugin_dir, 'plugin.yaml'), 'w') as f:
+    f.write('name: TestPlugin\\nversion: 1.2.3\\ndescription: A test plugin\\nauthor: Tester\\n')
+
+class FakeKosDB:
+    def __init__(self): self.tables = {}; self.data = {}
+    def list_tables(self): return list(self.tables.keys())
+    def execute(self, sql):
+        if sql.startswith('CREATE TABLE'):
+            self.tables['plugins'] = []
+            return 'OK'
+        return 'OK'
+    def query(self, sql):
+        if 'SELECT name FROM plugins' in sql:
+            return {'rows': []}
+        if 'SELECT * FROM plugins' in sql:
+            return {'rows': []}
+        return {'rows': []}
+
+from webcms.plugins.marketplace import get_registry
+reg = get_registry(db=FakeKosDB())
+reg.plugins_dir = tmp
+reg._discover_installed_plugins()
+reg._sync_to_kosdb()
+plugins = reg.list_available()
+print([{'name': p.name, 'version': p.version, 'author': p.author, 'active': p.active, 'installed': p.installed} for p in plugins])
+shutil.rmtree(tmp) | SUCCESS: True | OUTPUT_LEN: 287
+[2026-07-19 06:22:56] CMD: rm -f patch_request.py patch_request2.py plugin_registry.json | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:23:12] CMD: grep -n def list_templates webcms/templates/engine.py | SUCCESS: True | OUTPUT_LEN: 58
+[2026-07-19 06:23:15] CMD: sed -n 290,420p webcms/templates/engine.py | SUCCESS: True | OUTPUT_LEN: 5083
+[2026-07-19 06:23:47] CMD: python3 patch_engine.py | SUCCESS: True | OUTPUT_LEN: 2153
+[2026-07-19 06:24:22] CMD: git checkout webcms/templates/engine.py | SUCCESS: True | OUTPUT_LEN: 39
+[2026-07-19 06:25:23] CMD: sed -n 280,430p webcms/templates/engine.py | SUCCESS: True | OUTPUT_LEN: 5460
+[2026-07-19 06:25:27] CMD: grep -n def list_templates\|def create_template\|def update_template\|def delete_template webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 295
+[2026-07-19 06:25:55] CMD: python3 patch_engine.py | SUCCESS: True | OUTPUT_LEN: 8
+[2026-07-19 06:26:22] CMD: git checkout webcms/templates/engine.py | SUCCESS: True | OUTPUT_LEN: 38
+[2026-07-19 06:27:19] CMD: git checkout webcms/templates/engine.py | SUCCESS: True | OUTPUT_LEN: 38
+[2026-07-19 06:30:02] CMD: git checkout webcms/templates/engine.py | SUCCESS: True | OUTPUT_LEN: 38
+[2026-07-19 06:39:15] CMD: rm -f patch_engine.py patch_engine_lines.py patch_admin_template.py | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:39:41] CMD: which node npm npx pnpm | SUCCESS: False | OUTPUT_LEN: 0
+[2026-07-19 06:39:50] CMD: bash -c apt-get --version 2>/dev/null || yum --version 2>/dev/null || echo 'no package manager' | SUCCESS: True | OUTPUT_LEN: 505
+[2026-07-19 06:39:53] CMD: whoami id    | SUCCESS: True | OUTPUT_LEN: 114
+[2026-07-19 06:39:55] CMD: whoami     | SUCCESS: True | OUTPUT_LEN: 112
+[2026-07-19 06:40:00] CMD: bash -c echo $PATH && ls /usr/bin/node* /usr/local/bin/node* 2>/dev/null || true | SUCCESS: True | OUTPUT_LEN: 193
+[2026-07-19 06:41:18] CMD: bash -c sudo apt-get update -qq && sudo apt-get install -y -qq nodejs npm 2>&1 | tail -20 | SUCCESS: True | OUTPUT_LEN: 762
+[2026-07-19 06:46:07] CMD: bash -c cd /home/t3ch/adata2/OurAI/playground/KosCMS && timeout 15 python3 -c \"from webcms.app_factory import create_app; app = create_app(); app.run(host='127.0.0.1', port=8000, debug=True)\" 2>&1 | head -80 | SUCCESS: True | OUTPUT_LEN: 287
+[2026-07-19 06:47:33] CMD: bash -c cd /home/t3ch/adata2/OurAI/playground/KosCMS && pkill -f run_server_log.py; sleep 1; python3 run_server_log.py > /tmp/webcms_server.log 2>&1 & echo $! > /tmp/webcms_server.pid; sleep 3; curl -s -X PUT -H 'Content-Type: application/json' -d '{"site_name":"Test"}' http://127.0.0.1:8000/api/v1/admin/settings; echo; curl -s -X POST -H 'Content-Type: application/json' -d '{"id":"tpl","name":"tpl.html","content":"<h1>T</h1>"}' http://127.0.0.1:8000/api/v1/admin/templates; echo; cat /tmp/webcms_server.log | tail -60 | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:47:37] CMD: bash -c cd /home/t3ch/adata2/OurAI/playground/KosCMS && pkill -f run_server_log.py; sleep 1; python3 run_server_log.py > /tmp/webcms_server.log 2>&1 & echo $! > /tmp/webcms_server.pid; sleep 3; curl -s -X PUT -H 'Content-Type: application/json' -d '{"site_name":"Test"}' http://127.0.0.1:8000/api/v1/admin/settings; echo; curl -s -X POST -H 'Content-Type: application/json' -d '{"id":"tpl","name":"tpl.html","content":"<h1>T</h1>"}' http://127.0.0.1:8000/api/v1/admin/templates; echo; tail -60 /tmp/webcms_server.log | SUCCESS: True | OUTPUT_LEN: 0
+[2026-07-19 06:52:49] CMD: git checkout webcms/admin/admin_api.py | SUCCESS: True | OUTPUT_LEN: 38

@@ -1,7 +1,7 @@
 """
 WebCMS Router
 
-URL routing with pattern matching and parameter extraction.
+URL routing with pattern matching.
 """
 
 import re
@@ -32,7 +32,7 @@ class Router:
         }
         
         # Static routes optimization
-        if "{" not in path:
+        if "{" not in path and "<" not in path:
             if path not in self.static_routes:
                 self.static_routes[path] = {}
             for method in route["methods"]:
@@ -42,11 +42,15 @@ class Router:
     
     def _compile_pattern(self, path: str) -> re.Pattern:
         """Compile path pattern to regex."""
+        # Convert Flask-style <param:path> to greedy regex
+        path = re.sub(r"<(\w+):path>", r"(?P<\1>.+)", path)
+        # Convert Flask-style <param> to single-segment regex
+        path = re.sub(r"<(\w+)>", r"(?P<\1>[^/]+)", path)
         # Convert {param:path} to greedy path regex for nested paths
         path = re.sub(r"\{(\w+):path\}", r"(?P<\1>.+)", path)
         # Convert {param} to single-segment regex
-        pattern = re.sub(r"\{(\w+)\}", r"(?P<\1>[^/]+)", path)
-        return re.compile(f"^{pattern}$")
+        path = re.sub(r"\{(\w+)\}", r"(?P<\1>[^/]+)", path)
+        return re.compile(f"^{path}$")
     
     def match(self, path: str, method: str) -> Tuple[Optional[Callable], Dict[str, str]]:
         """
@@ -81,13 +85,13 @@ class Router:
             if route["handler"] is handler:
                 path = route["path"]
                 for key, value in kwargs.items():
-                    path = path.replace(f"{{{key}}}", str(value))
+                    path = path.replace(f"{{key}}", str(value))
+                    path = path.replace(f"<{key}>", str(value))
                 return path
         
         # Check static routes
         for path, methods in self.static_routes.items():
-            for route_handler in methods.values():
-                if route_handler is handler:
-                    return path
+            if handler in methods.values():
+                return path
         
         return None

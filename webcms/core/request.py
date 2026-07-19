@@ -4,8 +4,11 @@ WebCMS Request wrapper
 Wraps WSGI environ with convenient access to request data.
 """
 
+import io
 import json
 import urllib.parse
+from email.parser import BytesParser
+from email.message import Message
 import logging
 from typing import Dict, Any, Optional, List
 
@@ -32,6 +35,7 @@ class Request:
         self._body: Optional[bytes] = None
         self._json: Optional[Any] = None
         self._form: Optional[Dict[str, Any]] = None
+        self._files: Optional[Dict[str, Any]] = None
     
     @classmethod
     def from_wsgi(cls, environ: Dict[str, Any]) -> "Request":
@@ -126,24 +130,61 @@ class Request:
     @property
     def form(self) -> Dict[str, Any]:
         """Parse form data safely."""
-        if self._form is None:
-            self._form = {}
-            if self.content_type.startswith("application/x-www-form-urlencoded"):
-                try:
-                    self._form = urllib.parse.parse_qs(
-                        self.body.decode("utf-8"),
-                        keep_blank_values=True
-                    )
-                except UnicodeDecodeError as exc:
-                    logger.debug("Invalid UTF-8 in form body: %s", exc)
-                    self._form = {}
-                except Exception as exc:
-                    logger.warning("Unexpected error parsing form body: %s", exc)
-                    self._form = {}
-            elif self.content_type.startswith("multipart/form-data"):
-                # Simplified - full implementation would use cgi.FieldStorage
-                self._form = {}
-        return self._form
+        self._parse_multipart()
+        return self._form or {}
+
+    @property
+    def files(self) -> Dict[str, Any]:
+        """Parse uploaded files safely."""
+        self._parse_multipart()
+        return self._files or {}
+
+    def _parse_multipart(self):
+        """Parse multipart/form-data into form fields and files."""
+        if self._form is not None and self._files is not None:
+            return
+        self._form = {}
+        self._files = {}
+        if self.content_type.startswith("application/x-www-form-urlencoded"):
+            try:
+                self._form = urllib.parse.parse_qs(
+                    self.body.decode("utf-8"),
+                    keep_blank_values=True
+                )
+            except UnicodeDecodeError as exc:
+                logger.debug("Invalid UTF-8 in form body: %s", exc)
+            except Exception as exc:
+                logger.warning("Unexpected error parsing form body: %s", exc)
+        elif self.content_type.startswith("multipart/form-data"):
+            try:
+                # Parse using email BytesParser which handles multipart bodies
+                msg = BytesParser().parsebytes(self.body)
+                if msg.is_multipart():
+                    for part in msg.get_payload():
+                        if not isinstance(part, Message):
+                            continue
+                        disp = part.get("Content-Disposition", "")
+                        name = None
+                        filename = None
+                        for piece in disp.split(";"):
+                            piece = piece.strip()
+                            if piece.startswith("name="):
+                                name = piece[5:].strip('"')
+                            elif piece.startswith("filename="):
+                                filename = piece[9:].strip('"')
+                        if not name:
+                            continue
+                        content = part.get_payload(decode=True) or b""
+                        if filename:
+                            self._files[name] = {
+                                "filename": filename,
+                                "content": content,
+                                "content_type": part.get("Content-Type", "application/octet-stream"),
+                            }
+                        else:
+                            self._form[name] = content.decode("utf-8", errors="replace")
+            except Exception as exc:
+                logger.warning("Error parsing multipart form data: %s", exc)
     
     def get_header(self, name: str, default: Optional[str] = None) -> Optional[str]:
         """Get specific header."""

@@ -63,11 +63,15 @@ class AdminAPI:
                 return int(list(rows[0].values())[0])
             return 0
         else:
-            query = self.db.query(model_class)
-            if filter_conditions:
-                for key, value in filter_conditions.items():
-                    query = query.filter(getattr(model_class, key) == value)
-            return query.count()
+            session = self._sa_session()
+            try:
+                query = session.query(model_class)
+                if filter_conditions:
+                    for key, value in filter_conditions.items():
+                        query = query.filter(getattr(model_class, key) == value)
+                return query.count()
+            finally:
+                session.close()
 
     def _get_model_list(self, model_class, filter_conditions=None,
                        order_by=None, limit=None, desc=True) -> list:
@@ -92,18 +96,22 @@ class AdminAPI:
                 return []
             return result.get('rows', [])
         else:
-            query = self.db.query(model_class)
-            if filter_conditions:
-                for key, value in filter_conditions.items():
-                    query = query.filter(getattr(model_class, key) == value)
-            if order_by:
-                order_col = getattr(model_class, order_by)
-                if desc:
-                    order_col = order_col.desc()
-                query = query.order_by(order_col)
-            if limit:
-                query = query.limit(limit)
-            return query.all()
+            session = self._sa_session()
+            try:
+                query = session.query(model_class)
+                if filter_conditions:
+                    for key, value in filter_conditions.items():
+                        query = query.filter(getattr(model_class, key) == value)
+                if order_by:
+                    order_col = getattr(model_class, order_by)
+                    if desc:
+                        order_col = order_col.desc()
+                    query = query.order_by(order_col)
+                if limit:
+                    query = query.limit(limit)
+                return query.all()
+            finally:
+                session.close()
 
     def _get_model_by_id(self, model_class, record_id: str,
                         id_field='id', extra_filters=None) -> any:
@@ -126,11 +134,14 @@ class AdminAPI:
             rows = result.get('rows', [])
             return rows[0] if rows else None
         else:
-            query = self.db.query(model_class)
-            for key, value in filters.items():
-                query = query.filter(getattr(model_class, key) == value)
-            return query.first()
-
+            session = self._sa_session()
+            try:
+                query = session.query(model_class)
+                for key, value in filters.items():
+                    query = query.filter(getattr(model_class, key) == value)
+                return query.first()
+            finally:
+                session.close()
     # ---------------- Dashboard ----------------
 
     def dashboard(self, request: Request) -> Response:
@@ -153,9 +164,9 @@ class AdminAPI:
                 }
             }
         widgets = [
-            {"id": "stats", "title": "Content Statistics", "icon": "📊", "data": stats},
-            {"id": "activity", "title": "Recent Activity", "icon": "📅", "data": {"recent_posts": stats.get("content", {}).get("posts", 0)}},
-            {"id": "health", "title": "System Health", "icon": "❤️", "data": {"status": "ok"}}
+            {"id": "stats", "title": "Content Statistics", "icon": "ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ", "data": stats},
+            {"id": "activity", "title": "Recent Activity", "icon": "ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ", "data": {"recent_posts": stats.get("content", {}).get("posts", 0)}},
+            {"id": "health", "title": "System Health", "icon": "ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¤ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ", "data": {"status": "ok"}}
         ]
         for widget in widgets:
             widget.setdefault("icon", "")
@@ -234,7 +245,7 @@ class AdminAPI:
         result = self.db.execute(cmd)
         return not result.startswith("ERROR")
 
-    def _resolve_author_display(self, record) -> any:
+    def _resolve_author_display(self, record):
         """Resolve author display name from an ORM object or dict record."""
         author_id = None
         if isinstance(record, dict):
@@ -243,9 +254,7 @@ class AdminAPI:
                 return author.get('display_name')
             author_id = record.get('author_id')
         else:
-            author = getattr(record, 'author', None)
-            if author:
-                return getattr(author, 'display_name', None)
+            # Avoid lazy-loading author relationship after session close.
             author_id = getattr(record, 'author_id', None)
         if author_id and self.db:
             try:
@@ -258,7 +267,6 @@ class AdminAPI:
             except Exception:
                 pass
         return author_id
-
     @staticmethod
     def _format_updated_at(value) -> any:
         if value is None:
@@ -329,6 +337,27 @@ class AdminAPI:
             "is_sticky TEXT"
         ]
         self._ensure_table_kosdb(table_name, columns)
+
+    def _ensure_system_user(self):
+        """Ensure a system user exists and return its id."""
+        from webcms.models.user import User
+        session = self._sa_session()
+        try:
+            user = session.query(User).filter_by(username='system').first()
+            if user:
+                return user.id
+            user = User(
+                username='system',
+                email='system@localhost',
+                password_hash='system',
+                is_active=True,
+                is_superuser=True
+            )
+            session.add(user)
+            session.commit()
+            return user.id
+        finally:
+            session.close()
 
     def _current_user_id(self, request: Request) -> str:
         """Extract current user id from auth or request context if available."""
@@ -417,8 +446,10 @@ class AdminAPI:
                 fields = self._normalize_page_payload(data, request)
                 record = self._create_record_kosdb("pages", fields)
                 return Response.json(self._serialize_page(record), 201)
-            manager = ContentManager(self.db)
-            page = manager.create_page(**data)
+            manager = ContentManager(self._sa_session())
+            payload = dict(data)
+            payload['author_id'] = self._ensure_system_user()
+            page = manager.create_page(**payload)
             return Response.json(self._serialize_page(page), 201)
         except Exception as e:
             return Response.error(str(e), 400)
@@ -440,10 +471,15 @@ class AdminAPI:
                 fields.pop("created_at", None)
                 record = self._update_record_kosdb("pages", page_id, fields)
                 return Response.json(self._serialize_page(record))
-            manager = ContentManager(self.db)
-            page = manager.update_page(page_id, **data)
+            manager = ContentManager(self._sa_session())
+            data.setdefault('author_id', self._ensure_system_user())
+            # Route parameter may be slug or UUID; try ID first, then slug
+            page = manager.get_page(page_id=page_id)
+            if not page:
+                page = manager.get_page(slug=page_id)
             if not page:
                 return Response.not_found()
+            page = manager.update_page(page.id, **data)
             return Response.json(self._serialize_page(page))
         except Exception as e:
             return Response.error(str(e), 400)
@@ -460,15 +496,19 @@ class AdminAPI:
                 if not existing:
                     return Response.not_found()
                 if self._delete_record_kosdb("pages", page_id):
-                    return Response.json({"id": page_id, "deleted": True})
+                    return Response.json({"": page_id, "deleted": True})
                 return Response.error("Delete failed", 500)
-            manager = ContentManager(self.db)
-            if manager.delete_page(page_id):
-                return Response.json({"id": page_id, "deleted": True})
+            manager = ContentManager(self._sa_session())
+            page = manager.get_page(page_id=page_id)
+            if not page:
+                page = manager.get_page(slug=page_id)
+            if not page:
+                return Response.not_found()
+            if manager.delete_page(page.id):
+                return Response.json({"t": page_id, "deleted": True})
             return Response.not_found()
         except Exception as e:
             return Response.error(str(e), 400)
-
     def list_posts(self, request: Request) -> Response:
         from webcms.models.content import Post
         if not self.db:
@@ -492,7 +532,7 @@ class AdminAPI:
                 fields = self._normalize_post_payload_kosdb(data, request)
                 record = self._create_record_kosdb("posts", fields)
                 return Response.json(self._serialize_post(record), 201)
-            manager = ContentManager(self.db)
+            manager = ContentManager(self._sa_session())
             post = manager.create_post(**self._normalize_post_payload(data))
             return Response.json(self._serialize_post(post), 201)
         except Exception as e:
@@ -517,7 +557,7 @@ class AdminAPI:
                     fields.pop("published_at", None)
                 record = self._update_record_kosdb("posts", post_id, fields)
                 return Response.json(self._serialize_post(record))
-            manager = ContentManager(self.db)
+            manager = ContentManager(self._sa_session())
             post = manager.update_post(post_id, **self._normalize_post_payload(data))
             if not post:
                 return Response.not_found()
@@ -539,7 +579,7 @@ class AdminAPI:
                 if self._delete_record_kosdb("posts", post_id):
                     return Response.json({"id": post_id, "deleted": True})
                 return Response.error("Delete failed", 500)
-            manager = ContentManager(self.db)
+            manager = ContentManager(self._sa_session())
             if manager.delete_post(post_id):
                 return Response.json({"id": post_id, "deleted": True})
             return Response.not_found()
@@ -681,9 +721,12 @@ class AdminAPI:
 
     def update_template(self, request: Request, template_id: str) -> Response:
         from webcms.templates.engine import TemplateEngine
+        from webcms.templates.theme import ThemeManager
         data = request.json or {}
         try:
-            engine = TemplateEngine(db=self.db)
+            tm = ThemeManager(db=self.db)
+            template_dirs = tm.get_template_dirs()
+            engine = TemplateEngine(template_dirs=template_dirs, db=self.db)
             result = engine.save_template(template_id, data.get("content", ""), name=data.get("name"))
             return Response.json({"id": template_id, "updated": True})
         except Exception as e:
@@ -691,8 +734,11 @@ class AdminAPI:
 
     def delete_template(self, request: Request, template_id: str) -> Response:
         from webcms.templates.engine import TemplateEngine
+        from webcms.templates.theme import ThemeManager
         try:
-            engine = TemplateEngine(db=self.db)
+            tm = ThemeManager(db=self.db)
+            template_dirs = tm.get_template_dirs()
+            engine = TemplateEngine(template_dirs=template_dirs, db=self.db)
             if engine.delete_template(template_id):
                 return Response.json({"id": template_id, "deleted": True})
             return Response.error("Template not found", 404)
@@ -1191,6 +1237,14 @@ class AdminAPI:
         except Exception:
             pass
 
+    def _sa_session(self):
+        """Return a SQLAlchemy session from the database manager."""
+        if self.db is None:
+            return None
+        if hasattr(self.db, 'get_session') and callable(self.db.get_session):
+            return self.db.get_session()
+        return self.db
+
     def get_settings(self, request: Request) -> Response:
         print("[DEBUG] get_settings called")
         defaults = {
@@ -1233,11 +1287,14 @@ class AdminAPI:
                     print(f"[DEBUG] Loaded setting: {key} = {defaults[key]}")
             else:
                 print("[DEBUG] Using SQLAlchemy for get_settings")
-                # Use raw SQL to avoid ORM mapper configuration issues.
                 from sqlalchemy import text
-                rows = self.db.execute(text("SELECT key, value, type FROM settings")).fetchall()
-                for row in rows:
-                    defaults[row[0]] = self._coerce_setting(row[1], row[2])
+                session = self._sa_session()
+                try:
+                    rows = session.execute(text("SELECT key, value, type FROM settings")).fetchall()
+                    for row in rows:
+                        defaults[row[0]] = self._coerce_setting(row[1], row[2])
+                finally:
+                    session.close()
         except Exception as e:
             print(f"[DEBUG] Error in get_settings: {e}")
             import traceback
@@ -1248,43 +1305,43 @@ class AdminAPI:
     def update_settings(self, request: Request) -> Response:
         data = request.json or {}
         print(f"[DEBUG] update_settings called with data: {data}")
-        
+
         if not self.db:
             print("[DEBUG] No database connection, returning mock success")
             return Response.json({"updated": True, "settings": data})
-        
+
         normalized = {}
         for key, value in data.items():
             normalized[key] = self._normalize_setting_value(key, value)
-        
+
         print(f"[DEBUG] Normalized settings: {normalized}")
-        
+
         try:
             if self._is_kosdb():
                 print("[DEBUG] Using KosDB path")
                 self._ensure_settings_table_kosdb()
-                
+
                 errors = []
                 for key, value in normalized.items():
                     type_ = self._guess_type(value)
                     val_str = self._sql_escape(str(value))
-                    
+
                     print(f"[DEBUG] Processing setting: {key} = {value} (type: {type_})")
-                    
+
                     # Check if setting exists
                     check_query = f"SELECT setting_key FROM settings WHERE setting_key='{self._sql_escape(key)}'"
                     print(f"[DEBUG] Check query: {check_query}")
-                    
+
                     check = self.db.query(check_query)
                     print(f"[DEBUG] Check result: {check}")
-                    
+
                     # If query itself failed, report it
                     if check.get('error'):
                         errors.append({"key": key, "error": check.get('error')})
                         continue
-                    
+
                     exists = bool(check.get('rows', []))
-                    
+
                     if exists:
                         cmd = (
                             f"UPDATE settings SET value='{val_str}', type='{type_}' "
@@ -1295,51 +1352,54 @@ class AdminAPI:
                             f"INSERT INTO settings (setting_key, value, type) VALUES "
                             f"('{self._sql_escape(key)}', '{val_str}', '{type_}')"
                         )
-                    
+
                     print(f"[DEBUG] Executing: {cmd}")
                     result = self.db.execute(cmd)
                     print(f"[DEBUG] Execute result: {result}")
-                    
+
                     if result and ("ERROR" in result or "No database" in result):
                         errors.append({"key": key, "error": result})
-                
+
                 if errors:
                     print(f"[DEBUG] Errors during update: {errors}")
                     return Response.json({"updated": False, "errors": errors, "settings": normalized}, 400)
-                    
+
             else:
                 print("[DEBUG] Using SQLAlchemy path")
-                # Use raw SQL to avoid ORM mapper configuration issues.
-                from sqlalchemy import text
-                for key, value in normalized.items():
-                    type_ = self._guess_type(value)
-                    val_str = str(value).replace("'", "''")
-                    check = self.db.execute(
-                        text("SELECT key FROM settings WHERE key=:key"),
-                        {"key": key}
-                    ).fetchone()
-                    if check:
-                        self.db.execute(
-                            text("UPDATE settings SET value=:value, type=:type WHERE key=:key"),
-                            {"key": key, "value": val_str, "type": type_}
-                        )
-                    else:
-                        self.db.execute(
-                            text("INSERT INTO settings (key, value, type) VALUES (:key, :value, :type)"),
-                            {"key": key, "value": val_str, "type": type_}
-                        )
-                self.db.commit()
-                
+                # Use the ORM Setting model for SQLAlchemy path
+                from webcms.models.system import Setting
+                session = self._sa_session()
+                try:
+                    for key, value in normalized.items():
+                        type_ = self._guess_type(value)
+                        existing = session.query(Setting).filter_by(key=key).first()
+                        if existing:
+                            existing.value = str(value)
+                            existing.type = type_
+                            existing.updated_at = datetime.utcnow()
+                        else:
+                            setting = Setting(
+                                key=key,
+                                value=str(value),
+                                type=type_,
+                                created_at=datetime.utcnow(),
+                                updated_at=datetime.utcnow()
+                            )
+                            session.add(setting)
+                    session.commit()
+                except Exception:
+                    session.rollback()
+                    raise
+                finally:
+                    session.close()
+
             print("[DEBUG] Settings updated successfully")
             return Response.json({"updated": True, "settings": normalized})
-            
+
         except Exception as e:
             print(f"[DEBUG] Error updating settings: {e}")
             import traceback
             traceback.print_exc()
-            if not self._is_kosdb():
-                self.db.rollback()
-            return Response.json({"updated": False, "error": str(e), "settings": data}, 400)
             return Response.json({"updated": False, "error": str(e), "settings": data}, 400)
 
     def _normalize_setting_value(self, key: str, value):

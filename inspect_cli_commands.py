@@ -1,0 +1,1 @@
+from pathlib import Path; p = Path("webcms/cli/commands.py"); print(p.read_text()[:4000])

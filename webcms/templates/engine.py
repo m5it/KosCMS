@@ -4,12 +4,15 @@ Template Engine
 Jinja2 integration with custom filters and caching.
 """
 
+import logging
 import os
 import re
 import json
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from pathlib import Path
+
+logger = logging.getLogger("webcms.templates.engine")
 
 try:
     import markdown
@@ -56,6 +59,13 @@ class TemplateEngine:
         
         # Template cache
         self._cache: Dict[str, str] = {}
+    
+    @staticmethod
+    def _sql_escape(value) -> str:
+        """Escape a value for use in a KosDB SQL string."""
+        if value is None:
+            return "NULL"
+        return str(value).replace("'", "''")
     
     def _is_kosdb(self) -> bool:
         """Check if database is KosDB."""
@@ -147,7 +157,7 @@ class TemplateEngine:
         Args:
             template_name: Template file path
             context: Template variables
-        
+            
         Returns:
             Rendered HTML
         """
@@ -281,7 +291,8 @@ class TemplateEngine:
         try:
             result = self.db.query("SELECT id FROM templates WHERE is_active='1'")
             existing_ids = {row.get('id') for row in result.get('rows', [])}
-        except Exception:
+        except Exception as e:
+            logger.warning("Could not list existing templates for sync: %s", e)
             existing_ids = set()
         
         # Insert new templates
@@ -290,27 +301,28 @@ class TemplateEngine:
                 try:
                     self.db.execute(
                         f"INSERT INTO templates (id, name, path, updated_at, is_active) "
-                        f"VALUES ('{t['id']}', '{t['name']}', '{t['path']}', '{t['updated_at']}', '1')"
+                        f"VALUES ('{self._sql_escape(t['id'])}', '{self._sql_escape(t['name'])}', "
+                        f"'{self._sql_escape(t['path'])}', '{self._sql_escape(t['updated_at'])}', '1')"
                     )
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning("Could not sync template %s to KosDB: %s", t.get('id'), e)
     
     def list_templates(self) -> List[Dict[str, Any]]:
         """
         Get list of available templates.
-        Returns templates from filesystem, synced with KosDB if available.
+        Returns templates from filesystem merged with any KosDB-only templates.
         """
-        # Discover from disk
+        # Discover from disk (may be empty if no template_dirs exist)
         templates = self._discover_templates_from_disk()
         
         # Sync to KosDB if available
         if self.db and self._is_kosdb():
             self._sync_templates_to_kosdb(templates)
             
-            # Also get from KosDB to include any database-only templates
+            # Merge with DB templates, including DB-only templates
             try:
                 result = self.db.query(
-                    "SELECT id, name, path, updated_at FROM templates WHERE is_active='1'"
+                    "SELECT id, name, path, content, updated_at FROM templates WHERE is_active='1'"
                 )
                 if not result.get('error'):
                     db_templates = {
@@ -318,23 +330,47 @@ class TemplateEngine:
                             "id": row.get('id'),
                             "name": row.get('name'),
                             "path": row.get('path'),
+                            "content": row.get('content'),
                             "updated_at": row.get('updated_at', datetime.utcnow().isoformat())
                         }
                         for row in result.get('rows', [])
                     }
                     
-                    # Merge disk templates with DB templates
+                    # Disk templates take precedence for shared fields, but preserve content from DB
                     for t in templates:
+                        existing = db_templates.get(t['id'], {})
+                        t['content'] = existing.get('content')
                         db_templates[t['id']] = t
                     
                     templates = list(db_templates.values())
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Could not list templates from KosDB: %s", e)
         
         return sorted(templates, key=lambda x: x['name'])
     
     def get_template(self, template_id: str) -> Optional[Dict[str, Any]]:
-        """Get template by ID."""
+        """Get template by ID, preferring KosDB content."""
+        if self.db and self._is_kosdb():
+            self._ensure_templates_table_kosdb()
+            try:
+                result = self.db.query(
+                    f"SELECT id, name, path, content, updated_at FROM templates "
+                    f"WHERE id='{self._sql_escape(template_id)}' AND is_active='1'"
+                )
+                if not result.get('error'):
+                    rows = result.get('rows', [])
+                    if rows:
+                        row = rows[0]
+                        return {
+                            "id": row.get('id'),
+                            "name": row.get('name'),
+                            "path": row.get('path'),
+                            "content": row.get('content'),
+                            "updated_at": row.get('updated_at', datetime.utcnow().isoformat())
+                        }
+            except Exception as e:
+                logger.warning("Could not get template %s from KosDB: %s", template_id, e)
+        
         templates = self.list_templates()
         for t in templates:
             if t['id'] == template_id:
@@ -342,74 +378,94 @@ class TemplateEngine:
         return None
     
     def save_template(self, template_id: str, content: str, name: str = None) -> Dict[str, Any]:
-        """Save template content."""
+        """Save template content, returning the full saved record."""
+        safe_id = re.sub(r"[^a-zA-Z0-9_\-/]", "", template_id).strip("/")
+        if not safe_id:
+            return {"id": template_id, "error": "Invalid template id"}
+        
+        template_name = name or safe_id.replace('_', '/')
+        template_path = template_name
+        now = datetime.utcnow().isoformat()
+        
         if self.db and self._is_kosdb():
             self._ensure_templates_table_kosdb()
-            
-            # Update or insert
             try:
-                result = self.db.query(f"SELECT id FROM templates WHERE id='{template_id}'")
-                now = datetime.utcnow().isoformat()
-                
+                result = self.db.query(
+                    f"SELECT id FROM templates WHERE id='{self._sql_escape(safe_id)}'"
+                )
                 if result.get('rows'):
-                    # Update
                     self.db.execute(
-                        f"UPDATE templates SET content='{content}', updated_at='{now}' "
-                        f"WHERE id='{template_id}'"
+                        f"UPDATE templates SET "
+                        f"name='{self._sql_escape(template_name)}', "
+                        f"path='{self._sql_escape(template_path)}', "
+                        f"content='{self._sql_escape(content)}', "
+                        f"updated_at='{self._sql_escape(now)}' "
+                        f"WHERE id='{self._sql_escape(safe_id)}'"
                     )
                 else:
-                    # Insert
-                    template_name = name or template_id.replace('_', '/')
                     self.db.execute(
                         f"INSERT INTO templates (id, name, path, content, updated_at, is_active) "
-                        f"VALUES ('{template_id}', '{template_name}', '{template_name}', '{content}', '{now}', '1')"
+                        f"VALUES ('{self._sql_escape(safe_id)}', '{self._sql_escape(template_name)}', "
+                        f"'{self._sql_escape(template_path)}', '{self._sql_escape(content)}', "
+                        f"'{self._sql_escape(now)}', '1')"
                     )
                 
                 return {
-                    "id": template_id,
-                    "name": name or template_id,
+                    "id": safe_id,
+                    "name": template_name,
+                    "path": template_path,
+                    "content": content,
                     "updated_at": now
                 }
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Could not save template %s to KosDB: %s", safe_id, e)
         
         # Fallback: save to file if we have a template dir
         if self.template_dirs:
             for template_dir in self.template_dirs:
-                file_path = os.path.join(template_dir, template_id.replace('_', '/'))
+                file_path = os.path.join(template_dir, safe_id.replace('_', '/'))
                 try:
                     os.makedirs(os.path.dirname(file_path), exist_ok=True)
                     with open(file_path, 'w') as f:
                         f.write(content)
                     return {
-                        "id": template_id,
-                        "name": name or template_id,
-                        "updated_at": datetime.utcnow().isoformat()
+                        "id": safe_id,
+                        "name": template_name,
+                        "path": template_path,
+                        "content": content,
+                        "updated_at": now
                     }
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning("Could not save template %s to disk: %s", safe_id, e)
         
         return {"id": template_id, "error": "Could not save template"}
     
     def delete_template(self, template_id: str) -> bool:
-        """Delete template."""
+        safe_id = re.sub(r"[^a-zA-Z0-9_\-/]", "", template_id).strip("/")
+        if not safe_id:
+            return False
+        if not safe_id:
+            return False
+        
         if self.db and self._is_kosdb():
             self._ensure_templates_table_kosdb()
             try:
-                self.db.execute(f"DELETE FROM templates WHERE id='{template_id}'")
+                self.db.execute(
+                    f"DELETE FROM templates WHERE id='{self._sql_escape(safe_id)}'"
+                )
                 return True
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Could not delete template %s from KosDB: %s", safe_id, e)
         
         # Also try to delete from disk
         if self.template_dirs:
             for template_dir in self.template_dirs:
-                file_path = os.path.join(template_dir, template_id.replace('_', '/'))
+                file_path = os.path.join(template_dir, safe_id.replace('_', '/'))
                 try:
                     if os.path.exists(file_path):
                         os.remove(file_path)
                         return True
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning("Could not delete template %s from disk: %s", safe_id, e)
         
         return False
