@@ -152,6 +152,33 @@ Both list Flask, Flask-SQLAlchemy, Flask-JWT-Extended, Flask-CORS as dependencie
 
 ---
 
+## Bug 8: INSERT with column list fails on KosDB
+
+**Status:** FIXED (DB regex + `insert_with_columns` + double-split regression all resolved).
+
+**File:** `webcms/admin/admin_api.py:1288-1290`
+
+The admin API sends INSERT with named columns:
+```python
+cmd = (
+    f"INSERT INTO settings (setting_key, value, type) VALUES "
+    f"('{self._sql_escape(key)}', '{val_str}', '{type_}')"
+)
+```
+
+KosDB now supports this syntax. However, `commands.py:147` has a regression: it double-splits the columns list (parser already converts to list, then commands.py tries `.split(',')` again). This causes `ERROR: 'list' object has no attribute 'split'`.
+
+**Fix for DB:** Change `commands.py:147` from:
+```python
+col_list = [c.strip() for c in columns.split(',')]
+```
+to:
+```python
+col_list = columns  # parser.py already splits into a list
+```
+
+---
+
 ## Summary
 
 | # | File | Issue | Severity | Also needs |
@@ -163,5 +190,7 @@ Both list Flask, Flask-SQLAlchemy, Flask-JWT-Extended, Flask-CORS as dependencie
 | 5 | `README.md`, `setup.py`, `pyproject.toml` | Stale versions | Low | - |
 | 6 | `setup.py`, `requirements.txt` | Flask deps — wrong framework | Medium | - |
 | 7 | `Dockerfile`, `docker-compose.yml` | Flask refs — wrong framework | Medium | - |
+| 8 | `admin_api.py:1288` | INSERT with column list fails on KosDB | **High** | KOSDB_ISSUES.md Bug #4 | FIXED (regression in Bug #5) |
 
-**Bug #3 + KosDB Bug #1 together are the root cause** of the settings not persisting. Fix both sides.
+**Bug #3 + KosDB Bug #1 together were the root cause** of settings not persisting (now fixed).
+**Bug #8 + KosDB Bug #5** — INSERT column list support added and double-split regression fixed. All resolved.
