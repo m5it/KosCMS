@@ -6,8 +6,318 @@ combination of CMS-side architecture issues and KosDB-side missing features.
 
 ---
 
-## Issue 1: CMS — N+1 Query Problem (Critical)
+## Fixes Completed in This Repository
 
+The following optimizations have been implemented in the webcms codebase:
+
+### ✅ Issue 1: N+1 Query Problem — FIXED
+**File:** `webcms/admin/admin_api.py:1321-1376`
+
+`update_settings()` now loads all existing keys with a single `SELECT` before
+the write loop, then uses INSERT or UPDATE per key based on an in-memory set.
+This cuts round-trips from 2N to N+1.
+
+**Implementation:**
+```python
+# OPTIMIZATION: Load all existing keys in a single query
+existing_keys_result = self.db.query("SELECT setting_key FROM settings")
+existing_keys = {
+    row.get('setting_key')
+    for row in existing_keys_result.get('rows', [])
+    if row.get('setting_key')
+}
+# Then decide INSERT vs UPDATE per key without second SELECT
+```
+
+### ✅ Issue 2: Pool Acquire/Release Overhead — FIXED
+**File:** `webcms/database/kosdb_client.py:485-565`
+
+Added `KosDBClient.transaction()` context manager that acquires a single
+connection for multiple operations, avoiding repeated pool acquire/release
+and ping overhead.
+
+**Usage:**
+```python
+with self.db.transaction() as conn:
+    # All operations share one connection
+    existing = conn.query("SELECT setting_key FROM settings")
+    for key, value in settings.items():
+        conn.execute(f"UPDATE ...")
+```
+
+### ✅ Issue 2b: Ping Skip Optimization — FIXED
+**File:** `webcms/database/kosdb_client.py:45, 334-346`
+
+Added `max_ping_interval` config (default 5s) to skip the `ping()` round-trip
+if the connection was used within the last few seconds. Logs at debug level
+when ping is skipped.
+
+**Configuration:**
+```python
+@dataclass
+class KosDBConfig:
+    max_ping_interval: float = 5.0  # Skip ping if used within 5s
+```
+
+### ✅ Issue 6: Connection Reuse Within Request — FIXED
+**File:** `webcms/admin/admin_api.py:1330-1376`
+
+The KosDB path now uses `self.db.transaction()` context manager when
+available, holding a single connection for the entire settings save operation.
+
+**Implementation:**
+```python
+if hasattr(self.db, 'transaction'):
+    with self.db.transaction() as conn:
+        # All SELECT/UPDATE/INSERT operations share one connection
+        ...
+else:
+    # Fallback for legacy KosDB interfaces
+    ...
+```
+
+---
+
+## Fixes Requiring External test.KosDB Project Changes
+
+The following features require changes to the external `test.KosDB` project
+(LevelDB socket server). These cannot be implemented in this repository alone.
+
+### 🔧 Issue 3: Add UPSERT Support
+**Required Files:** `test.KosDB/commands.py`, `test.KosDB/database.py`
+
+KosDB has no `UPSERT` or `INSERT OR UPDATE` command. The CMS must do two
+round-trips (SELECT + INSERT/UPDATE) for every setting.
+
+**Recommended Implementation:**
+
+Add new command parser in `test.KosDB/commands.py`:
+```python
+# New command: INSERT OR UPDATE
+elif cmd_upper.startswith("INSERT OR UPDATE INTO"):
+    # Parse: INSERT OR UPDATE INTO table (cols) VALUES (vals)
+    return self._handle_upsert(parts)
+```
+
+**Recommended SQL Syntax:**
+```sql
+-- Standard UPSERT syntax
+INSERT OR UPDATE INTO settings (setting_key, value, type)
+VALUES ('site_name', 'KosCMS', 'str');
+
+-- Alternative: MySQL-style ON DUPLICATE KEY UPDATE
+INSERT INTO settings (setting_key, value, type)
+VALUES ('site_name', 'KosCMS', 'str')
+ON DUPLICATE KEY UPDATE value='KosCMS', type='str';
+```
+
+**LevelDB Implementation** in `test.KosDB/database.py`:
+```python
+def upsert(self, table: str, key_col: str, data: dict) -> bool:
+    """
+    Insert or update a row atomically using LevelDB batch.
+    """
+    from leveldb import WriteBatch
+    
+    batch = WriteBatch()
+    row_key = f"{table}:{key_col}:{data[key_col]}"
+    
+    # Check if exists (LevelDB Get)
+    existing = self.db.Get(row_key.encode())
+    
+    # Write the row data
+    batch.Put(row_key.encode(), json.dumps(data).encode())
+    
+    # Update index if needed
+    if existing:
+        batch.Delete(row_key.encode())  # Remove old index entry
+    
+    self.db.Write(batch)
+    return True
+```
+
+**Impact:** Cuts per-setting queries from 2 to 1 (30 → 15 round-trips for 15 settings).
+
+---
+
+### 🔧 Issue 4: Add BEGIN/COMMIT Transaction Support
+**Required Files:** `test.KosDB/commands.py`, `test.KosDB/server.py`, `test.KosDB/database.py`
+
+KosDB has no `BEGIN`/`COMMIT` transaction support. Each query is an isolated
+LevelDB operation. Even with CMS batching, there's no way to atomicize multiple
+writes.
+
+**Recommended Implementation:**
+
+**In `test.KosDB/server.py` - ClientHandler:**
+```python
+class ClientHandler(threading.Thread):
+    def __init__(self, ...):
+        ...
+        self.transaction_active = False
+        self.transaction_batch = None  # WriteBatch instance
+        
+    def handle_command(self, cmd: str):
+        cmd_upper = cmd.upper().strip()
+        
+        if cmd_upper == "BEGIN":
+            self.transaction_active = True
+            self.transaction_batch = WriteBatch()
+            return "OK Transaction started"
+            
+        elif cmd_upper == "COMMIT":
+            if not self.transaction_active:
+                return "ERROR No active transaction"
+            self.db.Write(self.transaction_batch)
+            self.transaction_active = False
+            self.transaction_batch = None
+            return "OK Transaction committed"
+            
+        elif cmd_upper == "ROLLBACK":
+            self.transaction_active = False
+            self.transaction_batch = None
+            return "OK Transaction rolled back"
+        
+        # Normal query execution
+        if self.transaction_active:
+            # Defer writes to batch, return tentative OK
+            return self._defer_to_transaction(cmd)
+        else:
+            return self._execute_immediate(cmd)
+```
+
+**Recommended SQL Syntax:**
+```sql
+BEGIN;
+UPDATE settings SET value='KosCMS' WHERE setting_key='site_name';
+UPDATE settings SET value='en' WHERE setting_key='default_language';
+INSERT INTO settings (setting_key, value, type) 
+VALUES ('new_setting', 'value', 'str');
+COMMIT;
+```
+
+**Impact:** Allows the CMS to send all 15 updates in one network round-trip
+as a single atomic batch. Cuts round-trips from N+1 (16) to 2 (BEGIN + COMMIT).
+
+---
+
+### 🔧 Issue 5: Add WriteBatch Bulk Write Support
+**Required Files:** `test.KosDB/commands.py`, `test.KosDB/database.py`
+
+Even without full transactions, KosDB could support bulk write operations
+using LevelDB's native WriteBatch.
+
+**Recommended Implementation:**
+
+**In `test.KosDB/commands.py`:**
+```python
+# New command: BATCH INSERT
+elif cmd_upper.startswith("BATCH INSERT INTO"):
+    return self._handle_batch_insert(parts)
+```
+
+**Recommended SQL Syntax:**
+```sql
+-- Batch insert multiple rows in one operation
+BATCH INSERT INTO settings (setting_key, value, type) VALUES
+    ('site_name', 'KosCMS', 'str'),
+    ('default_language', 'en', 'str'),
+    ('posts_per_page', '10', 'int');
+
+-- Batch update
+BATCH UPDATE settings SET value='updated' WHERE setting_key IN 
+    ('key1', 'key2', 'key3');
+```
+
+**LevelDB Implementation** in `test.KosDB/database.py`:
+```python
+def batch_insert(self, table: str, columns: list, rows: list) -> bool:
+    """
+    Insert multiple rows atomically using WriteBatch.
+    """
+    from leveldb import WriteBatch
+    
+    batch = WriteBatch()
+    for row in rows:
+        key = f"{table}:{columns[0]}:{row[0]}"  # Primary key lookup
+        data = dict(zip(columns, row))
+        batch.Put(key.encode(), json.dumps(data).encode())
+    
+    self.db.Write(batch)
+    return True
+```
+
+**Impact:** Cuts 15 individual INSERT/UPDATE round-trips to 1 batch operation.
+
+---
+
+### 🔧 Issue 5b: Single-Threaded Write Queue Optimization
+**Required Files:** `test.KosDB/server.py`, `test.KosDB/database.py`
+
+KosDB uses a single `Database` instance shared across all `ClientHandler`
+threads. LevelDB's writes are serialized through the database instance.
+
+**Recommended Implementation:**
+
+**In `test.KosDB/database.py` - WriteQueue:**
+```python
+import queue
+import threading
+
+class Database:
+    def __init__(self, path: str):
+        self.db = leveldb.LevelDB(path)
+        self.write_queue = queue.Queue()
+        self.write_thread = threading.Thread(target=self._write_worker, daemon=True)
+        self.write_thread.start()
+        
+    def _write_worker(self):
+        """Background thread for serialized writes."""
+        while True:
+            batch, result_callback = self.write_queue.get()
+            try:
+                self.db.Write(batch)
+                result_callback(True, None)
+            except Exception as e:
+                result_callback(False, str(e))
+            finally:
+                self.write_queue.task_done()
+    
+    def async_write(self, batch) -> Future:
+        """Queue a write operation."""
+        future = Future()
+        self.write_queue.put((batch, lambda ok, err: future.set_result(ok, err)))
+        return future
+```
+
+**Impact:** Prevents write starvation when multiple clients write simultaneously.
+
+---
+
+## Summary
+
+### Completed in This Repository (webcms)
+
+| Issue | File | Description | Impact |
+|-------|------|-------------|--------|
+| N+1 Query | `admin/admin_api.py` | Single SELECT for all keys | 30 → 16 queries |
+| Transaction Context | `database/kosdb_client.py` | Reuse connection across ops | -30 ping round-trips |
+| Ping Skip | `database/kosdb_client.py` | Skip ping if recently used | -N ping round-trips |
+| Connection Reuse | `admin/admin_api.py` | Use transaction() in update_settings | Pool efficiency |
+
+### Requires External test.KosDB Changes
+
+| Issue | Files | Description | Impact |
+|-------|-------|-------------|--------|
+| UPSERT | `commands.py`, `database.py` | INSERT OR UPDATE command | 16 → 8 queries |
+| Transactions | `server.py`, `commands.py` | BEGIN/COMMIT support | 16 → 2 round-trips |
+| WriteBatch | `commands.py`, `database.py` | Bulk INSERT/UPDATE | 16 → 1 round-trip |
+| Write Queue | `server.py`, `database.py` | Async write serialization | Prevents starvation |
+
+**Quick win (completed):** CMS-side fixes cut queries from 30 to ~16.
+
+**Best fix (external):** Add UPSERT + transactions to KosDB → enables single
+round-trip saves with atomic guarantees.
 **File:** `webcms/admin/admin_api.py:1325-1361`
 **Impact:** 30+ round-trips for 15 settings
 

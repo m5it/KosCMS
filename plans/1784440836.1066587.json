@@ -3,7 +3,7 @@
   "title": "Fix Admin Settings Save & Complete KosDB Support for Settings, Pages, Plugins, Templates",
   "instructions": "",
   "startTimestamp": 1784440836.1066618,
-  "endTimestamp": 1784449919.7836704,
+  "endTimestamp": 1784451776.8607385,
   "tasks": {
     "1784440841.1806934": {
       "id": "1784440841.1806934",
@@ -13,11 +13,11 @@
       "endTimestamp": 1784441027.7586849,
       "log": [
         {
-          "timestamp": 1784440871.2664466,
+          "timestamp": 1784451767.2507987,
           "text": "Build started"
         },
         {
-          "timestamp": 1784441023.7726421,
+          "timestamp": 1784451767.2507997,
           "text": "Replaced the static dist/assets/admin.js with a version that includes a real settings form. Added putJson helper, showMessage feedback, and a settings screen that binds all setting groups (Site, Cache, Search, Notifications, Security) and sends PUT /api/v1/admin/settings with the correct payload. Success/error messages are shown for 5 seconds."
         }
       ]
@@ -30,15 +30,15 @@
       "endTimestamp": 1784441079.4853241,
       "log": [
         {
-          "timestamp": 1784441076.190797,
+          "timestamp": 1784451767.2508025,
           "text": "Hardened KosDB settings persistence in admin_api.py: added module logger, replaced debug print statements with logging, made settings table schema deterministic with PRIMARY KEY on setting_key, made get_settings read explicit columns, made update_settings treat any non-OK/No-database response as an error and return 400 with per-key errors."
         },
         {
-          "timestamp": 1784441732.9809332,
+          "timestamp": 1784451767.2508028,
           "text": "Completed task 3/7: hardened KosDB-backed pages/posts CRUD in admin_api.py (deterministic table schema with PRIMARY KEY, boolean/date/author_id normalization, full serialized responses, error logging for non-OK KosDB execute), fixed admin route placeholders from <id> to {id} so PUT/DELETE match, verified static admin.js uses /pages and /posts endpoints, and smoke-tested create_page with a mock KosDB."
         },
         {
-          "timestamp": 1784442179.4354692,
+          "timestamp": 1784451767.250803,
           "text": "Completed task 4/7: made PluginRegistry KosDB-aware with a plugins table, kept filesystem registry as fallback, auto-sync on startup, added install/upload endpoints in admin_api.py with actionable messages, updated PluginManager.jsx and static admin.js with description/version/author display, error handling, and upload/install flow, and added multipart files/form parsing to Request."
         }
       ]

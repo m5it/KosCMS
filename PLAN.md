@@ -1,29 +1,29 @@
-# Plan: Fix Admin Settings Save & Complete KosDB Support for Settings, Pages, Plugins, Templates
-## ID: 1784440836.1066587
-## Created: 2026-07-19 06:00:36
+# Plan: Settings Save Performance Optimization
+## ID: 1784451884.852964
+## Created: 2026-07-19 09:04:44
 ## Status: in_progress
 
-### Tasks (7):
-1. [pending] Fix admin settings Save button to actually call PUT /api/v1/admin/settings
-   ID: 1784440841.1806934
+### Goal:
+Optimize the CMS settings save path to reduce database round-trips and connection overhead, targeting the 10-30 second save time on /admin/settings. Focus on changes within this repository: the CMS admin API and the KosDB client adapter. Document KosDB-server-side limitations that require changes in the external test.KosDB project.
 
-2. [pending] Verify and harden KosDB settings persistence in AdminAPI
-   ID: 1784440844.8566062
+### Tasks (6):
+1. [pending] Fix N+1 SELECT in update_settings
+   ID: 1784451891.5425017
 
-3. [pending] Fix Pages/Posts list endpoint mismatch and complete KosDB content CRUD
-   ID: 1784440848.300103
+2. [pending] Add connection reuse for KosDB multi-query operations
+   ID: 1784451891.5427217
 
-4. [pending] Complete PluginManager UI and KosDB persistence for plugins
-   ID: 1784440852.7040381
+3. [pending] Use KosDB transaction in update_settings
+   ID: 1784451891.5436406
 
-5. [pending] Complete TemplateManager UI and KosDB template persistence
-   ID: 1784440860.310966
+4. [pending] Reduce ping overhead in KosDB pool
+   ID: 1784451891.5437474
 
-6. [pending] Rebuild admin UI dist from React source and verify all admin routes
-   ID: 1784440864.8125803
+5. [pending] Add benchmark test for settings save
+   ID: 1784451891.5438564
 
-7. [pending] Smoke-test end-to-end: settings save, page create, plugin toggle, template save
-   ID: 1784440869.0736513
+6. [pending] Document KosDB server-side limitations
+   ID: 1784451891.5439565
 
 ---
 

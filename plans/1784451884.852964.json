@@ -1,0 +1,62 @@
+{
+  "id": "1784451884.852964",
+  "title": "Settings Save Performance Optimization",
+  "instructions": "Optimize the CMS settings save path to reduce database round-trips and connection overhead, targeting the 10-30 second save time on /admin/settings. Focus on changes within this repository: the CMS admin API and the KosDB client adapter. Document KosDB-server-side limitations that require changes in the external test.KosDB project.",
+  "startTimestamp": 1784451884.8529656,
+  "endTimestamp": 1784452617.5925748,
+  "tasks": {
+    "1784451891.5425017": {
+      "id": "1784451891.5425017",
+      "status": "completed",
+      "instruction": "In webcms/admin/admin_api.py, refactor update_settings() so it loads all existing setting keys with a single SELECT before the write loop. For KosDB mode, run one query to get all setting_key values, build a set, then decide INSERT vs UPDATE per key without issuing a second SELECT per key. Keep the existing SQLAlchemy path unchanged except for any necessary consistency. Add inline comments explaining the optimization.",
+      "startTimestamp": 1784451891.5440671,
+      "endTimestamp": 1784452041.2557337,
+      "log": [
+        {
+          "timestamp": 1784452274.4125843,
+          "text": "Build started"
+        }
+      ]
+    },
+    "1784451891.5427217": {
+      "id": "1784451891.5427217",
+      "status": "completed",
+      "instruction": "In webcms/database/kosdb_client.py, add a transaction() context manager that acquires a single KosDBConnection from the pool, yields it for multiple query()/execute() calls, and releases it afterward. This avoids repeated pool acquire/release and ping overhead during a batch of operations. Ensure it handles reconnection if the connection dies inside the context and releases the connection in a finally block.",
+      "startTimestamp": 1784452041.255736,
+      "endTimestamp": 1784452424.177116,
+      "log": []
+    },
+    "1784451891.5436406": {
+      "id": "1784451891.5436406",
+      "status": "completed",
+      "instruction": "Update webcms/admin/admin_api.py update_settings() to use the new KosDBClient.transaction() context manager for the entire KosDB write path. All SELECT/UPDATE/INSERT operations during a settings save should share one connection. Verify the context manager is used only when self.db is a KosDBClient instance.",
+      "startTimestamp": 1784452424.1771176,
+      "endTimestamp": 1784452468.9721158,
+      "log": []
+    },
+    "1784451891.5437474": {
+      "id": "1784451891.5437474",
+      "status": "completed",
+      "instruction": "In webcms/database/kosdb_client.py, modify the pool's acquire logic to skip the ping() round-trip if the connection was used within the last few seconds (configurable, default 5). Add a last_used timestamp to KosDBConnection and a max_ping_interval config option. Log at debug level when ping is skipped.",
+      "startTimestamp": 1784452468.972117,
+      "endTimestamp": 1784452536.89706,
+      "log": []
+    },
+    "1784451891.5438564": {
+      "id": "1784451891.5438564",
+      "status": "completed",
+      "instruction": "Create tests/benchmark/test_settings_save.py that measures the number of database round-trips and elapsed time for saving 15 settings via /api/v1/admin/settings. Use a mock KosDB client to count query/execute calls. Include assertions that the optimized code issues at most N+1 writes (1 SELECT + N writes) instead of 2N+1.",
+      "startTimestamp": 1784452536.8970613,
+      "endTimestamp": 1784452578.8909056,
+      "log": []
+    },
+    "1784451891.5439565": {
+      "id": "1784451891.5439565",
+      "status": "completed",
+      "instruction": "Update SETTINGS_PERFORMANCE_ISSUES.md with a clear section distinguishing fixes done in this repository vs. fixes that require changes in the external test.KosDB project (UPSERT, BEGIN/COMMIT transactions, WriteBatch bulk writes, single-threaded write queue). Include recommended SQL syntax and file paths for the external project.",
+      "startTimestamp": 1784452578.8909066,
+      "endTimestamp": 1784452617.5923884,
+      "log": []
+    }
+  }
+}

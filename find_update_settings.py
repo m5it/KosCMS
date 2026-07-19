@@ -1,7 +1,14 @@
-path = "webcms/admin/admin_api.py"
-with open(path) as f:
-    lines = f.readlines()
+from pathlib import Path
 
-for i, line in enumerate(lines, 1):
-    if 'def update_settings' in line or 'Using SQLAlchemy path' in line:
-        print(f"{i:4d}: {line.rstrip()}")
+p = Path("webcms/admin/admin_api.py")
+lines = p.read_text().splitlines()
+
+for i, line in enumerate(lines):
+    if "def update_settings" in line:
+        print(f"Found update_settings at line {i+1}")
+        # Print context around it
+        start = max(0, i-5)
+        end = min(len(lines), i+150)
+        for j in range(start, end):
+            print(f"{j+1:4d}: {lines[j]}")
+        break

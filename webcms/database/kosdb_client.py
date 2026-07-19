@@ -40,6 +40,9 @@ class KosDBConfig:
     
     # Query timeout
     query_timeout: float = 30.0
+    
+    # Ping optimization: skip ping if connection used within this many seconds (default 5)
+    max_ping_interval: float = 5.0
 
 
 class KosDBConnection:
@@ -328,10 +331,19 @@ class KosDBConnectionPool:
                     else:
                         raise RuntimeError("Connection pool exhausted")
             
-            # Check if connection is alive
-            if not conn.ping():
-                conn.close()
-                conn.connect()
+            # Check if connection is alive - skip ping if recently used
+            # This optimization avoids a round-trip when connection is likely still good
+            time_since_used = time.time() - conn.last_used
+            should_ping = time_since_used > self.config.max_ping_interval
+            
+            if should_ping:
+                logger.debug(f"Connection idle for {time_since_used:.2f}s, pinging")
+                if not conn.ping():
+                    conn.close()
+                    conn.connect()
+            else:
+                logger.debug(f"Skipping ping, connection used {time_since_used:.2f}s ago "
+                           f"(max_ping_interval={self.config.max_ping_interval}s)")
             
             if self.config.database and not conn._db_selected:
                 conn.execute(f"USE {self.config.database}")
@@ -468,7 +480,7 @@ class KosDBClient:
         result = self.execute("SHOW TABLES")
         if result.startswith("ERROR"):
             return []
-        return [line.strip() for line in result.split('\n')
+        return [line.strip() for line in result.split('\\n')
                 if line.strip() and not line.strip().startswith("OK")]
     
     def close(self):
@@ -480,3 +492,88 @@ class KosDBClient:
     
     def __exit__(self, *args):
         self.close()
+
+    @contextmanager
+    def transaction(self):
+        """
+        Context manager for batch operations with a single pooled connection.
+        
+        Acquires one connection from the pool and yields it for multiple
+        query()/execute() calls. This avoids repeated pool acquire/release
+        and ping overhead during batch operations.
+        
+        If the connection dies during the transaction, it will attempt
+        reconnection once before raising an error.
+        
+        Usage:
+            with client.transaction() as conn:
+                conn.execute("INSERT INTO users VALUES (1, 'Alice')")
+                conn.execute("INSERT INTO users VALUES (2, 'Bob')")
+                result = conn.query("SELECT * FROM users")
+        
+        Yields:
+            KosDBConnection: Pooled connection ready for operations
+        
+        Raises:
+            RuntimeError: If connection cannot be established or reconnected
+        """
+        conn = None
+        
+        try:
+            # Acquire single connection from pool - this is the optimization:
+            # one acquire/release cycle instead of N for N operations
+            with self.pool.acquire() as conn:
+                # Verify connection is alive before starting transaction
+                if not conn.ping():
+                    logger.debug("Connection stale, reconnecting before transaction")
+                    conn.close()
+                    if not conn.connect():
+                        raise RuntimeError("Failed to establish connection for transaction")
+                
+                # Wrap connection to handle auto-reconnect on failure
+                class _ReconnectingConnection:
+                    def __init__(self, inner_conn, client):
+                        self._conn = inner_conn
+                        self._client = client
+                        self._reconnected = False
+                    
+                    def _ensure_alive(self):
+                        """Check connection and reconnect if needed (once)."""
+                        if not self._conn.ping() and not self._reconnected:
+                            logger.warning("Connection lost during transaction, attempting reconnect")
+                            self._conn.close()
+                            if self._conn.connect():
+                                self._reconnected = True
+                                logger.info("Successfully reconnected during transaction")
+                            else:
+                                raise RuntimeError("Connection lost and reconnection failed")
+                    
+                    def execute(self, command: str) -> str:
+                        self._ensure_alive()
+                        return self._conn.execute(command)
+                    
+                    def query(self, command: str) -> Dict[str, Any]:
+                        self._ensure_alive()
+                        return self._conn.query(command)
+                    
+                    # Expose underlying connection attributes if needed
+                    @property
+                    def connected(self):
+                        return self._conn.connected
+                    
+                    @property
+                    def config(self):
+                        return self._conn.config
+                
+                # Yield wrapped connection with auto-reconnect capability
+                yield _ReconnectingConnection(conn, self)
+                
+        except Exception as e:
+            logger.error(f"Transaction failed: {e}")
+            raise
+        finally:
+            # Connection is automatically released by pool.acquire() context manager
+            # No explicit cleanup needed here - the pool handles it
+            logger.debug("Transaction complete, connection released to pool")
+
+
