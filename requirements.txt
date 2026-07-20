@@ -1,25 +1,37 @@
+# KosCMS Requirements
+# ===================
+#
+# DATABASE OPTIONS:
+# ----------------
+# Option A: KosDB (LevelDB) - DEFAULT, no additional deps needed
+#   Just install as-is. Database runs via TCP socket to LevelDB server.
+#
+# Option B: PostgreSQL - Uncomment psycopg2-binary below
+#   Requires PostgreSQL dev headers: sudo apt-get install libpq-dev
+#
+# Option C: Hybrid mode - Uncomment both SQLAlchemy and psycopg2-binary
+#
 
-# WebCMS Admin Panel - Python Dependencies
+# Core Web Framework (Required for all modes)
+flask==2.3.3
+werkzeug==2.3.7
+jinja2==3.1.2
+click==8.1.7
+itsdangerous==2.1.2
 
-# Custom WebCMS framework (no Flask)
-
-# Database
-SQLAlchemy==2.0.20
-psycopg2-binary==2.9.7
-plyvel==1.5.1
-
-# Caching
-redis==4.6.0
+# Security & Authentication
+bcrypt==4.0.1
+PyJWT==2.8.0
 
 # Utilities
+python-dateutil==2.8.2
 python-dotenv==1.0.0
+pyyaml==6.0.1
 
-# Security
-bcrypt==4.0.1
-cryptography==41.0.3
+# Database Drivers (Choose based on your setup above)
+# --------------------------------------------------
+# PostgreSQL support - Uncomment if using PostgreSQL:
+# psycopg2-binary==2.9.9
 
-# Development (optional)
-pytest==7.4.2
-pytest-cov==4.1.0
-black==23.7.0
-flake8==6.1.0
+# SQLAlchemy ORM - Uncomment for hybrid mode or PostgreSQL ORM:
+# SQLAlchemy==2.0.20

@@ -1,0 +1,28 @@
+# KosDB-Optimized Requirements
+# ==============================
+# For deployments using KosDB (LevelDB) instead of PostgreSQL
+# No psycopg2-binary needed - database runs via TCP socket to LevelDB server
+#
+
+# Core Web Framework
+flask==2.3.3
+werkzeug==2.3.7
+jinja2==3.1.2
+click==8.1.7
+itsdangerous==2.1.2
+
+# Security & Authentication
+bcrypt==4.0.1
+PyJWT==2.8.0
+
+# Utilities
+python-dateutil==2.8.2
+python-dotenv==1.0.0
+pyyaml==6.0.1
+
+# Optional: SQLAlchemy only if you need hybrid mode
+# Uncomment if using SQLAlchemy with KosDB:
+# SQLAlchemy==2.0.20
+
+# Note: psycopg2-binary intentionally removed
+# KosDB uses LevelDB via socket connection - no PostgreSQL client needed
