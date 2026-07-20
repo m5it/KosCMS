@@ -1,4 +1,3 @@
-
 """
 KosDB Client Adapter
 
@@ -12,6 +11,7 @@ import queue
 import json
 import time
 import logging
+import select
 from typing import Optional, Dict, List, Any, Callable
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -254,16 +254,49 @@ class KosDBConnection:
         }
     
     def ping(self) -> bool:
-        """Check if connection is alive."""
+        """
+        Check if connection is alive using TCP keepalive.
+        
+        Uses select.select() and MSG_PEEK to detect if the connection
+        has been closed by the peer without sending any command.
+        This eliminates the round-trip of sending SHOW DATABASES.
+        
+        Returns:
+            True if connection appears alive, False if dead/closed
+        """
         if not self.socket:
             return False
         
         try:
-            # Simple ping with SHOW DATABASES
-            self._send("SHOW DATABASES")
-            response = self._receive()
-            return not response.startswith("ERROR")
-        except:
+            # Check if socket has any data waiting (peer might have sent something)
+            readable, _, exceptional = select.select(
+                [self.socket], [], [], 0
+            )
+            
+            if exceptional:
+                # Exceptional condition means error
+                return False
+            
+            if readable:
+                # Data available - use MSG_PEEK to check without consuming
+                try:
+                    data = self.socket.recv(1, socket.MSG_PEEK)
+                    if len(data) == 0:
+                        # Empty data means connection closed by peer
+                        logger.debug("Ping detected closed connection (empty recv)")
+                        return False
+                    # Has data, connection is alive
+                    return True
+                except (OSError, socket.error):
+                    return False
+            
+            # No data waiting and no exception - connection is likely alive
+            # We can't be 100% sure without sending data, but this is the
+            # trade-off for eliminating the round-trip
+            return True
+            
+        except Exception as e:
+            logger.debug(f"Ping check failed: {e}")
             return False
     
     def close(self) -> None:
@@ -279,6 +312,77 @@ class KosDBConnection:
             self.connected = False
             self.authenticated = False
             self._db_selected = False
+    
+    @contextmanager
+    def transaction(self):
+        """
+        Context manager for manual transaction control.
+        
+        Yields the connection itself, allowing the caller to send
+        BEGIN/COMMIT commands as regular execute() calls.
+        
+        Usage:
+            with conn.transaction() as c:
+                c.execute("BEGIN")
+                c.execute("INSERT INTO ...")
+                c.execute("COMMIT")
+        
+        Yields:
+            KosDBConnection: This connection instance
+        """
+        try:
+            yield self
+        except Exception:
+            # Re-raise without handling - caller manages transaction state
+            raise
+    
+    def pipeline(self, commands: List[str]) -> List[str]:
+        """
+        Execute multiple commands in a pipeline.
+        
+        Sends all commands without waiting for individual responses,
+        then collects all responses. This eliminates network round-trip
+        idle time between commands.
+        
+        Args:
+            commands: List of SQL commands to execute
+        
+        Returns:
+            List of response strings, one per command
+        
+        Usage:
+            results = conn.pipeline([
+                "INSERT INTO users VALUES (1, 'Alice')",
+                "INSERT INTO users VALUES (2, 'Bob')",
+                "SELECT * FROM users"
+            ])
+        """
+        with self.lock:
+            if not self.connected:
+                if not self.connect():
+                    return [f"ERROR: Connection failed"] * len(commands)
+            
+            try:
+                # Send all commands without waiting for responses
+                for cmd in commands:
+                    self._send(cmd)
+                
+                # Collect all responses
+                results = []
+                for _ in commands:
+                    response = self._receive()
+                    results.append(response)
+                
+                self.last_used = time.time()
+                return results
+                
+            except socket.timeout:
+                logger.warning("Pipeline timeout")
+                return [f"ERROR: Pipeline timeout"] * len(commands)
+            except Exception as e:
+                logger.error(f"Pipeline error: {e}")
+                self.connected = False
+                return [f"ERROR: {e}"] * len(commands)
 
 
 class KosDBConnectionPool:
@@ -331,18 +435,19 @@ class KosDBConnectionPool:
                     else:
                         raise RuntimeError("Connection pool exhausted")
             
-            # Check if connection is alive - skip ping if recently used
-            # This optimization avoids a round-trip when connection is likely still good
+            # Check if connection is alive - skip TCP keepalive check if recently used
+            # The TCP check is lightweight (select + MSG_PEEK) but we still skip it
+            # for very recent connections to minimize any overhead
             time_since_used = time.time() - conn.last_used
-            should_ping = time_since_used > self.config.max_ping_interval
+            should_check = time_since_used > self.config.max_ping_interval
             
-            if should_ping:
-                logger.debug(f"Connection idle for {time_since_used:.2f}s, pinging")
+            if should_check:
+                logger.debug(f"Connection idle for {time_since_used:.2f}s, TCP keepalive check")
                 if not conn.ping():
                     conn.close()
                     conn.connect()
             else:
-                logger.debug(f"Skipping ping, connection used {time_since_used:.2f}s ago "
+                logger.debug(f"Skipping TCP check, connection used {time_since_used:.2f}s ago "
                            f"(max_ping_interval={self.config.max_ping_interval}s)")
             
             if self.config.database and not conn._db_selected:
@@ -487,14 +592,8 @@ class KosDBClient:
         """Close client and pool."""
         self.pool.close_all()
     
-    def __enter__(self):
-        return self
-    
-    def __exit__(self, *args):
-        self.close()
-
     @contextmanager
-    def transaction(self):
+    def transaction(self, pipeline: bool = False):
         """
         Context manager for batch operations with a single pooled connection.
         
@@ -505,14 +604,27 @@ class KosDBClient:
         If the connection dies during the transaction, it will attempt
         reconnection once before raising an error.
         
+        Args:
+            pipeline: If True, buffers execute() calls and sends them all at once
+                     when the context exits. query() calls still execute immediately.
+                     This reduces round-trips for write-heavy transactions.
+        
         Usage:
+            # Normal transaction (immediate execution)
             with client.transaction() as conn:
                 conn.execute("INSERT INTO users VALUES (1, 'Alice')")
-                conn.execute("INSERT INTO users VALUES (2, 'Bob')")
                 result = conn.query("SELECT * FROM users")
+            
+            # Pipelined transaction (buffered execution)
+            with client.transaction(pipeline=True) as conn:
+                conn.execute("BEGIN")
+                conn.execute("INSERT INTO users VALUES (1, 'Alice')")
+                conn.execute("INSERT INTO users VALUES (2, 'Bob')")
+                conn.execute("COMMIT")
+                # All commands sent at once when context exits
         
         Yields:
-            KosDBConnection: Pooled connection ready for operations
+            KosDBConnection or _PipelinedConnection: Pooled connection ready for operations
         
         Raises:
             RuntimeError: If connection cannot be established or reconnected
@@ -530,43 +642,17 @@ class KosDBClient:
                     if not conn.connect():
                         raise RuntimeError("Failed to establish connection for transaction")
                 
-                # Wrap connection to handle auto-reconnect on failure
-                class _ReconnectingConnection:
-                    def __init__(self, inner_conn, client):
-                        self._conn = inner_conn
-                        self._client = client
-                        self._reconnected = False
-                    
-                    def _ensure_alive(self):
-                        """Check connection and reconnect if needed (once)."""
-                        if not self._conn.ping() and not self._reconnected:
-                            logger.warning("Connection lost during transaction, attempting reconnect")
-                            self._conn.close()
-                            if self._conn.connect():
-                                self._reconnected = True
-                                logger.info("Successfully reconnected during transaction")
-                            else:
-                                raise RuntimeError("Connection lost and reconnection failed")
-                    
-                    def execute(self, command: str) -> str:
-                        self._ensure_alive()
-                        return self._conn.execute(command)
-                    
-                    def query(self, command: str) -> Dict[str, Any]:
-                        self._ensure_alive()
-                        return self._conn.query(command)
-                    
-                    # Expose underlying connection attributes if needed
-                    @property
-                    def connected(self):
-                        return self._conn.connected
-                    
-                    @property
-                    def config(self):
-                        return self._conn.config
-                
-                # Yield wrapped connection with auto-reconnect capability
-                yield _ReconnectingConnection(conn, self)
+                if pipeline:
+                    # Yield pipelined connection that buffers execute() calls
+                    pipelined_conn = _PipelinedConnection(conn)
+                    try:
+                        yield pipelined_conn
+                    finally:
+                        # Flush any buffered commands when exiting context
+                        pipelined_conn._flush()
+                else:
+                    # Yield wrapped connection with auto-reconnect capability
+                    yield _ReconnectingConnection(conn, self)
                 
         except Exception as e:
             logger.error(f"Transaction failed: {e}")
@@ -577,3 +663,138 @@ class KosDBClient:
             logger.debug("Transaction complete, connection released to pool")
 
 
+class _ReconnectingConnection:
+    """
+    Wrapper for KosDBConnection that provides auto-reconnect capability.
+    
+    Used in non-pipelined transactions to handle connection failures gracefully.
+    """
+    
+    def __init__(self, inner_conn, client):
+        self._conn = inner_conn
+        self._client = client
+        self._reconnected = False
+    
+    def _ensure_alive(self):
+        """Check connection and reconnect if needed (once)."""
+        if not self._conn.ping() and not self._reconnected:
+            logger.warning("Connection lost during transaction, attempting reconnect")
+            self._conn.close()
+            if self._conn.connect():
+                self._reconnected = True
+                logger.info("Successfully reconnected during transaction")
+            else:
+                raise RuntimeError("Connection lost and reconnection failed")
+    
+    def execute(self, command: str) -> str:
+        self._ensure_alive()
+        return self._conn.execute(command)
+    
+    def query(self, command: str) -> Dict[str, Any]:
+        self._ensure_alive()
+        return self._conn.query(command)
+    
+    # Expose underlying connection attributes if needed
+    @property
+    def connected(self):
+        return self._conn.connected
+    
+    @property
+    def config(self):
+        return self._conn.config
+
+
+class _PipelinedConnection:
+    """
+    Wrapper for KosDBConnection that buffers execute() calls for pipelining.
+    
+    Used in pipelined transactions to reduce round-trips for write-heavy operations.
+    query() calls execute immediately for backward compatibility.
+    """
+    
+    def __init__(self, inner_conn):
+        self._conn = inner_conn
+        self._buffer: List[str] = []
+        self._results: List[str] = []
+        self._flushed = False
+    
+    def execute(self, command: str) -> str:
+        """
+        Buffer execute() call for pipelined execution.
+        
+        Commands are collected and sent all at once when the transaction
+        context exits.
+        
+        Args:
+            command: SQL command to execute
+        
+        Returns:
+            Placeholder response ("OK (buffered)") - actual results available
+            after context exits via get_buffered_results()
+        """
+        if self._flushed:
+            raise RuntimeError("Cannot execute after pipeline has been flushed")
+        
+        self._buffer.append(command)
+        logger.debug(f"Buffered command: {command[:50]}...")
+        
+        # Return placeholder - actual result comes after flush
+        return "OK (buffered)"
+    
+    def query(self, command: str) -> Dict[str, Any]:
+        """
+        Execute query immediately (not buffered).
+        
+        query() calls need immediate results, so they bypass the buffer
+        and execute directly on the underlying connection.
+        
+        Args:
+            command: SELECT or other query
+        
+        Returns:
+            Parsed results as dict with columns and rows
+        """
+        # Flush any pending writes before query to maintain consistency
+        if self._buffer:
+            self._flush()
+        
+        return self._conn.query(command)
+    
+    def _flush(self):
+        """Send all buffered commands and collect responses."""
+        if self._flushed or not self._buffer:
+            return
+        
+        self._flushed = True
+        
+        try:
+            # Use the underlying connection's pipeline method
+            self._results = self._conn.pipeline(self._buffer)
+            logger.debug(f"Flushed {len(self._buffer)} commands, got {len(self._results)} results")
+        except Exception as e:
+            logger.error(f"Pipeline flush failed: {e}")
+            # Mark results as errors for all buffered commands
+            self._results = [f"ERROR: Pipeline flush failed: {e}"] * len(self._buffer)
+    
+    def get_buffered_results(self) -> List[str]:
+        """
+        Get results from buffered execute() calls.
+        
+        Should be called after the transaction context exits to retrieve
+        the actual server responses for buffered commands.
+        
+        Returns:
+            List of response strings, one per buffered execute() call
+        """
+        if not self._flushed:
+            raise RuntimeError("Pipeline not yet flushed - call within context")
+        return self._results
+    
+    # Expose underlying connection attributes if needed
+    @property
+    def connected(self):
+        return self._conn.connected
+    
+    @property
+    def config(self):
+        return self._conn.config

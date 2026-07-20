@@ -164,9 +164,9 @@ class AdminAPI:
                 }
             }
         widgets = [
-            {"id": "stats", "title": "Content Statistics", "icon": "ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ", "data": stats},
-            {"id": "activity", "title": "Recent Activity", "icon": "ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ", "data": {"recent_posts": stats.get("content", {}).get("posts", 0)}},
-            {"id": "health", "title": "System Health", "icon": "ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¤ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ", "data": {"status": "ok"}}
+            {"id": "stats", "title": "Content Statistics", "icon": "📊", "data": stats},
+            {"id": "activity", "title": "Recent Activity", "icon": "📈", "data": {"recent_posts": stats.get("content", {}).get("posts", 0)}},
+            {"id": "health", "title": "System Health", "icon": "❤️", "data": {"status": "ok"}}
         ]
         for widget in widgets:
             widget.setdefault("icon", "")
@@ -496,7 +496,7 @@ class AdminAPI:
                 if not existing:
                     return Response.not_found()
                 if self._delete_record_kosdb("pages", page_id):
-                    return Response.json({"": page_id, "deleted": True})
+                    return Response.json({"id": page_id, "deleted": True})
                 return Response.error("Delete failed", 500)
             manager = ContentManager(self._sa_session())
             page = manager.get_page(page_id=page_id)
@@ -505,10 +505,11 @@ class AdminAPI:
             if not page:
                 return Response.not_found()
             if manager.delete_page(page.id):
-                return Response.json({"t": page_id, "deleted": True})
+                return Response.json({"id": page_id, "deleted": True})
             return Response.not_found()
         except Exception as e:
             return Response.error(str(e), 400)
+
     def list_posts(self, request: Request) -> Response:
         from webcms.models.content import Post
         if not self.db:
@@ -859,8 +860,6 @@ class AdminAPI:
 
     # ---------------- Users & Roles ----------------
 
-    # ---------------- Users & Roles ----------------
-
     def list_users(self, request: Request) -> Response:
         from webcms.models.user import User
         if not self.db:
@@ -899,7 +898,6 @@ class AdminAPI:
         if value is None:
             return False
         return str(value).lower() in ("1", "true", "yes", "on")
-        return Response.json({"users": result})
 
     def create_user(self, request: Request) -> Response:
         from webcms.models.user import User
@@ -959,6 +957,7 @@ class AdminAPI:
             if not self._is_kosdb() and self.db:
                 self.db.rollback()
             return Response.error(str(e), 400)
+
     def update_user(self, request: Request, user_id: str) -> Response:
         from webcms.models.user import User
         data = request.json or {}
@@ -1033,6 +1032,7 @@ class AdminAPI:
             if not self._is_kosdb() and self.db:
                 self.db.rollback()
             return Response.error(str(e), 400)
+
     def delete_user(self, request: Request, user_id: str) -> Response:
         from webcms.models.user import User
         if not self.db:
@@ -1329,12 +1329,16 @@ class AdminAPI:
                 if hasattr(self.db, 'transaction'):
                     # TRANSACTION PATH: Use single pooled connection for all operations
                     with self.db.transaction() as conn:
+                        # Send BEGIN to start transaction
+                        conn.execute("BEGIN")
+                        
                         # OPTIMIZATION: All operations share one connection via transaction()
                         # This cuts pool overhead from N acquire/release cycles to 1.
                         existing_keys_result = conn.query("SELECT setting_key FROM settings")
                         print(f"[DEBUG] Existing keys query result: {existing_keys_result}")
                         if existing_keys_result.get('error'):
                             print(f"[DEBUG] Error loading existing keys: {existing_keys_result.get('error')}")
+                            conn.execute("ROLLBACK")
                             return Response.json({"updated": False, "error": existing_keys_result.get('error'), "settings": normalized}, 400)
 
                         existing_keys = {
@@ -1372,7 +1376,11 @@ class AdminAPI:
 
                         if errors:
                             print(f"[DEBUG] Errors during update: {errors}")
+                            conn.execute("ROLLBACK")
                             return Response.json({"updated": False, "errors": errors, "settings": normalized}, 400)
+                        
+                        # Send COMMIT to finalize transaction
+                        conn.execute("COMMIT")
                 else:
                     # FALLBACK: Raw dict-style db without transaction() - use direct db methods
                     # OPTIMIZATION: Load all existing keys in a single query instead

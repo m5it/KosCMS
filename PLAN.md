@@ -1,29 +1,35 @@
-# Plan: Settings Save Performance Optimization
-## ID: 1784451884.852964
-## Created: 2026-07-19 09:04:44
+# Plan: KosCMS Performance Optimization - Phase 1
+## ID: 1784462678.5444753
+## Created: 2026-07-19 12:04:38
 ## Status: in_progress
 
 ### Goal:
-Optimize the CMS settings save path to reduce database round-trips and connection overhead, targeting the 10-30 second save time on /admin/settings. Focus on changes within this repository: the CMS admin API and the KosDB client adapter. Document KosDB-server-side limitations that require changes in the external test.KosDB project.
+Implement client-side performance optimizations for KosCMS admin settings save functionality. The goal is to reduce database round-trips from 15 individual writes per settings save down to a single transaction (N+1 to 3 round-trips). Focus on three key areas: C1 (BEGIN/COMMIT transaction support), C2 (SQL pipelining), and C3 (TCP-based ping optimization). These changes require modifications to both the KosDB client adapter and the admin API settings handler.
 
-### Tasks (6):
-1. [pending] Fix N+1 SELECT in update_settings
-   ID: 1784451891.5425017
+### Tasks (8):
+1. [pending] Add transaction() context manager support to KosDBConnection
+   ID: 1784462691.111431
 
-2. [pending] Add connection reuse for KosDB multi-query operations
-   ID: 1784451891.5427217
+2. [pending] Implement pipeline() method for KosDBConnection
+   ID: 1784462691.1116126
 
-3. [pending] Use KosDB transaction in update_settings
-   ID: 1784451891.5436406
+3. [pending] Implement TCP keepalive-based ping check
+   ID: 1784462691.1128411
 
-4. [pending] Reduce ping overhead in KosDB pool
-   ID: 1784451891.5437474
+4. [pending] Update KosDBConnectionPool.acquire() to use TCP ping
+   ID: 1784462691.113055
 
-5. [pending] Add benchmark test for settings save
-   ID: 1784451891.5438564
+5. [pending] Refactor update_settings to use bulk SELECT + transaction
+   ID: 1784462691.1132474
 
-6. [pending] Document KosDB server-side limitations
-   ID: 1784451891.5439565
+6. [pending] Add pipeline support to KosDBClient transaction context
+   ID: 1784462691.1134355
+
+7. [pending] Write benchmark test to verify optimization
+   ID: 1784462691.113544
+
+8. [pending] Verify integration and run tests
+   ID: 1784462691.1136546
 
 ---
 
