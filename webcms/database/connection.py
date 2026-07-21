@@ -2,14 +2,26 @@
 Database Connection Manager
 
 SQLAlchemy with connection pooling and session management.
+Note: SQLAlchemy is optional - only needed for PostgreSQL mode.
+KosDB mode works without SQLAlchemy installed.
 """
 
 from contextlib import contextmanager
 from typing import Generator, Optional
 
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import QueuePool
+# Lazy import SQLAlchemy - only needed for PostgreSQL mode
+try:
+    from sqlalchemy import create_engine, event
+    from sqlalchemy.orm import sessionmaker, Session
+    from sqlalchemy.pool import QueuePool
+    SQLALCHEMY_AVAILABLE = True
+except ImportError:
+    SQLALCHEMY_AVAILABLE = False
+    # Create dummy classes for type hints
+    class Session:
+        pass
+    class QueuePool:
+        pass
 
 from webcms.models.base import Base
 
@@ -19,6 +31,13 @@ class DatabaseManager:
     
     def __init__(self, database_url: str, pool_size: int = 10, 
                  max_overflow: int = 20, echo: bool = False):
+        if not SQLALCHEMY_AVAILABLE:
+            raise ImportError(
+                "SQLAlchemy is required for DatabaseManager. "
+                "Install with: pip install SQLAlchemy "
+                "Or use KosDB mode which doesn't require SQLAlchemy."
+            )
+        
         self.database_url = database_url
         self.engine = None
         self.SessionLocal = None
@@ -53,19 +72,27 @@ class DatabaseManager:
     
     def create_tables(self):
         """Create all tables."""
+        if not SQLALCHEMY_AVAILABLE:
+            raise ImportError("SQLAlchemy required to create tables")
         Base.metadata.create_all(bind=self.engine)
     
     def drop_tables(self):
         """Drop all tables."""
+        if not SQLALCHEMY_AVAILABLE:
+            raise ImportError("SQLAlchemy required to drop tables")
         Base.metadata.drop_all(bind=self.engine)
     
     def get_session(self) -> Session:
         """Get database session."""
+        if not SQLALCHEMY_AVAILABLE:
+            raise ImportError("SQLAlchemy required for database sessions")
         return self.SessionLocal()
     
     @contextmanager
     def session_scope(self) -> Generator[Session, None, None]:
         """Provide transactional scope around operations."""
+        if not SQLALCHEMY_AVAILABLE:
+            raise ImportError("SQLAlchemy required for session scope")
         session = self.SessionLocal()
         try:
             yield session
@@ -96,18 +123,16 @@ def init_db(database_url: str, **kwargs) -> DatabaseManager:
 
 def get_db() -> Generator[Session, None, None]:
     """Get database session for dependency injection."""
+    if not SQLALCHEMY_AVAILABLE:
+        raise ImportError(
+            "SQLAlchemy is not installed. "
+            "For KosDB mode, use KosDBClient instead of DatabaseManager. "
+            "Install SQLAlchemy for PostgreSQL support: pip install SQLAlchemy"
+        )
     if _db_manager is None:
-        raise RuntimeError("Database not initialized")
-    
+        raise RuntimeError("Database not initialized. Call init_db() first.")
     db = _db_manager.get_session()
     try:
         yield db
     finally:
         db.close()
-
-
-def get_db_manager() -> DatabaseManager:
-    """Get database manager instance."""
-    if _db_manager is None:
-        raise RuntimeError("Database not initialized")
-    return _db_manager

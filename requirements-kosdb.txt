@@ -20,9 +20,10 @@ python-dateutil==2.8.2
 python-dotenv==1.0.0
 pyyaml==6.0.1
 
-# Optional: SQLAlchemy only if you need hybrid mode
-# Uncomment if using SQLAlchemy with KosDB:
-# SQLAlchemy==2.0.20
+# Database (Optional - for hybrid mode)
+# SQLAlchemy is only needed if you want to use PostgreSQL alongside KosDB
+# For pure KosDB mode, this is optional but recommended for compatibility
+SQLAlchemy==2.0.20
 
 # Note: psycopg2-binary intentionally removed
 # KosDB uses LevelDB via socket connection - no PostgreSQL client needed

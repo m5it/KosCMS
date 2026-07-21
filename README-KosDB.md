@@ -62,6 +62,35 @@ python -m webcms.database.kosdb_server
 ```
 
 ### Port already in use
+## Troubleshooting
+
+### "No module named 'sqlalchemy'" error
+```bash
+# SQLAlchemy is now included in requirements-kosdb.txt
+# If you see this error, reinstall:
+pip install -r requirements-kosdb.txt
+
+# Or install SQLAlchemy manually:
+pip install SQLAlchemy==2.0.20
+```
+
+### "cannot import name 'kosdb_server'" error
+```bash
+# Make sure you're running from the project root
+cd ~/www/KosCMS_2
+python -m webcms.database.kosdb_server
+
+# Verify the file exists:
+ls webcms/database/kosdb_server.py
+```
+
+### "Connection refused" error
+```bash
+# Make sure KosDB server is running
+python -m webcms.database.kosdb_server
+```
+
+### Port already in use
 ```bash
 # Use a different port
 python -m webcms.database.kosdb_server --port 9998
@@ -72,12 +101,6 @@ python -m webcms.database.kosdb_server --port 9998
 # Make install script executable
 chmod +x install-kosdb.sh
 ```
-
-## Configuration
-
-Create `.env` file:
-
-```bash
 # Database type
 DATABASE_TYPE=kosdb
 

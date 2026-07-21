@@ -2456,3 +2456,8 @@ shutil.rmtree(tmp) | SUCCESS: True | OUTPUT_LEN: 287
 [2026-07-19 12:17:27] CMD: python3 -m py_compile webcms/database/kosdb_client.py | SUCCESS: True | OUTPUT_LEN: 0
 [2026-07-19 12:17:29] CMD: python3 -m pytest tests/benchmark/test_settings_save.py -v | SUCCESS: True | OUTPUT_LEN: 49
 [2026-07-19 12:17:31] CMD: python3 -m unittest tests.benchmark.test_settings_save -v | SUCCESS: True | OUTPUT_LEN: 2831
+[2026-07-21 20:01:52] CMD: python3 -c from webcms.database.kosdb_server import main; print('kosdb_server import OK') | SUCCESS: True | OUTPUT_LEN: 439
+[2026-07-21 20:02:01] CMD: python3 -c import sys; sys.path.insert(0, '../KosDB'); from server import KosDBServer; print('KosDBServer class found') | SUCCESS: True | OUTPUT_LEN: 397
+[2026-07-21 20:02:05] CMD: python3 -c import sys; sys.path.insert(0, '../KosDB'); import server; print([x for x in dir(server) if not x.startswith('_')]) | SUCCESS: True | OUTPUT_LEN: 286
+[2026-07-21 20:02:33] CMD: python3 -c from webcms.database.kosdb_server import main, KosDBServer; print('kosdb_server import OK'); print('KosDBServer:', KosDBServer) | SUCCESS: True | OUTPUT_LEN: 66
+[2026-07-21 20:02:35] CMD: python3 -c from webcms.database.connection import DatabaseManager, SQLALCHEMY_AVAILABLE; print('connection.py import OK'); print('SQLAlchemy available:', SQLALCHEMY_AVAILABLE) | SUCCESS: True | OUTPUT_LEN: 51
