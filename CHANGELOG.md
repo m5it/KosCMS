@@ -1,3 +1,12 @@
+## 2026-07-21 — v1.3.36
+
+### Auto: Version v1.3.36
+
+- Version auto-incremented from v1.3.35
+- Files changed: HISTORY.md, background.log, requirements-kosdb.txt, state.aiia
+
+---
+
 ## 2026-07-21 — v1.3.35
 
 ### Auto: Version v1.3.35
